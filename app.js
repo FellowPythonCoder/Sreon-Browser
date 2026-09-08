@@ -254,31 +254,56 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   items.forEach(el=>io.observe(el));
 })();
 
-// ---------- Views / downloads counter (local device only) ----------
-// No backend here, so this counts on-device via localStorage. Swap in a
-// real analytics/counter service (Plausible, a tiny serverless counter,
-// GitHub Releases download stats, etc.) for numbers that add up across
-// visitors.
+// ---------- Views / downloads counter (site-wide, via CounterAPI v2) ----------
+// CounterAPI's old no-signup v1 endpoints were retired in Aug 2026. The
+// only version now is v2, which needs a free account + workspace + access
+// token from counterapi.dev. Replace the two placeholders below with your
+// own values from the CounterAPI dashboard.
 (function(){
+  const COUNTER_WORKSPACE = 'Sreon Browser';   // e.g. 'sreon'
+  const COUNTER_TOKEN     = 'ut_JXyZ3s0052FUfPeQ9E5zvMMrXbUFeFj99NOHxdpd'; // from counterapi.dev dashboard
+  const API_BASE = `https://api.counterapi.dev/v2/${COUNTER_WORKSPACE}`;
+
   const viewsEl = document.getElementById('stat-views');
   const downloadsEl = document.getElementById('stat-downloads');
   if(!viewsEl || !downloadsEl) return;
 
-  function bump(key){
-    const n = (parseInt(localStorage.getItem(key), 10) || 0) + 1;
-    localStorage.setItem(key, String(n));
-    return n;
-  }
-  function read(key){
-    return parseInt(localStorage.getItem(key), 10) || 0;
+  const authHeaders = { 'Authorization': `Bearer ${COUNTER_TOKEN}` };
+
+  // Increments a named counter and returns its new value.
+  async function bump(name){
+    try{
+      const res = await fetch(`${API_BASE}/${name}/up`, { headers: authHeaders });
+      const data = await res.json();
+      return data && data.data ? data.data.up_count : null;
+    }catch(err){
+      console.error('CounterAPI error:', err);
+      return null;
+    }
   }
 
-  viewsEl.textContent = bump('sreon_views');
-  downloadsEl.textContent = read('sreon_downloads');
+  // Reads a named counter's current value without changing it.
+  async function read(name){
+    try{
+      const res = await fetch(`${API_BASE}/${name}`, { headers: authHeaders });
+      const data = await res.json();
+      return data && data.data ? data.data.up_count : null;
+    }catch(err){
+      console.error('CounterAPI error:', err);
+      return null;
+    }
+  }
 
+  // Bump "views" once per page load, show whatever comes back.
+  bump('views').then(v => { if(v !== null) viewsEl.textContent = v; });
+
+  // Show current downloads count without incrementing it yet.
+  read('downloads').then(v => { if(v !== null) downloadsEl.textContent = v; });
+
+  // Bump "downloads" every time any [download] link is clicked.
   document.querySelectorAll('a[download]').forEach(a=>{
     a.addEventListener('click', ()=>{
-      downloadsEl.textContent = bump('sreon_downloads');
+      bump('downloads').then(v => { if(v !== null) downloadsEl.textContent = v; });
     });
   });
 })();
