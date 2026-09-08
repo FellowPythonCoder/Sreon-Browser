@@ -260,8 +260,8 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 // token from counterapi.dev. Replace the two placeholders below with your
 // own values from the CounterAPI dashboard.
 (function(){
-  const COUNTER_WORKSPACE = 'page-views6759';   // e.g. 'sreon'
-  const COUNTER_TOKEN     = 'ut_JXyZ3s0052FUfPeQ9E5zvMMrXbUFeFj99NOHxdpd'; // from counterapi.dev dashboard
+  const COUNTER_WORKSPACE = 'page-views6759';   // your CounterAPI workspace slug
+  const COUNTER_TOKEN     = 'YOUR-ACCESS-TOKEN'; // from counterapi.dev dashboard
   const API_BASE = `https://api.counterapi.dev/v2/${COUNTER_WORKSPACE}`;
 
   const viewsEl = document.getElementById('stat-views');
