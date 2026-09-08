@@ -261,7 +261,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 // own values from the CounterAPI dashboard.
 (function(){
   const COUNTER_WORKSPACE = 'page-views234';   // your CounterAPI workspace slug
-  const COUNTER_TOKEN     = 'YOUR-ACCESS-TOKEN'; // from counterapi.dev dashboard
+  const COUNTER_TOKEN     = 'ut_JXyZ3s0052FUfPeQ9E5zvMMrXbUFeFj99NOHxdpd'; // from counterapi.dev dashboard
   const API_BASE = `https://api.counterapi.dev/v2/${COUNTER_WORKSPACE}`;
 
   const viewsEl = document.getElementById('stat-views');
