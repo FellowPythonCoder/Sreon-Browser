@@ -254,6 +254,35 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   items.forEach(el=>io.observe(el));
 })();
 
+// ---------- Views / downloads counter (local device only) ----------
+// No backend here, so this counts on-device via localStorage. Swap in a
+// real analytics/counter service (Plausible, a tiny serverless counter,
+// GitHub Releases download stats, etc.) for numbers that add up across
+// visitors.
+(function(){
+  const viewsEl = document.getElementById('stat-views');
+  const downloadsEl = document.getElementById('stat-downloads');
+  if(!viewsEl || !downloadsEl) return;
+
+  function bump(key){
+    const n = (parseInt(localStorage.getItem(key), 10) || 0) + 1;
+    localStorage.setItem(key, String(n));
+    return n;
+  }
+  function read(key){
+    return parseInt(localStorage.getItem(key), 10) || 0;
+  }
+
+  viewsEl.textContent = bump('sreon_views');
+  downloadsEl.textContent = read('sreon_downloads');
+
+  document.querySelectorAll('a[download]').forEach(a=>{
+    a.addEventListener('click', ()=>{
+      downloadsEl.textContent = bump('sreon_downloads');
+    });
+  });
+})();
+
 // ---------- Live address bar (signature element) ----------
 // Tracks which section is in view and updates the sreon:// address strip
 // under the header to match -- echoes the product's own tab/address bar.
