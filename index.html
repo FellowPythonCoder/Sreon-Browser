@@ -1,296 +1,373 @@
-:root{
-  /* ---- color: warm paper, near-black ink, one deliberate violet accent ---- */
-  --paper: #F6F4EE;
-  --paper-2: #EEEAE0;
-  --ink: #15131C;
-  --ink-dim: #55505F;
-  --ink-faint: #6B6577;
-  --line: #DEDACD;
-  --line-strong: #C9C4B5;
-  --accent: #5B21B6;
-  --accent-bright: #7C3AED;
-  --accent-soft: #ECE4FA;
-  --white: #FFFFFF;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sreon — Browse different.</title>
+<meta name="description" content="Sreon is a small, privacy-first desktop browser: real workspaces, a command menu, an app lock, and encrypted local storage. Free and open source.">
+<link rel="icon" href="assets/sreon-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
-  /* ---- type ---- */
-  --font-display: 'Space Grotesk', 'Inter', sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#top">
+      <img src="assets/sreon-logo.png" alt="Sreon" class="brand-mark">
+      <span>Sreon</span>
+    </a>
+    <nav class="nav">
+      <a href="#why">Why</a>
+      <a href="#features">Features</a>
+      <a href="#try">Try It</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#download">Download</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a href="#download" class="btn btn-primary btn-small">Download</a>
+  </div>
+</header>
 
-  --radius: 8px;
-  --radius-sm: 4px;
+<!-- signature element: a live URL bar that tracks scroll position -->
+<div class="addr-strip">
+  <div class="wrap">
+    <span class="dot"></span>
+    <span id="live-addr">sreon://top</span>
+    <a href="secret.html" class="addr-secret-link" title="secret area">●</a>
+  </div>
+</div>
 
-  /* hard, offset shadow instead of soft glow -- a graphic device, not a light source */
-  --hard-shadow: 4px 4px 0 var(--ink);
-  --hard-shadow-sm: 3px 3px 0 var(--ink);
-}
+<main>
 
-*{ box-sizing:border-box; }
-html{ scroll-behavior:smooth; }
-body{
-  margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body);
-  -webkit-font-smoothing:antialiased; overflow-x:hidden;
-}
-.wrap{ max-width:1180px; margin:0 auto; padding:0 28px; }
-h1,h2,h3{ font-family:var(--font-display); font-weight:600; letter-spacing:-0.01em; margin:0; color:var(--ink); }
-p{ margin:0; color:var(--ink-dim); line-height:1.65; }
-a{ color:inherit; text-decoration:none; }
-::selection{ background:var(--accent); color:var(--white); }
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="wrap hero-inner">
+      <div class="eyebrow">sreon://browse-different</div>
+      <h1>A browser that keeps your business to itself.</h1>
+      <p class="hero-sub">
+        Sreon is a small, privacy-first desktop browser. Real workspaces, a
+        command menu, an app lock, and encrypted local storage — built to be
+        fast, quiet, and yours. Free and open source.
+      </p>
+      <div class="hero-actions">
+        <a href="#download" class="btn btn-primary">Download Sreon</a>
+        <a href="#try" class="btn btn-ghost">Try it in your browser</a>
+      </div>
+    </div>
 
-/* focus visibility kept intentional, never removed */
-a:focus-visible, button:focus-visible, input:focus-visible{
-  outline:2px solid var(--accent); outline-offset:3px;
-}
+    <div class="hero-visual reveal" aria-hidden="true">
+      <div class="mock-browser">
+        <div class="mock-titlebar">
+          <span class="mock-dot r"></span><span class="mock-dot y"></span><span class="mock-dot g"></span>
+          <span class="mock-app-name">Sreon</span>
+        </div>
+        <div class="mock-body">
+          <div class="mock-sidebar">
+            <div class="mock-ws-row">
+              <span class="mock-ws active">Personal</span>
+              <span class="mock-ws">Work</span>
+            </div>
+            <div class="mock-tab active"><span class="mock-fav g"></span>Google</div>
+            <div class="mock-tab"><span class="mock-fav yt"></span>YouTube</div>
+            <div class="mock-tab"><span class="mock-fav gh"></span>GitHub</div>
+            <div class="mock-tab"><span class="mock-fav wk"></span>Wikipedia</div>
+            <div class="mock-sidebar-foot">
+              <img src="assets/sreon-logo.png" class="mock-mini-logo" alt="">
+              <span>Sreon</span>
+              <span class="mock-gear">&#9881;</span>
+            </div>
+          </div>
+          <div class="mock-content">
+            <div class="mock-navbar">
+              <span class="mock-navbtn">&#8592;</span>
+              <span class="mock-navbtn">&#8594;</span>
+              <div class="mock-addr"><span class="mock-lock">&#128274;</span>sreon://new-tab</div>
+            </div>
+            <div class="mock-page"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-/* reveal-on-scroll base state (JS adds .is-visible) */
-.reveal{ opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease; }
-.reveal.is-visible{ opacity:1; transform:translateY(0); }
-@media (prefers-reduced-motion: reduce){
-  .reveal{ opacity:1; transform:none; transition:none; }
-  html{ scroll-behavior:auto; }
-}
+  <!-- WHY -->
+  <section class="why" id="why">
+    <div class="wrap why-inner">
+      <div class="section-head reveal">
+        <span class="section-kicker">sreon://why</span>
+        <h2>Why I built this</h2>
+      </div>
+      <div class="why-body reveal">
+        <p>
+          I kept counting how many things a "normal" browser does before I've
+          typed anything: sync accounts, telemetry pings, extension
+          marketplaces phoning home, a new-tab page quietly profiling what I
+          look at. None of it was there because I asked for it.
+        </p>
+        <blockquote class="pull-quote">
+          I wanted a browser that didn't need a privacy policy longer than its
+          changelog.
+        </blockquote>
+        <p>
+          Sreon started as a weekend project to see how small a real,
+          daily-usable browser could get if it only did what I actually
+          use: tabs, workspaces to keep Personal and Work apart, a command
+          menu instead of hunting through settings, and storage that's
+          encrypted by default instead of as an afterthought.
+        </p>
+        <p>
+          It's open source on purpose — not as a slogan, but so the privacy
+          claims on this page are things you can go verify in the source
+          rather than things you have to take my word for.
+        </p>
+      </div>
+    </div>
+  </section>
 
-/* ---------- Header ---------- */
-.site-header{ position:sticky; top:0; z-index:100; background:var(--paper); border-bottom:1px solid var(--line); }
-.header-inner{ display:flex; align-items:center; gap:32px; padding-top:18px; padding-bottom:18px; }
-.brand{ display:flex; align-items:center; gap:9px; font-family:var(--font-display); font-weight:700; font-size:18px; margin-right:auto; }
-.brand-mark{ width:24px; height:24px; object-fit:contain; }
-.nav{ display:flex; gap:28px; }
-.nav a{ font-size:14px; font-weight:500; color:var(--ink-dim); transition:color .15s ease; position:relative; }
-.nav a::after{ content:''; position:absolute; left:0; right:0; bottom:-4px; height:1px; background:var(--ink); transform:scaleX(0); transform-origin:right; transition:transform .2s ease; }
-.nav a:hover{ color:var(--ink); }
-.nav a:hover::after{ transform:scaleX(1); transform-origin:left; }
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-kicker">sreon://features</span>
+        <h2>Everything you'd want from a browser. Nothing you didn't ask for.</h2>
+      </div>
+      <div class="feature-grid">
 
-/* live address strip -- the page's signature element: a real URL bar
-   that tracks scroll position, the way Sreon's own tab bar would */
-.addr-strip{
-  border-bottom:1px solid var(--line); background:var(--paper-2);
-  font-family:var(--font-mono); font-size:12.5px; color:var(--ink-faint);
-}
-.addr-strip .wrap{ display:flex; align-items:center; gap:8px; padding-top:7px; padding-bottom:7px; }
-.addr-strip .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent); flex:none; }
-.addr-strip #live-addr{ color:var(--ink-dim); transition:opacity .18s ease; }
+        <div class="feature-card reveal">
+          <div class="f-icon">&#128203;</div>
+          <h3>Real tabs, real workspaces</h3>
+          <p>Keep Personal and Work fully separate — each with its own logins, bookmarks, and history, isolated from the other.</p>
+        </div>
 
-.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 22px; border-radius:var(--radius-sm); font-weight:600; font-size:14.5px; font-family:var(--font-body); border:1px solid transparent; cursor:pointer; transition:transform .12s ease, box-shadow .12s ease, background .15s ease, border-color .15s ease; }
-.btn-primary{ background:var(--ink); color:var(--paper); box-shadow:var(--hard-shadow-sm); }
-.btn-primary:hover{ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
-.btn-primary:active{ transform:translate(0,0); box-shadow:1px 1px 0 var(--ink); }
-.btn-ghost{ background:transparent; color:var(--ink); border:1px solid var(--line-strong); }
-.btn-ghost:hover{ border-color:var(--ink); background:var(--paper-2); }
-.btn-small{ padding:8px 16px; font-size:13px; }
+        <div class="feature-card reveal">
+          <div class="f-icon">&#8984;</div>
+          <h3>Command menu (⌘K)</h3>
+          <p>Jump to a site, switch workspace, or change a setting without leaving the keyboard.</p>
+        </div>
 
-/* ---------- Hero ---------- */
-.hero{ padding:76px 0 0; }
-.hero-inner{ display:grid; grid-template-columns:1fr; gap:20px; max-width:640px; }
-.eyebrow{ font-family:var(--font-mono); font-size:12.5px; color:var(--accent); letter-spacing:.02em; }
-.hero h1{ font-size:clamp(40px, 6vw, 68px); line-height:1.04; }
-.hero-sub{ font-size:17px; max-width:520px; }
-.hero-actions{ display:flex; gap:14px; margin-top:8px; flex-wrap:wrap; }
+        <div class="feature-card reveal">
+          <div class="f-icon">&#128274;</div>
+          <h3>App lock</h3>
+          <p>Gate the whole app behind an optional password, salted and hashed locally. Sreon never stores it in the clear.</p>
+        </div>
 
-.hero-visual{ display:flex; justify-content:center; margin-top:56px; padding:0 20px 0; }
-.mock-browser{
-  width:100%; max-width:960px; border-radius:10px; overflow:hidden;
-  background:var(--white); border:1px solid var(--ink);
-  box-shadow:8px 8px 0 var(--accent-soft), 8px 8px 0 1px var(--ink);
-}
-.mock-titlebar{ height:38px; display:flex; align-items:center; gap:10px; padding:0 16px; background:var(--paper-2); border-bottom:1px solid var(--line); }
-.mock-dot{ width:9px; height:9px; border-radius:50%; }
-.mock-dot.r{background:#D8D2C2;} .mock-dot.y{background:#C9C2AE;} .mock-dot.g{background:#BAB29A;}
-.mock-app-name{ font-family:var(--font-mono); color:var(--ink-faint); font-size:11.5px; }
-.mock-body{ display:flex; height:420px; }
-.mock-sidebar{ width:200px; background:var(--paper-2); border-right:1px solid var(--line); padding:16px 12px; display:flex; flex-direction:column; gap:6px; }
-.mock-ws-row{ display:flex; gap:6px; margin-bottom:10px; }
-.mock-ws{ font-family:var(--font-mono); font-size:11px; font-weight:600; padding:5px 11px; border-radius:3px; color:var(--ink-dim); background:var(--white); border:1px solid var(--line); }
-.mock-ws.active{ color:var(--white); background:var(--ink); border-color:var(--ink); }
-.mock-tab{ display:flex; align-items:center; gap:8px; font-size:12px; font-weight:500; color:var(--ink-dim); padding:7px 8px; border-radius:4px; }
-.mock-tab.active{ background:var(--accent-soft); color:var(--ink); }
-.mock-fav{ width:11px; height:11px; border-radius:3px; flex:none; background:var(--line-strong); }
-.mock-fav.g{ background:conic-gradient(from 90deg,#4285F4 0 25%,#34A853 25% 50%,#FBBC05 50% 75%,#EA4335 75% 100%); }
-.mock-fav.yt{ background:#E0455A; }
-.mock-fav.gh{ background:#3A3540; }
-.mock-fav.wk{ background:#8B8694; }
-.mock-sidebar-foot{ margin-top:auto; display:flex; align-items:center; gap:8px; padding-top:12px; border-top:1px solid var(--line); font-size:11.5px; font-weight:600; color:var(--ink); font-family:var(--font-mono); }
-.mock-mini-logo{ width:14px; height:14px; }
-.mock-gear{ margin-left:auto; color:var(--ink-faint); font-size:12px; }
-.mock-content{ flex:1; display:flex; flex-direction:column; }
-.mock-navbar{ height:44px; display:flex; align-items:center; gap:10px; padding:0 14px; border-bottom:1px solid var(--line); }
-.mock-navbtn{ color:var(--ink-faint); font-size:13px; }
-.mock-addr{ flex:1; height:26px; border-radius:4px; background:var(--paper-2); border:1px solid var(--line); display:flex; align-items:center; gap:7px; padding:0 10px; font-size:11.5px; font-weight:500; color:var(--ink-dim); font-family:var(--font-mono); }
-.mock-lock{ color:var(--accent); font-size:10px; }
-.mock-page{ flex:1; background:var(--white); }
+        <div class="feature-card reveal">
+          <div class="f-icon">&#128737;&#65039;</div>
+          <h3>Ad &amp; tracker blocking</h3>
+          <p>A local domain list blocks known ad/analytics/tracker requests before they load — no network call needed to check it.</p>
+        </div>
 
-/* ---------- Section shell ---------- */
-section{ padding:96px 0; }
-.section-head{ max-width:640px; }
-section h2{ font-size:clamp(26px,3.6vw,38px); }
-.section-sub{ max-width:560px; margin-top:14px; font-size:15.5px; }
+        <div class="feature-card reveal">
+          <div class="f-icon">&#128190;</div>
+          <h3>Encrypted local storage</h3>
+          <p>History, saved logins, and bookmarks are AES-256-GCM encrypted on disk, with per-workspace keys derived by PBKDF2.</p>
+        </div>
 
-.section-kicker{ font-family:var(--font-mono); font-size:12px; color:var(--accent); margin-bottom:12px; display:block; }
+        <div class="feature-card reveal">
+          <div class="f-icon">&#127912;</div>
+          <h3>Make it yours</h3>
+          <p>Accent colors, glass blur and opacity, corner radius, and your own photo or video as the background.</p>
+        </div>
 
-/* ---------- Why ---------- */
-.why-inner{ max-width:720px; }
-.why-body{ margin-top:38px; display:flex; flex-direction:column; gap:22px; }
-.why-body p{ font-size:16px; max-width:620px; }
-.pull-quote{
-  margin:6px 0 6px 0; padding:4px 0 4px 22px; border-left:2px solid var(--accent);
-  font-family:var(--font-display); font-size:22px; line-height:1.4; font-weight:500;
-  color:var(--ink); font-style:normal; max-width:560px;
-}
+      </div>
+    </div>
+  </section>
 
-/* ---------- Features: a flat spec sheet, not glossy cards ---------- */
-.feature-grid{
-  margin-top:48px; border-top:1px solid var(--line); border-left:1px solid var(--line);
-  display:grid; grid-template-columns:repeat(3, 1fr);
-}
-.feature-card{ border-right:1px solid var(--line); border-bottom:1px solid var(--line); padding:30px 26px; transition:background .18s ease; }
-.feature-card:hover{ background:var(--paper-2); }
-.f-icon{ font-size:22px; margin-bottom:14px; display:block; }
-.feature-card h3{ font-size:16px; margin-bottom:9px; font-weight:600; }
-.feature-card p{ font-size:14px; }
+  <!-- TEST BOX -->
+  <section class="tryit" id="try">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-kicker">sreon://try-it</span>
+        <h2>Try the interface</h2>
+        <p class="section-sub">
+          This is a live, interactive preview of Sreon's UI running right here in your
+          browser — click around. Try typing in the address bar: it searches a small
+          local index instantly, with the timing shown, because nothing here calls a
+          server. It's a front-end demo, not the full app: download Sreon below for
+          real browsing, encryption, and the ad blocker.
+        </p>
+      </div>
 
-/* ---------- Try it / demo box ---------- */
-.demo-frame{
-  margin-top:44px; border-radius:10px; overflow:hidden;
-  background:var(--white); border:1px solid var(--ink);
-  box-shadow:8px 8px 0 var(--accent-soft), 8px 8px 0 1px var(--ink);
-}
-.demo-titlebar{ height:42px; display:flex; align-items:center; gap:12px; padding:0 16px; background:var(--paper-2); border-bottom:1px solid var(--line); }
-.demo-toggle{ margin-left:auto; background:var(--white); color:var(--ink); border:1px solid var(--line-strong); font-size:12px; font-weight:600; padding:6px 12px; border-radius:var(--radius-sm); cursor:pointer; font-family:var(--font-body); transition:border-color .15s ease, background .15s ease; }
-.demo-toggle:hover{ background:var(--paper-2); border-color:var(--ink); }
-.demo-body{ position:relative; display:flex; height:440px; background:var(--white); transition:background .2s ease, color .2s ease; }
-.demo-sidebar{ width:210px; background:var(--paper-2); border-right:1px solid var(--line); padding:16px 12px; display:flex; flex-direction:column; }
-.demo-ws-row{ display:flex; gap:6px; margin-bottom:14px; }
-.demo-ws{ font: inherit; font-family:var(--font-mono); font-size:11px; font-weight:600; padding:6px 12px; border-radius:3px; color:var(--ink-dim); background:var(--white); border:1px solid var(--line); cursor:pointer; transition:all .15s ease; }
-.demo-ws.active{ color:var(--white); background:var(--ink); border-color:var(--ink); }
-.demo-tabs{ display:flex; flex-direction:column; gap:4px; }
-.demo-tab{ display:flex; align-items:center; gap:9px; font-size:12.5px; font-weight:500; color:var(--ink-dim); padding:8px 9px; border-radius:4px; background:none; border:none; cursor:pointer; text-align:left; font-family:var(--font-body); transition:background .15s ease, color .15s ease; }
-.demo-tab:hover{ background:var(--white); }
-.demo-tab.active{ background:var(--accent-soft); color:var(--ink); }
-.demo-newtab{ margin-top:8px; font-size:12px; font-weight:600; color:var(--ink-dim); background:none; border:1px dashed var(--line-strong); border-radius:4px; padding:8px; cursor:pointer; font-family:var(--font-body); transition:all .15s ease; }
-.demo-newtab:hover{ color:var(--ink); border-color:var(--accent); background:var(--accent-soft); }
-.demo-sidebar-foot{ margin-top:auto; display:flex; align-items:center; gap:8px; padding-top:12px; border-top:1px solid var(--line); font-size:11.5px; font-weight:600; color:var(--ink); font-family:var(--font-mono); }
-.demo-content{ flex:1; display:flex; flex-direction:column; min-width:0; }
-.demo-navbar{ height:48px; display:flex; align-items:center; gap:10px; padding:0 14px; border-bottom:1px solid var(--line); }
-.demo-addr{ flex:1; height:28px; border-radius:4px; background:var(--paper-2); border:1px solid var(--line); display:flex; align-items:center; gap:7px; padding:0 10px; font-size:12px; font-weight:500; font-family:var(--font-mono); transition:border-color .15s ease, background .15s ease; }
-.demo-addr:focus-within{ border-color:var(--accent); background:var(--white); }
-.demo-addr input{ flex:1; min-width:0; border:none; outline:none; background:none; font:inherit; color:var(--ink); padding:0; }
-.demo-page{ flex:1; display:flex; align-items:center; justify-content:center; text-align:center; padding:30px; background:var(--white); animation:pageIn .2s ease; overflow-y:auto; }
-.demo-page.is-list{ display:block; text-align:left; padding:18px 22px; }
-@keyframes pageIn{ from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:none; } }
-.demo-page-title{ font-family:var(--font-display); font-size:21px; font-weight:600; margin-bottom:8px; }
-.demo-page-sub{ font-size:13px; color:var(--ink-dim); max-width:340px; }
+      <div class="demo-frame reveal">
+        <div class="demo-titlebar">
+          <span class="mock-dot r"></span><span class="mock-dot y"></span><span class="mock-dot g"></span>
+          <span class="mock-app-name">Sreon — Preview</span>
+          <button id="demo-theme-toggle" class="demo-toggle" type="button">&#9728; Toggle theme</button>
+        </div>
 
-/* local, instant search results in the address-bar demo */
-.search-meta{ font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); margin-bottom:14px; }
-.search-result{ padding:10px 10px; margin:0 -10px 2px; border-radius:6px; cursor:pointer; transition:background .12s ease; }
-.search-result:hover, .search-result:focus-visible{ background:var(--paper-2); }
-.sr-title{ font-family:var(--font-display); font-size:14.5px; font-weight:600; color:var(--ink); margin-bottom:2px; }
-.sr-url{ font-family:var(--font-mono); font-size:11px; color:var(--accent); margin-bottom:3px; }
-.sr-snippet{ font-size:12.5px; color:var(--ink-dim); }
-.search-result mark{ background:var(--accent-soft); color:var(--ink); border-radius:2px; padding:0 1px; }
-.search-empty{ font-size:13px; color:var(--ink-dim); }
+        <div class="demo-body" id="demo-body">
+          <div class="demo-sidebar">
+            <div class="demo-ws-row" id="demo-ws-row">
+              <button class="demo-ws active" data-ws="Personal" type="button">Personal</button>
+              <button class="demo-ws" data-ws="Work" type="button">Work</button>
+            </div>
 
-.demo-cmdk{
-  position:absolute; left:50%; top:64px; transform:translateX(-50%) translateY(-10px); width:70%; max-width:420px;
-  background:var(--white); border:1px solid var(--ink);
-  border-radius:8px; padding:14px 16px; box-shadow:5px 5px 0 var(--ink);
-  opacity:0; pointer-events:none; transition:opacity .16s ease, transform .16s ease;
-}
-.demo-cmdk.open{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
-.demo-cmdk-row{ display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:8px; }
-.demo-cmdk-row input{ flex:1; background:none; border:none; outline:none; color:var(--ink); font-size:13px; font-family:var(--font-mono); }
-.demo-hint{ font-size:10px; font-family:var(--font-mono); color:var(--ink-faint); border:1px solid var(--line); border-radius:4px; padding:2px 6px; }
-.demo-cmdk-opt{ font-size:12.5px; font-weight:500; color:var(--ink-dim); padding:8px; border-radius:4px; }
-.demo-cmdk-opt.hi{ background:var(--accent-soft); color:var(--ink); }
+            <div class="demo-tabs" id="demo-tabs">
+              <button class="demo-tab active" data-tab="google" type="button"><span class="mock-fav g"></span>Google</button>
+              <button class="demo-tab" data-tab="youtube" type="button"><span class="mock-fav yt"></span>YouTube</button>
+              <button class="demo-tab" data-tab="github" type="button"><span class="mock-fav gh"></span>GitHub</button>
+              <button class="demo-tab" data-tab="wikipedia" type="button"><span class="mock-fav wk"></span>Wikipedia</button>
+            </div>
 
-/* dark theme toggle -- for the demo box only */
-.demo-body.light{ background:#15131C; }
-.demo-body.light .demo-sidebar{ background:#1D1A26; border-color:#332F3D; }
-.demo-body.light .demo-navbar, .demo-body.light .demo-titlebar{ border-color:#332F3D; }
-.demo-body.light .demo-addr{ background:#252030; border-color:#332F3D; color:#EDEAE1; }
-.demo-body.light .demo-tab{ color:#948EA0; }
-.demo-body.light .demo-tab:hover{ background:#252030; }
-.demo-body.light .demo-tab.active{ color:#fff; background:#332B4D; }
-.demo-body.light .demo-ws{ background:#1D1A26; border-color:#332F3D; color:#948EA0; }
-.demo-body.light .demo-ws.active{ background:#fff; color:#15131C; border-color:#fff; }
-.demo-body.light .demo-page{ background:#15131C; color:#EDEAE1; }
-.demo-body.light .demo-page-title{ color:#fff; }
-.demo-body.light .demo-page-sub{ color:#948EA0; }
-.demo-body.light .demo-sidebar-foot{ color:#fff; border-color:#332F3D; }
-.demo-body.light .demo-newtab{ border-color:#3B3648; color:#948EA0; }
-.demo-body.light .demo-addr:focus-within{ background:#252030; }
-.demo-body.light .search-meta{ color:#6E6880; }
-.demo-body.light .sr-title{ color:#fff; }
-.demo-body.light .sr-snippet{ color:#948EA0; }
-.demo-body.light .search-result:hover, .demo-body.light .search-result:focus-visible{ background:#252030; }
-.demo-body.light .search-result mark{ background:#332B4D; color:#fff; }
-.demo-body.light .search-empty{ color:#948EA0; }
+            <button class="demo-newtab" id="demo-newtab" type="button">+ New Tab</button>
 
-/* ---------- Download ---------- */
-.download-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:44px; }
-.download-card{ display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:26px 22px; border-radius:var(--radius); background:var(--white); border:1px solid var(--line-strong); transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
-.download-card:hover{ border-color:var(--ink); box-shadow:4px 4px 0 var(--accent-soft), 4px 4px 0 1px var(--ink); transform:translate(-2px,-2px); }
-.dl-icon{ font-size:26px; }
-.dl-name{ font-weight:600; font-size:16px; font-family:var(--font-display); }
-.dl-sub{ font-size:12.5px; color:var(--ink-dim); font-family:var(--font-mono); }
-.download-note{ font-size:12.5px; color:var(--ink-faint); margin-top:22px; font-family:var(--font-mono); }
+            <div class="demo-sidebar-foot">
+              <img src="assets/sreon-logo.png" class="mock-mini-logo" alt="">
+              <span>Sreon</span>
+              <button class="mock-gear" id="demo-cmdk-btn" type="button" title="Command menu (⌘K)">&#8984;K</button>
+            </div>
+          </div>
 
-.stats-row{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:28px; max-width:460px; }
-.stat-card{ display:flex; flex-direction:column; align-items:flex-start; gap:4px; padding:20px 22px; border-radius:var(--radius); background:var(--paper-2); border:1px solid var(--line-strong); }
-.stat-icon{ font-size:20px; }
-.stat-num{ font-size:26px; font-weight:700; font-family:var(--font-display); }
-.stat-label{ font-size:12.5px; color:var(--ink-dim); font-family:var(--font-mono); }
-.stats-note{ font-size:12px; color:var(--ink-faint); margin-top:10px; font-family:var(--font-mono); }
+          <div class="demo-content">
+            <div class="demo-navbar">
+              <span class="mock-navbtn">&#8592;</span>
+              <span class="mock-navbtn">&#8594;</span>
+              <span class="mock-navbtn">&#8635;</span>
+              <div class="demo-addr">
+                <span class="mock-lock">&#128274;</span>
+                <input id="demo-addr-text" type="text" autocomplete="off" spellcheck="false" aria-label="Address bar — type a site or search" value="google.com">
+              </div>
+            </div>
+            <div class="demo-page" id="demo-page">
+              <!-- filled by JS -->
+            </div>
+          </div>
 
-/* ---------- Contact ---------- */
-.contact{ text-align:center; padding-top:70px; padding-bottom:90px; }
-.contact .section-head{ align-items:center; }
-.contact .btn{ margin-top:22px; display:inline-flex; }
+          <div class="demo-cmdk" id="demo-cmdk">
+            <div class="demo-cmdk-row"><span>&#128269;</span><input type="text" placeholder="Search tabs, sites, actions…" id="demo-cmdk-input"><span class="demo-hint">Esc to close</span></div>
+            <div class="demo-cmdk-opt hi">&#128257; Switch to Work workspace</div>
+            <div class="demo-cmdk-opt">&#127760; Open github.com</div>
+            <div class="demo-cmdk-opt">&#9728; Toggle theme</div>
+            <div class="demo-cmdk-opt">&#128274; Privacy &amp; security settings</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-/* ---------- Privacy: an actual ordered mechanism, so numbering earns its place ---------- */
-.privacy{ background:var(--paper-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-.privacy-steps{ list-style:none; margin:44px 0 0; padding:0; max-width:760px; border-top:1px solid var(--line); }
-.privacy-step{ display:grid; grid-template-columns:64px 1fr; gap:20px; padding:26px 0; border-bottom:1px solid var(--line); }
-.ps-num{ font-family:var(--font-mono); font-size:13px; color:var(--accent); padding-top:2px; }
-.ps-body h3{ font-size:16.5px; margin-bottom:8px; }
-.ps-body p{ font-size:14.5px; max-width:560px; }
-.privacy .btn{ margin-top:26px; display:inline-flex; }
+  <!-- DOWNLOAD -->
+  <section class="download" id="download">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-kicker">sreon://download</span>
+        <h2>Download Sreon</h2>
+        <p class="section-sub">Free and open source. Built from source with Tauri — see the repo for build instructions.</p>
+      </div>
 
-/* ---------- Footer ---------- */
-.site-footer{ padding:36px 0; }
-.footer-inner{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
-.footer-inner .brand{ font-size:15px; }
-.footer-links{ display:flex; gap:22px; font-size:13px; color:var(--ink-dim); font-family:var(--font-mono); }
-.footer-links a:hover{ color:var(--ink); }
+      <div class="download-grid">
+        <a class="download-card reveal" href="sreon.zip" download data-platform="mac">
+          <div class="dl-icon">&#63743;</div>
+          <div class="dl-name">macOS</div>
+          <div class="dl-sub">Apple Silicon &amp; Intel</div>
+        </a>
+        <a class="download-card reveal" href="sreon.zip" download data-platform="windows">
+          <div class="dl-icon">&#8862;</div>
+          <div class="dl-name">Windows</div>
+          <div class="dl-sub">64-bit installer</div>
+        </a>
+        <a class="download-card reveal" href="sreon.zip" download data-platform="linux">
+          <div class="dl-icon">&#128039;</div>
+          <div class="dl-name">Linux</div>
+          <div class="dl-sub">AppImage / .deb</div>
+        </a>
+      </div>
+      <p class="download-note">Replace these links with your GitHub Releases URLs once you have platform-specific builds — see the README in the site project for exact steps.</p>
 
-/* ---------- Responsive ---------- */
-@media (max-width:860px){
-  .nav{ display:none; }
-  .feature-grid{ grid-template-columns:repeat(2,1fr); }
-  .download-grid{ grid-template-columns:1fr; }
-  .demo-body{ flex-direction:column; height:auto; }
-  .demo-sidebar{ width:100%; border-right:none; border-bottom:1px solid var(--line); flex-direction:row; flex-wrap:wrap; align-items:center; }
-  .demo-tabs{ flex-direction:row; flex-wrap:wrap; }
-  .demo-sidebar-foot{ margin-top:0; margin-left:auto; border-top:none; padding-top:0; }
-  .mock-body{ height:auto; flex-direction:column; }
-  .mock-sidebar{ width:100%; flex-direction:row; flex-wrap:wrap; border-right:none; border-bottom:1px solid var(--line); }
-  .addr-strip{ display:none; }
-}
-@media (max-width:600px){
-  .feature-grid{ grid-template-columns:1fr; }
-}
+      <div class="stats-row reveal">
+        <div class="stat-card">
+          <div class="stat-icon">&#128065;&#65039;</div>
+          <div class="stat-num" id="stat-views">0</div>
+          <div class="stat-label">Page views</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">&#8681;</div>
+          <div class="stat-num" id="stat-downloads">0</div>
+          <div class="stat-label">Downloads</div>
+        </div>
+      </div>
+      <p class="stats-note">Counted site-wide via CounterAPI.</p>
+    </div>
+  </section>
 
-/* Tiny, easy-to-miss link to the hidden area. Deliberately understated. */
-.footer-secret-row {
-  text-align: center;
-  padding-bottom: 6px;
-}
-.footer-secret-link {
-  font-size: 9px;
-  color: rgba(255,255,255,0.12);
-  text-decoration: none;
-  letter-spacing: 1px;
-}
-.footer-secret-link:hover {
-  color: rgba(255,255,255,0.35);
-}
+  <!-- PRIVACY -->
+  <section class="privacy" id="privacy">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-kicker">sreon://privacy</span>
+        <h2>How privacy actually works here</h2>
+        <p class="section-sub">
+          Not a policy — a mechanism. This is the actual order of operations
+          every time you use Sreon.
+        </p>
+      </div>
+
+      <ol class="privacy-steps">
+        <li class="privacy-step reveal">
+          <span class="ps-num">01</span>
+          <div class="ps-body">
+            <h3>You browse normally</h3>
+            <p>Pages render like they would in any browser. There's no separate collection layer sitting in front of your traffic, and no analytics SDK compiled into the app.</p>
+          </div>
+        </li>
+        <li class="privacy-step reveal">
+          <span class="ps-num">02</span>
+          <div class="ps-body">
+            <h3>What you save gets encrypted immediately</h3>
+            <p>History, saved logins, and bookmarks are encrypted with AES-256-GCM on your device before they ever touch disk — not batched, not deferred.</p>
+          </div>
+        </li>
+        <li class="privacy-step reveal">
+          <span class="ps-num">03</span>
+          <div class="ps-body">
+            <h3>Each workspace gets its own key</h3>
+            <p>Keys are derived per workspace with PBKDF2, so Personal and Work can't read each other's data even while both are unlocked.</p>
+          </div>
+        </li>
+        <li class="privacy-step reveal">
+          <span class="ps-num">04</span>
+          <div class="ps-body">
+            <h3>Nothing is sent anywhere</h3>
+            <p>No account, no server-side sync, no crash reporter phoning home. There's nothing to breach on our end because there's no "our end" holding your data — and the source is open, so that's checkable, not just claimed.</p>
+          </div>
+        </li>
+      </ol>
+
+      <a href="https://github.com/FellowPythonCoder/SreonBrowserCode/tree/main" class="btn btn-ghost reveal">Read the source on GitHub</a>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact" id="contact">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="section-kicker">sreon://contact</span>
+        <h2>Run into a problem?</h2>
+        <p class="section-sub">Bugs, questions, or feature ideas — email me directly and I'll get back to you.</p>
+      </div>
+      <a href="mailto:azadpelia13@gmail.com" class="btn btn-primary reveal">&#9993;&#65039; azadpelia13@gmail.com</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div class="brand">
+      <img src="assets/sreon-logo.png" alt="Sreon" class="brand-mark">
+      <span>Sreon</span>
+    </div>
+    <div class="footer-links">
+      <a href="#">GitHub</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#features">Features</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
