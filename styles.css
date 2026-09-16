@@ -276,25 +276,40 @@ section h2{ font-size:clamp(26px,3.6vw,38px); }
   .mock-sidebar{ width:100%; flex-direction:row; flex-wrap:wrap; border-right:none; border-bottom:1px solid var(--line); }
   .addr-strip{ display:none; }
 }
+@media (max-width:900px){
+  /* keep the secret-area link reachable even though the address strip hides on mobile */
+  .addr-strip{ display:block !important; }
+  .addr-strip #live-addr{ display:none; }
+  .addr-strip .dot{ display:none; }
+  .addr-strip .wrap{ justify-content:center; }
+  .addr-secret-link{ margin-left:0; }
+}
 @media (max-width:600px){
   .feature-grid{ grid-template-columns:1fr; }
 }
 
-/* Tiny, easy-to-miss link to the hidden area. Deliberately understated. */
-.footer-secret-row {
-  text-align: center;
-  padding-bottom: 10px;
-}
-.footer-secret-link {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
+/* Visible red circle link to the secret area, next to the live address bar */
+.addr-secret-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: rgba(220,38,38,0.55);
-  text-decoration: none;
-  transition: background 0.2s, box-shadow 0.2s;
+  background: #dc2626;
+  box-shadow: 0 0 8px rgba(220,38,38,0.8), 0 0 2px rgba(220,38,38,1);
+  margin-left: 14px;
+  text-indent: -9999px;
+  overflow: hidden;
+  flex: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+  animation: secretPulse 2s ease-in-out infinite;
 }
-.footer-secret-link:hover {
-  background: rgba(220,38,38,0.9);
-  box-shadow: 0 0 6px rgba(220,38,38,0.6);
+.addr-secret-link:hover {
+  transform: scale(1.25);
+  box-shadow: 0 0 14px rgba(220,38,38,1), 0 0 4px rgba(220,38,38,1);
+}
+@keyframes secretPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(220,38,38,0.8), 0 0 2px rgba(220,38,38,1); }
+  50% { box-shadow: 0 0 14px rgba(220,38,38,1), 0 0 4px rgba(220,38,38,1); }
 }
