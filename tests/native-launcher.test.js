@@ -70,7 +70,7 @@ async function fixture(callback) {
   }
 }
 
-test("native launcher opens an existing app without Docker, npm, or a web server", async () => {
+test("native launcher opens an existing app without Docker, npm, or a web server", { skip: process.platform === "win32" }, async () => {
   await fixture(async (run, project) => {
     const app = join(
       project,
@@ -83,7 +83,7 @@ test("native launcher opens an existing app without Docker, npm, or a web server
   });
 });
 
-test("native launcher builds a real app bundle and opens its filesystem path", async () => {
+test("native launcher builds a real app bundle and opens its filesystem path", { skip: process.platform === "win32" }, async () => {
   await fixture(async (run, project) => {
     const result = await run(["build"]);
     assert.equal(result.code, 0, result.stderr);
@@ -98,7 +98,7 @@ test("native launcher builds a real app bundle and opens its filesystem path", a
   });
 });
 
-test("native build errors never fall back to localhost", async () => {
+test("native build errors never fall back to localhost", { skip: process.platform === "win32" }, async () => {
   await fixture(async (run) => {
     const result = await run(["build"], { TEST_FAIL: "1" });
     assert.equal(result.code, 1);
@@ -106,7 +106,7 @@ test("native build errors never fall back to localhost", async () => {
   });
 });
 
-test("non-Mac launch is rejected with instructions instead of starting a website", async () => {
+test("non-Mac launch is rejected with instructions instead of starting a website", { skip: process.platform === "win32" }, async () => {
   await fixture(async (run) => {
     const result = await run([], { TEST_OS: "Linux" });
     assert.equal(result.code, 1);

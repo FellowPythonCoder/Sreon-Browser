@@ -1,6 +1,6 @@
 {
   "name": "sreon-search",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "license": "AGPL-3.0-only",
@@ -14,7 +14,9 @@
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features",
-    "preview": "node scripts/preview.mjs"
+    "preview": "node scripts/preview.mjs",
+    "source:zip": "python scripts/package-source.py",
+    "api:build": "cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --bin sreon-api"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

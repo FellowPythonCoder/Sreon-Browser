@@ -1,81 +1,159 @@
 # How Sreon works
 
-Sreon is a minimal native Mac search app: the Sreon logo, a search box, results, and a dark-mode button. There are no settings, service addresses, accounts, or source-code links in the interface.
+Sreon is a native desktop search app and lightweight browser. Its start page keeps the original Sreon logo, purple-and-cream styling, and dark mode. Search, media tabs, and a source-linked overview are built in. There are no service-address settings, accounts, or source-code links in the interface.
 
-## Run it on your Mac
+## Install
 
-1. Open [Build Sreon Mac app](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/desktop.yml) and choose the latest successful run for `arena/01a0bffb-sreon-browser`.
-2. Download `Sreon-mac-universal` under **Artifacts**. GitHub may require sign-in. Unzip it, open the DMG, and drag **Sreon** into **Applications**. Alternatively, unzip `Sreon-mac-universal.zip` to obtain the app directly.
-3. Open Sreon and search. No server address or setup is needed. Internet access is required for live results.
+Open [Build Sreon desktop apps](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/desktop.yml), select a successful build, and download the artifact for your operating system. GitHub may require sign-in. Artifacts expire after 30 days; source builds remain available.
 
-The universal app supports Apple Silicon and Intel Macs running macOS 11 or later. It uses ad-hoc signing, not Apple notarization. If macOS blocks this downloaded app, review it and use the per-app approval in **System Settings → Privacy & Security** if you trust this build. Do not disable Gatekeeper globally.
+| System | Download | Run |
+| --- | --- | --- |
+| Windows 10/11, x64 | Sreon-Windows | Unzip, then open the setup EXE. The installer installs Sreon and downloads Microsoft WebView2 if needed. |
+| Linux x86-64, Ubuntu 22.04 or compatible | Sreon-Linux | Unzip, make the AppImage executable, then open it. A DEB package is also provided. |
+| macOS 11+, Apple Silicon or Intel | Sreon-Mac | Unzip, open the DMG, and drag Sreon into Applications. The app ZIP is an alternative. |
 
-The installed app does not require Node.js, Docker, Rust, a terminal, or a localhost server. Release builds are compiled on macOS and signature-checked in CI; automated UI tests simulate native IPC and are not a substitute for testing the app on a physical Mac.
+The installed app needs no Rust, Node.js, Docker, terminal server, or service URL. Internet is required for live searches and websites. Native runtime libraries are still required: WebKit on Mac, WebView2 on Windows, and compatible system libraries on Linux. AppImage support varies by distribution; Linux packages are built on Ubuntu 22.04, not claimed to work on every distribution.
 
-## Use it
-
-Type a query and press Return. Even a typed domain is treated as a search, not an address-bar navigation. Click a result to open it in Sreon's separate WebKit browsing window. The search window stays in place. Further results reuse the browsing window.
-
-The moon button toggles dark mode. Click the logo to return to the start page. **Command-L** focuses search; the native Navigate menu supports back, forward, and reload in a browsing window. Previous/Next appears only when more result pages are available.
-
-## The built-in search engine
-
-Sreon's compiled Rust core sends search requests directly over HTTPS, parses results, excludes advertisements, removes duplicate links and provider redirect wrappers, and returns plain titles, destination URLs, and snippets to the interface. Requests reuse a connection pool, have bounded response sizes and timeouts, and newer searches cancel earlier native requests. Result markup is never inserted as HTML or executed.
-
-**Built-in does not mean an independently crawled web index.** The current web source is DuckDuckGo's public HTML search endpoint (`html.duckduckgo.com/html/`). Sreon uses ordinary search and next-page form requests. It does not solve or bypass CAPTCHA, impersonate a browser to evade checks, or guarantee third-party availability.
-
-If the initial web search fails or is challenged, Sreon tries Wikipedia's public search API (`en.wikipedia.org/w/api.php`). These are limited reference articles, not equivalent full-web results. The results screen explicitly says when this fallback is in use. A failed later web page does not silently switch sources. If both sources fail, Sreon shows an error and a retry button, never invented results. HTML-source changes or rate limits can temporarily break web search.
-
-The interface is bundled with the app and talks to Rust through Tauri IPC, not HTTP. macOS provides WebKit. There is no bundled Chromium/Electron, listening web server, hosted Sreon proxy, API key, or domain to configure. Only the local search window can invoke the search/open-page commands; browsing windows have no native IPC permissions. URLs are restricted to public HTTP(S) destinations with private literal addresses blocked; this is not a complete DNS-rebinding defense.
-
-The developer browser preview is only an interface preview: it does not perform searches or pretend to be the native app. GitHub Pages cannot execute the Rust search core.
-
-## Privacy and storage
-
-Search text and your IP address go to the web source; if fallback is needed, the same query goes to the reference source. A result website receives normal browsing traffic when opened. Sreon is not a VPN or anonymity service. It adds no analytics or telemetry and fetches no external fonts, favicons, or images on the search page.
-
-Only the theme is saved locally. Queries and result pages are kept in memory for the current search, not written to a Sreon search-history database or browser URL. Returning home clears that state. Old Sreon endpoint/preferences/history entries are removed on startup. Website windows use WebKit's incognito mode; that does not hide traffic from websites, your network, or providers. System-level caches, memory, and crash reporting are outside this application's storage guarantees.
-
-## Build from source in Terminal
-
-Install Apple's command-line tools (`xcode-select --install`), Node.js 22 or newer, and stable Rust from [rustup.rs](https://rustup.rs). Then:
+Linux example, replacing the filename with the downloaded name:
 
 ```sh
-git clone https://github.com/FellowPythonCoder/Sreon-Browser.git
-cd Sreon-Browser
-git checkout arena/01a0bffb-sreon-browser
-bash sreon.sh build
+chmod +x Sreon_*.AppImage
+./Sreon_*.AppImage
 ```
 
-The launcher builds a native `Sreon.app` for your Mac and opens it. Later, `bash sreon.sh` reopens an existing build without rebuilding. The app is under `src-tauri/target/release/bundle/macos/`. Move it to Applications if desired.
+If FUSE is unavailable, try `./Sreon_*.AppImage --appimage-extract-and-run` or install the DEB using your distribution's package installer.
 
-For a universal app and DMG:
+Windows builds are not publisher-signed; SmartScreen may warn. Mac builds are ad-hoc signed, not Apple-notarized. Approve a downloaded application only if you trust its source; do not disable operating-system protections globally. Automated builds do not replace hands-on testing on your machine. Playback, DRM, extensions, and site compatibility depend on the system webview; this is not a complete replacement for every Safari/Chrome feature.
+
+## Search and visit sites
+
+- Enter `youtube.com` or `https://youtube.com` to visit the website directly.
+- Enter `YouTube`, `YouTube videos`, or another phrase to get normal web search results.
+- Use **Shift-Return** to search a domain as text instead of visiting it.
+- Result links open inside the same app window, below the address bar, not in a new window or iframe.
+- **Back to results** returns to the retained search. **Forward to website** restores the page. Reload refreshes the visible site. Native Navigate menu commands support website history.
+- **Command-L / Control-L** focuses the address field. Click the Sreon start-page logo to clear the current search. The moon/sun button toggles dark mode.
+
+## Search categories and overview
+
+**All** searches normal websites. The primary source is Bing's public RSS search endpoint; DuckDuckGo's public HTML search is a secondary source. The app never substitutes Wikipedia-only results when web search fails. If both sources are unavailable, an error and retry button appear. This is an online-source adapter, not a new independently crawled Sreon index. It does not bypass CAPTCHA or guarantee source availability.
+
+**Images** searches Wikimedia Commons for bitmap images. **Photos** narrows that library to JPEG files, a practical format filter rather than a guarantee that every result is a photograph. These are explicitly labeled Commons library results, not a full-web image index. Cards show available author/license credits and open the original file's description page for complete attribution and reuse terms.
+
+**Videos** searches web video pages, currently focusing on YouTube, Vimeo, and Dailymotion. YouTube results can show thumbnails. Opening a video loads its original website in the same app window. Availability depends on the upstream web index; Sreon does not download or rehost video files.
+
+**Search overview** displays excerpts from up to three top web results with clickable sources. It is not an AI-generated answer, an independently verified fact summary, or an encyclopedia fallback. It makes no extra model/API request and adds no AI account or charge.
+
+Pagination appears only when the source supplies a supported continuation cursor. The RSS source currently returns one batch; Sreon does not invent further pages. There are no pretend news/date/language filters that the underlying source cannot reliably honor.
+
+## Performance, privacy, and security
+
+The compiled Rust core reuses HTTPS connections, applies bounded timeouts and response sizes, normalizes results, excludes identifiable ads, deduplicates links, and unwraps provider redirect wrappers. Search results and source overviews are returned together; image thumbnails load lazily. New desktop searches cancel earlier native requests. Up to 32 query/category/page responses are cached in process memory for two minutes, making repeated searches avoid a network round trip. No absolute speed claim or benchmark is implied.
+
+Only the theme is saved locally by Sreon. Query/cache data is temporary memory, not a Sreon disk-history database. Going home clears the visible result state; the short-lived engine cache remains until expiry/process exit. Queries and your IP go to the active search sources. Media tabs also contact Commons and thumbnail hosts (`upload.wikimedia.org`, `i.ytimg.com`). Website navigation creates normal traffic to the visited website. Sreon adds no telemetry, is not a VPN, and does not hide traffic from providers or your network.
+
+A local webview renders the controls; a separate, unprivileged child webview renders websites inside the same native window. Only the local **main webview**, not every view sharing its window, can invoke native commands. Remote views have no IPC permissions. Search result markup is rendered as text, not executable HTML. Website views use incognito mode and public HTTP(S) navigation restrictions. Private literal addresses are blocked, but this is not a complete DNS-rebinding defense. System caches/crash reporting are outside the application's storage guarantees. Pop-up windows are blocked.
+
+## Source ZIP and folder layout
+
+`Sreon-source.zip` in the project folder contains the project source under one `Sreon/` folder. It excludes Git internals, credentials, dependency caches, build output, and nested ZIPs. Existing protected `o/` and `games/` code is included unchanged; the old `sreon.zip` remains untouched outside the new archive. Downloaded dependencies are not vendored. CI source ZIPs include the Cargo.lock generated for that build; locally regenerated archives include it when present.
+
+- `index.html`, `styles.css`, `app.js`, `native.js`, `theme.js`: interface.
+- `src-tauri/src/search.rs`: reusable search engine, media, parsing, cache.
+- `src-tauri/src/desktop.rs`: native window, child website view, IPC.
+- `src-tauri/src/api.rs`: standalone JSON-line integration API.
+- `integrations/sreon.py`, `integrations/sreon.mjs`: Python and Node clients.
+- `assets/`: logo and local fonts; `src-tauri/icons/`: app icons.
+- `scripts/`: asset preparation, licensing, source packaging.
+- `tests/`: interface, packaging, launcher tests.
+- `.github/workflows/`: platform builds and live source checks.
+
+New application/integration code has no explanatory code comments. Instructions and legal notices live in this file. Protected legacy files have not been rewritten to remove their existing contents.
+
+To regenerate the ZIP after source changes, use `python scripts/package-source.py` (or `python3` on systems using that name). In a Git checkout, add new source files to the index first so the packager includes them. The packager also works from an extracted archive.
+
+## Build the app
+
+Install Node.js 22+, stable Rust, and native build prerequisites: Xcode command-line tools on Mac; Visual Studio C++ Build Tools and WebView2 on Windows; GTK/WebKitGTK 4.1 development libraries on Linux. Then, inside the extracted Sreon folder:
+
+```sh
+npm ci
+npm run desktop:build
+```
+
+Platform-specific package builds:
+
+```sh
+npm run desktop:build -- --bundles nsis
+npm run desktop:build -- --bundles appimage,deb
+```
+
+Run only the appropriate command for your operating system. Output is under `src-tauri/target/release/bundle/`. For Mac, `bash sreon.sh build` builds and opens the app. A universal Mac build requires:
 
 ```sh
 rustup target add aarch64-apple-darwin x86_64-apple-darwin
-npm ci
 npm run desktop:build -- --target universal-apple-darwin --bundles app,dmg
 ```
 
-Tests:
+The browser preview (`npm run preview`) is for interface development only. Searches and website browsing run in the installed app, not in that preview or GitHub Pages.
+
+## Integrate into another application
+
+The desktop packages also contain `sreon-api` (Mac/Linux) or `sreon-api.exe` (Windows). This is a command-line helper, not the graphical application. Another program starts it as a subprocess, writes one JSON request per line to standard input, and reads one JSON response per line from standard output. There is **no listening HTTP server or domain to configure**. Keep it running to reuse connections/cache. Requests are processed sequentially; callers should avoid large queues.
+
+Build just the helper without desktop dependencies:
 
 ```sh
-npm ci
+cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --bin sreon-api
+```
+
+Protocol version 1, method `search`, categories `web`, `images`, `photos`, `videos`. A query is 1–500 characters. The entire request must fit in 16 KiB. `cursor` is null initially; pass `nextCursor` back unchanged for another page. Request IDs are echoed for valid requests.
+
+```json
+{"id":1,"method":"search","params":{"q":"YouTube","category":"web","cursor":null}}
+```
+
+Success has `version`, `id`, and `result`; result contains `results`, `overview`, `nextCursor`, `notice`, `elapsed`, and `cached`. Each result has `title`, `url`, `content`, `thumbnail`, and `credit`. Error responses have `error: {status, code, message}` instead. Malformed/oversized requests return `id: null`. Standard output is reserved for protocol responses; diagnostics go to standard error. This is not a publicly deployed REST API. If exposing it through your own server, add authentication, rate limits, request limits, and your own origin policy.
+
+Python, with `integrations/` on the Python import path:
+
+```python
+from sreon import Sreon
+
+with Sreon("/path/to/sreon-api") as engine:
+    result = engine.search("YouTube")
+    for item in result["results"]:
+        print(item["title"], item["url"])
+```
+
+Node.js:
+
+```js
+import { Sreon } from "./integrations/sreon.mjs";
+
+const engine = new Sreon("/path/to/sreon-api");
+try {
+  const result = await engine.search("forests", "images");
+  console.log(result.results);
+} finally {
+  engine.close();
+}
+```
+
+On Windows, use the path to `sreon-api.exe`. Do not launch the graphical Sreon EXE as the API helper. Python/Node are needed only by these example clients, not by the installed desktop app or compiled helper. Rust applications can instead depend on package `sreon` at `src-tauri/` with `default-features = false` and call `sreon_core::search::Engine::new()?.search(SearchRequest { ... }).await` directly.
+
+## Tests and licenses
+
+```sh
 npm test
 npm run test:rust
 npx playwright install chromium
 npm run test:ui
 ```
 
-A non-mocked live source check is available with `cargo run --manifest-path src-tauri/Cargo.toml --no-default-features --example live-search -- "rust programming language"`. This makes actual online requests; source availability varies. `npm run preview` starts a developer-only static interface preview, not the application or its search engine.
+Live web search check: `cargo run --manifest-path src-tauri/Cargo.toml --no-default-features --example live-search -- YouTube`. UI tests simulate IPC; they do not exercise every native website or prove physical-device compatibility.
 
-`src-tauri/src/search.rs` implements search and source parsing. `src-tauri/src/desktop.rs` owns native windows and IPC permissions. `index.html`, `app.js`, `native.js`, `theme.js`, and `styles.css` are the bundled interface. `scripts/prepare-desktop.mjs` includes only app assets. CI builds both Mac architectures and distributes the app, DMG, dependency lockfile, and this document. The old Docker/SearXNG setup has been removed. The existing secret page, games, verification file, domain file, and legacy ZIP remain untouched and are not bundled with the app.
-
-## Source and licenses
-
-Sreon is open source under **AGPL-3.0-only**. Corresponding source and build scripts: [FellowPythonCoder/Sreon-Browser](https://github.com/FellowPythonCoder/Sreon-Browser/tree/arena/01a0bffb-sreon-browser). CI packages append the exact source commit below. Keep this document with redistributed builds: it consolidates the previously separate project and font license files. Dependencies retain their respective licenses; CI also appends available Rust dependency license notices and includes `Cargo.lock`.
-
-The public search form protocol was checked against the [SearXNG DuckDuckGo adapter](https://github.com/searxng/searxng/blob/master/searx/engines/duckduckgo.py) (AGPL-3.0-or-later). Sreon does not embed or require a SearXNG server.
+Sreon is **AGPL-3.0-only**. Integration does not relicense the code; review AGPL obligations before embedding, distributing, or offering modified software as a network service. Preserve this document with redistributions. Corresponding source/build scripts: [FellowPythonCoder/Sreon-Browser](https://github.com/FellowPythonCoder/Sreon-Browser/tree/arena/01a0bffb-sreon-browser). CI appends dependency notices and an exact commit link to packaged copies. Dependencies and media retain their own licenses. The public search form protocol was checked against the [SearXNG adapter](https://github.com/searxng/searxng/blob/master/searx/engines/duckduckgo.py); no SearXNG server is embedded or required.
 
 ### Sreon — GNU Affero General Public License
 

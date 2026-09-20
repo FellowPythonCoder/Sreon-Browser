@@ -44,11 +44,12 @@ test("only the local main window receives explicitly scoped native commands", as
   assert.equal(config.build.devUrl, undefined);
   assert.equal(config.build.frontendDist, "../dist/desktop");
   assert.deepEqual(config.app.security.capabilities, ["main"]);
-  assert.deepEqual(capability.windows, ["main"]);
+  assert.equal(capability.windows, undefined);
+  assert.deepEqual(capability.webviews, ["main"]);
   assert.equal(capability.remote, undefined);
   assert.deepEqual(
     capability.permissions.filter((name) => name.startsWith("allow-")),
-    ["allow-search", "allow-open-page"],
+    ["allow-search", "allow-open-page", "allow-navigate"],
   );
   assert.ok(
     !capability.permissions.some((permission) =>
