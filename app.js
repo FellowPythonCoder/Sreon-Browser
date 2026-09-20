@@ -1,3 +1,4 @@
+const runtime = window.sreonRuntime;
 const siteBase = new URL("./", document.currentScript.src);
 const paths = {
   search: '<circle cx="10.8" cy="10.8" r="7.2"/><path d="m16 16 4.5 4.5"/>',
@@ -142,7 +143,7 @@ function setCategory(next) {
   });
   $("#search-input").placeholder =
     category === "general"
-      ? "Where will your curiosity take you?"
+      ? (runtime.isNative ? "Search the web or enter a website" : "Where will your curiosity take you?")
       : `Search ${category}, without the noise…`;
 }
 function syncInput() {
@@ -280,10 +281,7 @@ async function runSearch(query, options = {}) {
   window.scrollTo({ top: 0, behavior: "instant" });
   const timeout = setTimeout(() => requestController.abort("timeout"), 25000);
   try {
-    const response = await fetch(new URL(`api/search?${params}`, siteBase), {
-      signal: requestController.signal,
-      headers: { Accept: "application/json" },
-    });
+    const response = await runtime.search(params, requestController.signal);
     if (response.status === 404) {
       renderError(
         {
@@ -343,15 +341,25 @@ function restoreLocation() {
 const privacyPoint = (symbol, title, text) =>
   `<div class="privacy-point"><span>${icon(symbol)}</span><div><h3>${title}</h3><p>${text}</p></div></div>`;
 function openDialog(name) {
+  if (runtime.isNative && name === "setup") name = "settings";
   if (!$("#modal").open) lastFocused = document.activeElement;
   const content = $("#modal-content");
   const dialogs = {
-    privacy: `<span class="section-kicker">YOUR CURIOSITY BELONGS TO YOU</span><h2 id="modal-title">Explore. Don’t be followed.</h2>${privacyPoint("fingerprint", "No profiles. No analytics.", "Sreon does not include advertising trackers, analytics, or server-side search history. We don’t create a profile of your searches.")}${privacyPoint("shield", "Search through your own backend", "Queries are sent to your configured search service, which asks upstream providers for results. Those providers receive the query and your server’s IP address, not a Sreon account.")}${privacyPoint("settings", "Your device, your preferences", "Theme and search preferences stay in this browser. Recent searches are off by default; if enabled, only the last five are saved on this device.")}${privacyPoint("globe", "Know where a click takes you", "Opening a result connects you to that website. Image thumbnails may load directly from external sources. Those websites have their own privacy policies.")}<p>No system makes you anonymous by itself. Your hosting provider and network may retain connection logs. Use a backend you trust.</p><button class="secondary-button" data-dialog="settings">Manage your preferences ${icon("arrow-right")}</button>`,
+    privacy: `<span class="section-kicker">YOUR CURIOSITY BELONGS TO YOU</span><h2 id="modal-title">Explore. Don’t be followed.</h2>${privacyPoint("fingerprint", "No profiles. No analytics.", "Sreon does not include advertising trackers, analytics, or server-side search history. We don’t create a profile of your searches.")}${privacyPoint("shield", "Search through your own backend", runtime.isNative ? "The app connects directly to your chosen HTTPS search service. That service sees your IP and query; upstream providers see the backend’s IP. No account or local server is needed." : "Queries are sent to your configured search service, which asks upstream providers for results. Those providers receive the query and your server’s IP address, not a Sreon account.")}${privacyPoint("settings", "Your device, your preferences", "Theme and search preferences stay in this browser. Recent searches are off by default; if enabled, only the last five are saved on this device.")}${privacyPoint("globe", "Know where a click takes you", "Opening a result connects you to that website. Image thumbnails may load directly from external sources. Those websites have their own privacy policies.")}<p>No system makes you anonymous by itself. Your hosting provider and network may retain connection logs. Use a backend you trust.</p><button class="secondary-button" data-dialog="settings">Manage your preferences ${icon("arrow-right")}</button>`,
     shortcuts: `<span class="section-kicker">LESS CLICKING. MORE EXPLORING.</span><h2 id="modal-title">A few handy shortcuts.</h2><div class="shortcut-row"><span>Jump to search</span><kbd>/</kbd></div><div class="shortcut-row"><span>Search</span><kbd>Enter ↵</kbd></div><div class="shortcut-row"><span>Close a dialog / leave the search box</span><kbd>Esc</kbd></div><div class="shortcut-row"><span>Switch search tabs when focused</span><kbd>← →</kbd></div><div class="shortcut-row"><span>Show these shortcuts</span><kbd>?</kbd></div><p>Your browser’s usual keyboard shortcuts work here, too.</p>`,
-    setup: `<span class="section-kicker">YOUR OWN LITTLE SEARCH ENGINE</span><h2 id="modal-title">Connect to the open web.</h2><p>The interface is ready. Full web search needs the included open-source backend running on your computer. This preview never substitutes made-up results.</p><ol class="setup-steps"><li>Install and open Docker Desktop on your computer.</li><li>Download the project, open a terminal in its folder, and run:</li></ol><code class="setup-command">bash sreon.sh</code><ol class="setup-steps" start="3"><li>Wait for the containers to start, then open <strong>http://localhost:3000</strong> on that computer.</li></ol><p>Already have a backend? Set <code>SEARXNG_URL</code> in your <code>.env</code> file, enable its JSON output, and restart Sreon. Full instructions are in README.md.</p><div class="dialog-footer"><a class="text-button" href="README.md" target="_blank">Read setup instructions ${icon("arrow-up-right")}</a><button class="secondary-button" id="check-connection">Check connection ${icon("refresh")}</button></div><div class="backend-status" id="backend-status"></div>`,
+    setup: `<span class="section-kicker">YOUR OWN LITTLE SEARCH ENGINE</span><h2 id="modal-title">Connect to the open web.</h2><p>The interface is ready. Full web search needs the included open-source backend running on your computer. This preview never substitutes made-up results.</p><ol class="setup-steps"><li>Install and open Docker Desktop on your computer.</li><li>Download the project, open a terminal in its folder, and run:</li></ol><code class="setup-command">bash sreon-web.sh</code><ol class="setup-steps" start="3"><li>Wait for the containers to start, then open <strong>http://localhost:3000</strong> on that computer.</li></ol><p>Already have a backend? Set <code>SEARXNG_URL</code> in your <code>.env</code> file, enable its JSON output, and restart Sreon. Full instructions are in README.md.</p><div class="dialog-footer"><a class="text-button" href="README.md" target="_blank">Read setup instructions ${icon("arrow-up-right")}</a><button class="secondary-button" id="check-connection">Check connection ${icon("refresh")}</button></div><div class="backend-status" id="backend-status"></div>`,
   };
   if (name === "settings") {
     content.innerHTML = `<span class="section-kicker">MAKE YOURSELF AT HOME</span><h2 id="modal-title">Your search. Your way.</h2><p class="modal-lead">Small preferences for a better place to explore.</p><div class="setting-row"><div><label for="setting-theme">Appearance</label><p>A little light, or a little shade.</p></div><select id="setting-theme"><option value="light">Cream</option><option value="dark">Dark</option><option value="system">Match device</option></select></div><div class="setting-row"><div><label for="setting-safe">Safe search</label><p>Ask search providers to filter explicit content.</p></div><select id="setting-safe"><option value="2">Strict</option><option value="1">Moderate</option><option value="0">Off</option></select></div><div class="setting-row"><div><label for="setting-language">Search language</label><p>Prefer results in your language.</p></div><select id="setting-language"><option value="auto">Automatic</option><option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="ja">日本語</option></select></div><div class="setting-row"><div><label for="setting-newtab">Open results in a new tab</label><p>Keep your place while you explore.</p></div><input class="switch" type="checkbox" role="switch" id="setting-newtab"></div><div class="setting-row"><div><label for="setting-history">Remember recent searches</label><p>Last five searches. On this device only.</p></div><input class="switch" type="checkbox" role="switch" id="setting-history"></div><div class="backend-status" id="backend-status">Checking search connection…</div><div class="dialog-footer"><button class="text-button" id="reset-preferences">Reset preferences</button><button class="primary-button" id="save-settings">Save preferences ${icon("check")}</button></div>`;
+    if (runtime.isNative) {
+      const connection = document.createElement("div");
+      connection.className = "setting-connection";
+      connection.innerHTML = '<label for="setting-endpoint">Search service</label><input id="setting-endpoint" type="url" placeholder="https://search.example.com/" autocomplete="off" spellcheck="false" maxlength="2048"><p>Use your hosted search-service base URL with JSON search enabled. Sreon connects directly over HTTPS; nothing runs on localhost.</p><p id="endpoint-error" role="alert" hidden></p>';
+      content.querySelector(".modal-lead").after(connection);
+      $("#setting-endpoint").value = runtime.getEndpoint();
+      $('label[for="setting-newtab"]').textContent = "Open results in a new window";
+      $('label[for="setting-newtab"]').nextElementSibling.textContent = "Otherwise, reuse the last browsing window.";
+    }
     $("#setting-theme").value = preferences.theme;
     $("#setting-safe").value = preferences.safeSearch;
     $("#setting-language").value = preferences.language;
@@ -367,9 +375,7 @@ async function checkConnection() {
   if (!element) return;
   element.textContent = "Checking search connection…";
   try {
-    const response = await fetch(new URL("api/health", siteBase), {
-      signal: AbortSignal.timeout(8000),
-    });
+    const response = await runtime.health(AbortSignal.timeout(8000));
     const data = await response.json();
     if (!element.isConnected) return;
     element.classList.toggle("connected", data.connected);
@@ -399,6 +405,16 @@ document.addEventListener("click", (event) => {
   }
   const id = event.target.closest("[id]")?.id;
   if (id === "save-settings") {
+    if (runtime.isNative) {
+      try { runtime.setEndpoint($("#setting-endpoint").value); }
+      catch (error) {
+        $("#endpoint-error").hidden = false;
+        $("#endpoint-error").textContent = error.message || "Could not save your search service.";
+        $("#setting-endpoint").focus();
+        return;
+      }
+      $("#desktop-connection").hidden = !!runtime.getEndpoint();
+    }
     preferences = {
       theme: $("#setting-theme").value,
       safeSearch: $("#setting-safe").value,
@@ -413,6 +429,10 @@ document.addEventListener("click", (event) => {
     if (currentQuery) runSearch(currentQuery, { page, fromHistory: true });
   }
   if (id === "reset-preferences") {
+    if (runtime.isNative) {
+      try { runtime.setEndpoint(""); } catch {}
+      $("#desktop-connection").hidden = false;
+    }
     preferences = { ...defaults };
     writeStorage("sreon.history", []);
     savePreferences();
@@ -435,7 +455,15 @@ document.addEventListener("click", (event) => {
 });
 $("#search-form").addEventListener("submit", (event) => {
   event.preventDefault();
-  runSearch($("#search-input").value);
+  const value = $("#search-input").value.trim();
+  if (runtime.isNative && category === "general" && (/^https?:\/\/\S+$/i.test(value) || /^[a-z\d-]+(?:\.[a-z\d-]+)+(?:[/:?#]\S*)?$/i.test(value))) {
+    try {
+      const url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+      runtime.openPage(url.href, !preferences.newTab).catch(error => showToast(error?.message || "Could not open this website."));
+    } catch { showToast("Enter a valid website address."); }
+    return;
+  }
+  runSearch(value);
 });
 $("#search-input").addEventListener("input", syncInput);
 $("#clear-search").addEventListener("click", () => {
@@ -519,3 +547,19 @@ window.addEventListener("popstate", restoreLocation);
 hydrateIcons();
 applyTheme();
 restoreLocation();
+
+if (runtime.isNative) {
+  $("#desktop-connection").hidden = !!runtime.getEndpoint();
+  const openNativeLink = event => {
+    const link = event.target.closest("a[href]");
+    if (!link || ![0, 1].includes(event.button)) return;
+    let url;
+    try { url = new URL(link.href, location.href); } catch { return; }
+    if (!["https:", "http:"].includes(url.protocol) || url.origin === siteBase.origin) return;
+    event.preventDefault();
+    runtime.openPage(url.href, !preferences.newTab && !event.metaKey && !event.ctrlKey)
+      .catch(error => showToast(error?.message || "Could not open this page."));
+  };
+  document.addEventListener("click", openNativeLink, true);
+  document.addEventListener("auxclick", openNativeLink, true);
+}

@@ -11,6 +11,7 @@ const publicFiles = new Set([
   "index.html",
   "styles.css",
   "app.js",
+  "native.js",
   "theme.js",
   "README.md",
   "LICENSE.txt",

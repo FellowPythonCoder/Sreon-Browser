@@ -85,7 +85,7 @@ test("search without a backend gives useful setup steps, not fake results", asyn
   await page
     .getByRole("button", { name: "Connect your search engine" })
     .click();
-  await expect(page.getByRole("dialog")).toContainText("bash sreon.sh");
+  await expect(page.getByRole("dialog")).toContainText("bash sreon-web.sh");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).not.toBeVisible();
 });

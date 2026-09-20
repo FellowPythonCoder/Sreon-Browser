@@ -22,8 +22,8 @@ async function fixture(callback) {
   await mkdir(project);
   await mkdir(bin);
   await copyFile(
-    new URL("../sreon.sh", import.meta.url),
-    join(project, "sreon.sh"),
+    new URL("../sreon-web.sh", import.meta.url),
+    join(project, "sreon-web.sh"),
   );
   const log = join(directory, "commands");
   await writeFile(log, "");
@@ -69,7 +69,7 @@ if [ "$*" = '-a Docker' ]; then : > "$TEST_READY"; fi
     try {
       const result = await execute(
         "/bin/bash",
-        [join(project, "sreon.sh"), ...args],
+        [join(project, "sreon-web.sh"), ...args],
         { cwd: directory, env, timeout: 15000 },
       );
       return { ...result, code: 0, commands: await readFile(log, "utf8") };
@@ -88,7 +88,7 @@ test("launcher help and invalid actions do not contact Docker", async () => {
   await fixture(async (run) => {
     const help = await run(["--help"]);
     assert.equal(help.code, 0);
-    assert.match(help.stdout, /bash sreon.sh stop/);
+    assert.match(help.stdout, /bash sreon-web.sh stop/);
     assert.equal(help.commands, "");
     const invalid = await run(["delete-everything"]);
     assert.equal(invalid.code, 2);

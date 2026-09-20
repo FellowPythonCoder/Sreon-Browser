@@ -2,7 +2,7 @@ FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
-COPY --chown=node:node package.json server.js index.html styles.css app.js theme.js README.md LICENSE.txt ./
+COPY --chown=node:node package.json server.js index.html styles.css app.js native.js theme.js README.md LICENSE.txt ./
 COPY --chown=node:node assets ./assets
 USER node
 EXPOSE 3000

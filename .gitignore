@@ -4,3 +4,8 @@ playwright-report/
 test-results/
 image-search/
 .cache/
+dist/
+target/
+src-tauri/gen/
+*.dmg
+*.app/

@@ -3,105 +3,56 @@ set -euo pipefail
 
 ROOT="$(CDPATH= cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ACTION="${1:-start}"
-
-usage() {
-  printf '%s\n' \
-    'Sreon Search' \
-    '' \
-    'bash sreon.sh          Start search and open it on your Mac' \
-    'bash sreon.sh stop     Stop search without deleting its settings' \
-    'bash sreon.sh status   Show the container status' \
-    'bash sreon.sh logs     Show application and setup logs' \
-    '' \
-    'Requires Docker Desktop on macOS, or Docker with Compose on Linux.' \
-    'Set SREON_NO_OPEN=1 to skip opening your browser.' \
-    'Set PORT in .env or your environment to change the local port.'
-}
-
 if [ "$#" -gt 1 ]; then
-  usage >&2
+  printf '%s\n' 'Usage: bash sreon.sh [start|build|help]' >&2
   exit 2
 fi
 case "$ACTION" in
-  help|-h|--help) usage; exit 0 ;;
-  start|stop|status|logs) ;;
-  *) usage >&2; exit 2 ;;
+  help|-h|--help)
+    printf '%s\n' 'Sreon native Mac app' 'bash sreon.sh          Open an existing app, or build it once if needed' 'bash sreon.sh build    Build a fresh native app and open it' 'The installed app needs no Docker, Node, Rust, terminal, or localhost server.'
+    exit 0 ;;
+  start|build) ;;
+  *) printf '%s\n' 'Usage: bash sreon.sh [start|build|help]' >&2; exit 2 ;;
 esac
-
-if ! command -v docker >/dev/null 2>&1; then
-  if [ -x /Applications/Docker.app/Contents/Resources/bin/docker ]; then
-    export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
-  else
-    printf '%s\n' 'Docker is required for live search.' 'Install Docker Desktop for your Mac: https://www.docker.com/products/docker-desktop/' 'Open it once to complete setup, then run this command again.' >&2
-    exit 1
-  fi
-fi
-if ! docker compose version >/dev/null 2>&1; then
-  printf '%s\n' 'Docker Compose is missing. Install or update Docker Desktop, then try again.' >&2
+if [ "$(uname -s)" != Darwin ]; then
+  printf '%s\n' 'This launcher builds the macOS app. Run it on your Mac, or download the Mac build from GitHub Actions.' >&2
   exit 1
 fi
-
-compose() {
-  docker compose --project-directory "$ROOT" -f "$ROOT/compose.yaml" "$@"
-}
-
-if ! docker info >/dev/null 2>&1; then
-  if [ "$ACTION" = start ] && [ "$(uname -s)" = Darwin ]; then
-    printf '%s\n' 'Opening Docker Desktop…'
-    if ! open -a Docker; then
-      printf '%s\n' 'Open Docker Desktop manually and complete its setup, then try again.' >&2
-      exit 1
+if [ "$ACTION" = start ]; then
+  for app in "$ROOT/src-tauri/target/release/bundle/macos/Sreon.app" "$ROOT/src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app" /Applications/Sreon.app "$HOME/Applications/Sreon.app"; do
+    if [ -d "$app" ]; then
+      open "$app"
+      exit 0
     fi
-    attempt=0
-    until docker info >/dev/null 2>&1; do
-      attempt=$((attempt + 1))
-      if [ "$attempt" -ge 60 ]; then
-        printf '%s\n' 'Docker did not become ready. Check Docker Desktop and run this command again.' >&2
-        exit 1
-      fi
-      sleep 2
-    done
-  else
-    printf '%s\n' 'Docker is not running. Start Docker Desktop or your Docker engine first.' >&2
-    exit 1
-  fi
+  done
 fi
-
-case "$ACTION" in
-  stop) compose down; exit 0 ;;
-  status) compose ps -a; exit 0 ;;
-  logs) compose logs --tail 100 sreon configure; exit 0 ;;
-esac
-
-if ! command -v curl >/dev/null 2>&1; then
-  printf '%s\n' 'curl is required to check search readiness. It is included with macOS.' >&2
+if ! xcode-select -p >/dev/null 2>&1; then
+  printf '%s\n' 'Install Apple’s build tools with: xcode-select --install' 'Then run this command again.' >&2
   exit 1
 fi
-printf '%s\n' 'Starting Sreon Search. The first run downloads its search backend.'
-if ! compose up --build -d; then
-  printf '%s\n' 'Sreon could not start. Check the Docker message above. If the port is busy, set PORT=3001 and try again.' >&2
+if [ -f "$HOME/.cargo/env" ]; then
+  source "$HOME/.cargo/env"
+fi
+if ! command -v cargo >/dev/null 2>&1; then
+  printf '%s\n' 'Building requires Rust. Install it from https://rustup.rs, then open a new terminal.' 'A downloaded Sreon.app does not require Rust.' >&2
   exit 1
 fi
-if ! binding="$(compose port sreon 3000)"; then
-  printf '%s\n' 'Could not find the search port. Run: bash sreon.sh status' >&2
+if ! command -v npm >/dev/null 2>&1 || ! command -v node >/dev/null 2>&1; then
+  printf '%s\n' 'Building requires Node.js 22 or newer from https://nodejs.org.' 'A downloaded Sreon.app does not require Node.' >&2
   exit 1
 fi
-port="${binding##*:}"
-case "$port" in
-  ''|*[!0-9]*) printf '%s\n' 'Docker returned an invalid search port.' >&2; exit 1 ;;
-esac
-url="http://localhost:$port"
-printf '%s\n' 'Waiting for the search service…'
-attempt=0
-until curl --fail --silent --max-time 3 "$url/api/health" | grep -Eq '"connected"[[:space:]]*:[[:space:]]*true'; do
-  attempt=$((attempt + 1))
-  if [ "$attempt" -ge 45 ]; then
-    printf '%s\n' "The interface is at $url, but the search backend is not ready." 'Run: bash sreon.sh status' 'Run: bash sreon.sh logs' 'You can try starting again. No search results are fabricated.' >&2
-    exit 1
-  fi
-  sleep 2
-done
-printf '\nSreon Search is ready: %s\nStop it with: bash sreon.sh stop\n' "$url"
-if [ "${SREON_NO_OPEN:-0}" != 1 ] && [ "$(uname -s)" = Darwin ]; then
-  open "$url" || printf 'Open %s in your browser.\n' "$url"
+if ! node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)'; then
+  printf '%s\n' 'Update Node.js to version 22 or newer before building.' >&2
+  exit 1
 fi
+cd "$ROOT"
+printf '%s\n' 'Building Sreon’s native Rust app. The first build can take several minutes.'
+npm ci
+npm run desktop:build -- --bundles app
+APP="$ROOT/src-tauri/target/release/bundle/macos/Sreon.app"
+if [ ! -d "$APP" ]; then
+  printf '%s\n' 'The expected app bundle was not created. Review the build output above.' >&2
+  exit 1
+fi
+printf '\nBuilt: %s\nDrag Sreon.app into Applications to keep it in your Dock.\n' "$APP"
+open "$APP"

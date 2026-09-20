@@ -1,0 +1,66 @@
+name: Build Sreon Mac app
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arena/01a0bffb-sreon-browser
+    paths:
+      - src-tauri/**
+      - scripts/prepare-desktop.mjs
+      - native.js
+      - app.js
+      - index.html
+      - styles.css
+      - theme.js
+      - assets/**
+      - package.json
+      - package-lock.json
+      - .github/workflows/desktop.yml
+permissions:
+  contents: read
+concurrency:
+  group: sreon-mac-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  mac:
+    runs-on: macos-14
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install Rust targets
+        run: |
+          rustup update stable --no-self-update
+          rustup default stable
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - run: npm ci
+      - name: Test Rust search core
+        run: cargo test --manifest-path src-tauri/Cargo.toml --no-default-features
+      - name: Test server and desktop asset preparation
+        run: npm test
+      - name: Build universal native app
+        run: npm run desktop:build -- --target universal-apple-darwin --bundles app,dmg
+      - name: Package the app bundle
+        run: |
+          mkdir -p artifacts
+          ditto -c -k --sequesterRsrc --keepParent src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app artifacts/Sreon-mac-universal.zip
+          cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg artifacts/
+          cp src-tauri/Cargo.lock artifacts/Cargo.lock
+          shasum -a 256 artifacts/*.zip artifacts/*.dmg > artifacts/SHA256SUMS.txt
+          du -sh src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app
+          file src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app/Contents/MacOS/sreon
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Sreon-mac-universal
+          path: |
+            artifacts/*
+            src-tauri/Cargo.lock
+          if-no-files-found: warn
+          retention-days: 30
