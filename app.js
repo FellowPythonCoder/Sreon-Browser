@@ -169,10 +169,12 @@
   async function submit(value, forceSearch = false) {
     const text = value.trim();
     if (!text) return;
-    const direct = !forceSearch && category === "web" ? directUrl(text) : null;
+    const intent = ++sequence;
+    const direct = !forceSearch ? directUrl(text) : null;
     if (direct) { await openPage(direct.href); return; }
     if (text.length > 500) { showError(new Error("Use up to 500 characters for a search.")); return; }
     try { await returnToSearch(); } catch (error) { showError(error); return; }
+    if (intent !== sequence) return;
     query = text;
     input.value = text;
     address.value = text;
@@ -230,7 +232,7 @@
   const focusAddress = () => { address.focus(); address.select(); };
   window.addEventListener("sreon:focus-search", focusAddress);
   window.addEventListener("sreon:location", (event) => {
-    if (browsing && safeUrl(event.detail)) { address.value = event.detail; lastWebsite = event.detail; }
+    if (safeUrl(event.detail)) { lastWebsite = event.detail; if (browsing) address.value = event.detail; }
   });
   document.addEventListener("keydown", (event) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "l") { event.preventDefault(); focusAddress(); }

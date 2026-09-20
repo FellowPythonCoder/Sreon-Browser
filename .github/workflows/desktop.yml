@@ -46,6 +46,8 @@ jobs:
       run:
         shell: bash
     steps:
+      - name: Preserve source line endings
+        run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -69,11 +71,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri -> target
+          cache-on-failure: true
       - run: npm ci
       - name: Test Rust and integration API
-        run: cargo test --manifest-path src-tauri/Cargo.toml --no-default-features
+        run: node scripts/run-check.mjs cargo test --manifest-path src-tauri/Cargo.toml --no-default-features
       - name: Test assets and packaging
-        run: npm test
+        run: node scripts/run-check.mjs npm test
       - name: Test interface
         if: runner.os == 'macOS'
         run: |
@@ -97,7 +100,7 @@ jobs:
       - name: Consolidate dependency licenses
         run: node scripts/append-licenses.mjs
       - name: Build app
-        run: npm run desktop:build -- ${{ matrix.target }} --bundles ${{ matrix.bundles }}
+        run: node scripts/run-check.mjs npm run desktop:build -- ${{ matrix.target }} --bundles ${{ matrix.bundles }}
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'
       - name: Build integration API
@@ -109,6 +112,15 @@ jobs:
           cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --bin sreon-api --target aarch64-apple-darwin
           cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --bin sreon-api --target x86_64-apple-darwin
           lipo -create src-tauri/target/aarch64-apple-darwin/release/sreon-api src-tauri/target/x86_64-apple-darwin/release/sreon-api -output artifacts/sreon-api
+      - name: Test packaged integration API
+        run: |
+          if [ "$RUNNER_OS" = macOS ]; then
+            python tests/api-smoke.py artifacts/sreon-api
+          elif [ "$RUNNER_OS" = Windows ]; then
+            python tests/api-smoke.py src-tauri/target/release/sreon-api.exe
+          else
+            python tests/api-smoke.py src-tauri/target/release/sreon-api
+          fi
       - name: Package Mac
         if: runner.os == 'macOS'
         run: |

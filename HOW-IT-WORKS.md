@@ -140,7 +140,7 @@ try {
 }
 ```
 
-On Windows, use the path to `sreon-api.exe`. Do not launch the graphical Sreon EXE as the API helper. Python/Node are needed only by these example clients, not by the installed desktop app or compiled helper. Rust applications can instead depend on package `sreon` at `src-tauri/` with `default-features = false` and call `sreon_core::search::Engine::new()?.search(SearchRequest { ... }).await` directly.
+After extracting a Mac/Linux artifact, run `chmod +x sreon-api` before using the helper. On Windows, use the path to `sreon-api.exe`. Do not launch the graphical Sreon EXE as the API helper. Python/Node are needed only by these example clients, not by the installed desktop app or compiled helper. Rust applications can instead depend on package `sreon` at `src-tauri/` with `default-features = false` and call `sreon_core::search::Engine::new()?.search(SearchRequest { ... }).await` directly.
 
 ## Tests and licenses
 

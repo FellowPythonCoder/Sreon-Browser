@@ -166,3 +166,12 @@ test("preview does not invent native search results", async ({ page }) => {
   await expect(page.getByRole("status")).toContainText("installed Sreon app");
   await expect(page.locator("#results a")).toHaveCount(0);
 });
+
+test("address navigation still works when a media category is selected", async ({ page }) => {
+  await app(page);
+  await page.getByRole("tab", { name: "Videos", exact: true }).click();
+  await page.getByLabel("Search or enter website", { exact: true }).fill("youtube.com");
+  await page.getByLabel("Search or enter website", { exact: true }).press("Enter");
+  await expect(page.locator("body")).toHaveClass(/browsing/);
+  expect(await page.evaluate(() => window.calls.find(x => x.command === "open_page").payload.url)).toBe("https://youtube.com/");
+});

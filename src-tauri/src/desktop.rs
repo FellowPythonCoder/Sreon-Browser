@@ -80,7 +80,6 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         &Submenu::with_items(app, "Sreon", true, &[
             &PredefinedMenuItem::about(app, Some("About Sreon"), Some(AboutMetadata { name: Some("Sreon".into()), version: Some(env!("CARGO_PKG_VERSION").into()), ..Default::default() }))?,
             &PredefinedMenuItem::separator(app)?,
-            &PredefinedMenuItem::separator(app)?,
             &PredefinedMenuItem::quit(app, None)?,
         ])?,
         &Submenu::with_items(app, "Edit", true, &[
@@ -93,7 +92,6 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
             &PredefinedMenuItem::select_all(app, None)?,
         ])?,
         &Submenu::with_items(app, "Navigate", true, &[&search, &back, &forward, &reload])?,
-    ])?,
     ])
 }
 
