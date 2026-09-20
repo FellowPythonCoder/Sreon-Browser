@@ -143,7 +143,9 @@ function setCategory(next) {
   });
   $("#search-input").placeholder =
     category === "general"
-      ? (runtime.isNative ? "Search the web or enter a website" : "Where will your curiosity take you?")
+      ? runtime.isNative
+        ? "Search the web or enter a website"
+        : "Where will your curiosity take you?"
       : `Search ${category}, without the noise…`;
 }
 function syncInput() {
@@ -354,11 +356,14 @@ function openDialog(name) {
     if (runtime.isNative) {
       const connection = document.createElement("div");
       connection.className = "setting-connection";
-      connection.innerHTML = '<label for="setting-endpoint">Search service</label><input id="setting-endpoint" type="url" placeholder="https://search.example.com/" autocomplete="off" spellcheck="false" maxlength="2048"><p>Use your hosted search-service base URL with JSON search enabled. Sreon connects directly over HTTPS; nothing runs on localhost.</p><p id="endpoint-error" role="alert" hidden></p>';
+      connection.innerHTML =
+        '<label for="setting-endpoint">Search service</label><input id="setting-endpoint" type="url" placeholder="https://search.example.com/" autocomplete="off" spellcheck="false" maxlength="2048"><p>Use your hosted search-service base URL with JSON search enabled. Sreon connects directly over HTTPS; nothing runs on localhost.</p><p id="endpoint-error" role="alert" hidden></p>';
       content.querySelector(".modal-lead").after(connection);
       $("#setting-endpoint").value = runtime.getEndpoint();
-      $('label[for="setting-newtab"]').textContent = "Open results in a new window";
-      $('label[for="setting-newtab"]').nextElementSibling.textContent = "Otherwise, reuse the last browsing window.";
+      $('label[for="setting-newtab"]').textContent =
+        "Open results in a new window";
+      $('label[for="setting-newtab"]').nextElementSibling.textContent =
+        "Otherwise, reuse the last browsing window.";
     }
     $("#setting-theme").value = preferences.theme;
     $("#setting-safe").value = preferences.safeSearch;
@@ -406,10 +411,12 @@ document.addEventListener("click", (event) => {
   const id = event.target.closest("[id]")?.id;
   if (id === "save-settings") {
     if (runtime.isNative) {
-      try { runtime.setEndpoint($("#setting-endpoint").value); }
-      catch (error) {
+      try {
+        runtime.setEndpoint($("#setting-endpoint").value);
+      } catch (error) {
         $("#endpoint-error").hidden = false;
-        $("#endpoint-error").textContent = error.message || "Could not save your search service.";
+        $("#endpoint-error").textContent =
+          error.message || "Could not save your search service.";
         $("#setting-endpoint").focus();
         return;
       }
@@ -430,7 +437,9 @@ document.addEventListener("click", (event) => {
   }
   if (id === "reset-preferences") {
     if (runtime.isNative) {
-      try { runtime.setEndpoint(""); } catch {}
+      try {
+        runtime.setEndpoint("");
+      } catch {}
       $("#desktop-connection").hidden = false;
     }
     preferences = { ...defaults };
@@ -456,11 +465,24 @@ document.addEventListener("click", (event) => {
 $("#search-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const value = $("#search-input").value.trim();
-  if (runtime.isNative && category === "general" && (/^https?:\/\/\S+$/i.test(value) || /^[a-z\d-]+(?:\.[a-z\d-]+)+(?:[/:?#]\S*)?$/i.test(value))) {
+  if (
+    runtime.isNative &&
+    category === "general" &&
+    (/^https?:\/\/\S+$/i.test(value) ||
+      /^[a-z\d-]+(?:\.[a-z\d-]+)+(?:[/:?#]\S*)?$/i.test(value))
+  ) {
     try {
-      const url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
-      runtime.openPage(url.href, !preferences.newTab).catch(error => showToast(error?.message || "Could not open this website."));
-    } catch { showToast("Enter a valid website address."); }
+      const url = new URL(
+        /^https?:\/\//i.test(value) ? value : `https://${value}`,
+      );
+      runtime
+        .openPage(url.href, !preferences.newTab)
+        .catch((error) =>
+          showToast(error?.message || "Could not open this website."),
+        );
+    } catch {
+      showToast("Enter a valid website address.");
+    }
     return;
   }
   runSearch(value);
@@ -550,15 +572,29 @@ restoreLocation();
 
 if (runtime.isNative) {
   $("#desktop-connection").hidden = !!runtime.getEndpoint();
-  const openNativeLink = event => {
+  const openNativeLink = (event) => {
     const link = event.target.closest("a[href]");
     if (!link || ![0, 1].includes(event.button)) return;
     let url;
-    try { url = new URL(link.href, location.href); } catch { return; }
-    if (!["https:", "http:"].includes(url.protocol) || url.origin === siteBase.origin) return;
+    try {
+      url = new URL(link.href, location.href);
+    } catch {
+      return;
+    }
+    if (
+      !["https:", "http:"].includes(url.protocol) ||
+      url.origin === siteBase.origin
+    )
+      return;
     event.preventDefault();
-    runtime.openPage(url.href, !preferences.newTab && !event.metaKey && !event.ctrlKey)
-      .catch(error => showToast(error?.message || "Could not open this page."));
+    runtime
+      .openPage(
+        url.href,
+        !preferences.newTab && !event.metaKey && !event.ctrlKey,
+      )
+      .catch((error) =>
+        showToast(error?.message || "Could not open this page."),
+      );
   };
   document.addEventListener("click", openNativeLink, true);
   document.addEventListener("auxclick", openNativeLink, true);

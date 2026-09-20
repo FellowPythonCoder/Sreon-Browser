@@ -52,6 +52,9 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app artifacts/Sreon-mac-universal.zip
           cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg artifacts/
           cp src-tauri/Cargo.lock artifacts/Cargo.lock
+          cp LICENSE.txt README.md artifacts/
+          printf 'Corresponding source: https://github.com/%s/tree/%s\n' "$GITHUB_REPOSITORY" "$GITHUB_SHA" > artifacts/SOURCE.txt
+          codesign --verify --deep --strict src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app
           shasum -a 256 artifacts/*.zip artifacts/*.dmg > artifacts/SHA256SUMS.txt
           du -sh src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app
           file src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app/Contents/MacOS/sreon
