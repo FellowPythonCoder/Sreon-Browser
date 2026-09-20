@@ -1,0 +1,6 @@
+.git
+node_modules
+.env
+image-search
+playwright-report
+test-results

@@ -1,0 +1,21 @@
+{
+  "name": "sreon-search",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --env-file-if-exists=.env --watch server.js",
+    "test": "node --test tests/server.test.js",
+    "test:ui": "playwright test"
+  },
+  "devDependencies": {
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/instrument-serif": "^5.2.8",
+    "@playwright/test": "^1.58.2"
+  }
+}
