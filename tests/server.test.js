@@ -32,11 +32,6 @@ test("serves the interface and assets without exposing private project files", a
       "/",
       "/search?q=forest",
       "/search/",
-      "/search/app.js",
-      "/site-config.js",
-      "/o/",
-      "/games/engine.js",
-      "/sreon.zip",
       "/app.js",
       "/theme.js",
       "/styles.css",
@@ -51,6 +46,11 @@ test("serves the interface and assets without exposing private project files", a
     }
     for (const path of [
       "/.env",
+      "/site-config.js",
+      "/search/app.js",
+      "/o/",
+      "/games/engine.js",
+      "/sreon.zip",
       "/.git/HEAD",
       "/server.js",
       "/package.json",
@@ -274,4 +274,19 @@ test("Docker configuration initializer generates a secret and preserves it", asy
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("old search URLs redirect to the standalone engine and retain the query", async () => {
+  await withApp({}, async (base) => {
+    for (const path of ["/search", "/search/", "/search/index.html"]) {
+      const response = await fetch(`${base}${path}?q=forest&category=images`, {
+        redirect: "manual",
+      });
+      assert.equal(response.status, 308);
+      assert.equal(
+        response.headers.get("location"),
+        "/?q=forest&category=images",
+      );
+    }
+  });
 });

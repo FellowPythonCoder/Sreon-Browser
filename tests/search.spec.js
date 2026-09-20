@@ -7,7 +7,7 @@ const fixture = {
       url: "https://example.org/forest",
       content:
         "An introduction to forests and their extraordinary biodiversity.",
-      thumbnail: "/assets/nature.jpg",
+      thumbnail: "/assets/image-placeholder.svg",
       published: "2026-09-20",
     },
   ],
@@ -35,27 +35,28 @@ test("home is Sreon-only, loads local assets and has no script errors", async ({
     if (!new URL(request.url()).hostname.match(/127\.0\.0\.1|localhost/))
       external.push(request.url());
   });
-  await page.goto("/search/");
+  await page.goto("/");
   await expect(
     page.getByRole("heading", { name: "Less noise. More discovery." }),
   ).toBeVisible();
-  await expect(page.locator(".discovery-card")).toHaveCount(3);
+  await expect(
+    page.locator("iframe, #try, #download, .discovery-card, .manifesto"),
+  ).toHaveCount(0);
+  await expect(page.getByRole("searchbox")).toBeVisible();
   await expect(page.locator("body")).not.toContainText(
     /Google|Bing|DuckDuckGo/,
   );
   expect(
     await page
-      .locator(".card-image")
-      .evaluateAll((images) =>
-        images.every((image) => image.complete && image.naturalWidth > 0),
-      ),
+      .locator(".site-header .brand img")
+      .evaluate((image) => image.complete && image.naturalWidth > 0),
   ).toBe(true);
   expect(errors).toEqual([]);
   expect(external).toEqual([]);
 });
 
 test("dark mode persists and can return to cream", async ({ page }) => {
-  await page.goto("/search/");
+  await page.goto("/");
   await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.reload();
@@ -76,7 +77,7 @@ test("search without a backend gives useful setup steps, not fake results", asyn
       },
     }),
   );
-  await page.goto("/search/");
+  await page.goto("/");
   await search(page);
   await expect(
     page.getByRole("heading", { name: "One more step to the open web." }),
@@ -84,9 +85,7 @@ test("search without a backend gives useful setup steps, not fake results", asyn
   await page
     .getByRole("button", { name: "Connect your search engine" })
     .click();
-  await expect(page.getByRole("dialog")).toContainText(
-    "docker compose up --build -d",
-  );
+  await expect(page.getByRole("dialog")).toContainText("bash sreon.sh");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).not.toBeVisible();
 });
@@ -99,7 +98,7 @@ test("renders backend results, paginates and sends time filters", async ({
     requests.push(new URL(route.request().url()));
     return route.fulfill({ json: fixture });
   });
-  await page.goto("/search/");
+  await page.goto("/");
   await search(page);
   await expect(
     page.getByRole("link", { name: "The forest ecosystem" }),
@@ -135,7 +134,7 @@ test("images render a clickable source and hide unsafe result URLs", async ({
       { title: "Do not show", url: "javascript:alert(1)", content: "" },
     ],
   });
-  await page.goto("/search/?q=forest&category=images");
+  await page.goto("/?q=forest&category=images");
   await expect(page.locator(".image-result")).toHaveCount(1);
   await expect(page.locator(".image-result img")).toBeVisible();
   await expect(page.locator(".image-result")).toHaveAttribute(
@@ -146,7 +145,7 @@ test("images render a clickable source and hide unsafe result URLs", async ({
 
 test("handles empty, partial and error results", async ({ page }) => {
   await mockSearch(page, { ...fixture, results: [], hasMore: false });
-  await page.goto("/search/?q=unknown");
+  await page.goto("/?q=unknown");
   await expect(
     page.getByRole("heading", { name: "A different path, perhaps?" }),
   ).toBeVisible();
@@ -180,7 +179,7 @@ test("renders malicious snippets only as text", async ({ page }) => {
       },
     ],
   });
-  await page.goto("/search/?q=test");
+  await page.goto("/?q=test");
   await expect(page.locator("article.result-item")).toContainText(
     "<img src=x onerror=alert(1)>",
   );
@@ -196,7 +195,7 @@ test("settings save filters and opt-in history and can be reset", async ({
     requests.push(new URL(route.request().url()));
     return route.fulfill({ json: fixture });
   });
-  await page.goto("/search/");
+  await page.goto("/");
   await page.getByRole("button", { name: "Search settings" }).click();
   await page.getByLabel("Safe search", { exact: true }).selectOption("2");
   await page.getByLabel("Search language").selectOption("fr");
@@ -222,7 +221,7 @@ test("no history by default and history never exceeds five searches", async ({
   page,
 }) => {
   await mockSearch(page);
-  await page.goto("/search/");
+  await page.goto("/");
   await search(page);
   expect(
     await page.evaluate(() => localStorage.getItem("sreon.history")),
@@ -243,7 +242,7 @@ test("no history by default and history never exceeds five searches", async ({
 
 test("browser back and forward restore queries and home", async ({ page }) => {
   await mockSearch(page);
-  await page.goto("/search/");
+  await page.goto("/");
   await search(page, "forest");
   await expect(page.locator("article.result-item")).toBeVisible();
   await search(page, "architecture");
@@ -260,7 +259,7 @@ test("browser back and forward restore queries and home", async ({ page }) => {
 test("keyboard shortcuts, tab navigation and clear button work", async ({
   page,
 }) => {
-  await page.goto("/search/");
+  await page.goto("/");
   await page.keyboard.press("/");
   await expect(page.getByRole("searchbox")).toBeFocused();
   await page.getByRole("searchbox").fill("hello");
@@ -280,27 +279,11 @@ test("keyboard shortcuts, tab navigation and clear button work", async ({
   ).toHaveAttribute("aria-selected", "true");
 });
 
-test("discovery rotation changes prompts and cards submit searches", async ({
-  page,
-}) => {
-  await mockSearch(page);
-  await page.goto("/search/");
-  await page.getByRole("button", { name: "A fresh perspective" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Good design is everywhere" }),
-  ).toBeVisible();
-  await page.locator(".discovery-card").first().click();
-  await expect(page.getByRole("searchbox")).toHaveValue(
-    "Bauhaus design principles",
-  );
-  await expect(page.locator("article.result-item")).toBeVisible();
-});
-
 test("mobile layout and dialogs do not overflow horizontally", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto("/search/");
+  await page.goto("/");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

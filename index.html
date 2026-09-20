@@ -1,569 +1,217 @@
 <!doctype html>
 <html lang="en" data-theme="light">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sreon — Browse different.</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f8f7f2" />
     <meta
       name="description"
-      content="Sreon is a small, privacy-first desktop browser: real workspaces, a command menu, an app lock, and encrypted local storage. Free and open source."
+      content="Meet Sreon. Independent, open-source search with less noise and more discovery. Your curiosity belongs to you."
     />
+    <title>Sreon — Less noise. More discovery.</title>
     <link rel="icon" href="assets/sreon-logo.png" />
+    <link
+      rel="preload"
+      href="assets/fonts/dm-sans-latin-400-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/instrument-serif-latin-400-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="stylesheet" href="styles.css" />
     <script src="theme.js"></script>
-    <script src="site-config.js" defer></script>
+    <script src="app.js" defer></script>
   </head>
   <body>
+    <a class="skip-link" href="#search-input">Skip to search</a>
     <header class="site-header">
-      <div class="wrap header-inner">
-        <a class="brand" href="#top">
-          <img src="assets/sreon-logo.png" alt="Sreon" class="brand-mark" />
-          <span>Sreon</span>
-        </a>
-        <nav class="nav">
-          <a href="#why">Why</a>
-          <a href="#features">Features</a>
-          <a href="#try">Try It</a>
-          <a href="#privacy">Privacy</a>
-          <a href="#download">Download</a>
-          <a href="#contact">Contact</a>
-        </nav>
+      <a class="brand" href="./" aria-label="Sreon home"
+        ><img src="assets/sreon-logo.png" alt="" width="34" height="34" /><span
+          >sreon<span class="brand-period">.</span></span
+        ></a
+      >
+      <nav class="header-actions" aria-label="Main navigation">
+        <a
+          class="source-link"
+          aria-label="Open Sreon source code"
+          href="https://github.com/FellowPythonCoder/Sreon-Browser"
+          target="_blank"
+          rel="noopener noreferrer"
+          ><span data-icon="code"></span><span>Open source</span
+          ><span class="tiny-arrow" data-icon="arrow-up-right"></span
+        ></a>
+        <span class="header-divider"></span>
         <button
-          id="site-theme-toggle"
-          class="demo-toggle"
-          type="button"
+          class="icon-button"
+          id="theme-toggle"
           aria-label="Switch to dark mode"
+          title="Switch to dark mode"
         >
-          Dark mode
+          <span data-icon="moon"></span>
         </button>
-        <a href="#download" class="btn btn-primary btn-small">Download</a>
-      </div>
+        <button
+          class="icon-button"
+          data-dialog="settings"
+          aria-label="Search settings"
+          title="Search settings"
+        >
+          <span data-icon="settings"></span>
+        </button>
+      </nav>
     </header>
-
-    <div class="addr-strip">
-      <div class="wrap">
-        <span class="dot"></span>
-        <span id="live-addr">sreon://top</span>
-        <a href="/o" class="addr-secret-link" title="secret area">●</a>
-      </div>
-    </div>
-
     <main>
-      <section class="hero" id="top">
-        <div class="wrap hero-inner">
-          <div class="eyebrow">sreon://browse-different</div>
-          <h1>A browser that keeps your business to itself.</h1>
-          <p class="hero-sub">
-            Sreon is a small, privacy-first desktop browser. Real workspaces, a
-            command menu, an app lock, and encrypted local storage — built to be
-            fast, quiet, and yours. Free and open source.
-          </p>
-          <div class="hero-actions">
-            <a href="#download" class="btn btn-primary">Download Sreon</a>
-            <a href="#try" class="btn btn-ghost">Try it in your browser</a>
-          </div>
-        </div>
-
-        <div class="hero-visual reveal" aria-hidden="true">
-          <div class="mock-browser">
-            <div class="mock-titlebar">
-              <span class="mock-dot r"></span><span class="mock-dot y"></span
-              ><span class="mock-dot g"></span>
-              <span class="mock-app-name">Sreon</span>
-            </div>
-            <div class="mock-body">
-              <div class="mock-sidebar">
-                <div class="mock-ws-row">
-                  <span class="mock-ws active">Personal</span>
-                  <span class="mock-ws">Work</span>
-                </div>
-                <div class="mock-tab active">
-                  <span class="mock-fav sreon-fav"></span>Sreon Search
-                </div>
-                <div class="mock-tab">
-                  <span class="mock-fav sreon-fav"></span>Discover
-                </div>
-                <div class="mock-tab">
-                  <span class="mock-fav sreon-fav"></span>Design inspiration
-                </div>
-                <div class="mock-tab">
-                  <span class="mock-fav sreon-fav"></span>Something new
-                </div>
-                <div class="mock-sidebar-foot">
-                  <img
-                    src="assets/sreon-logo.png"
-                    class="mock-mini-logo"
-                    alt=""
-                  />
-                  <span>Sreon</span>
-                  <span class="mock-gear">&#9881;</span>
-                </div>
-              </div>
-              <div class="mock-content">
-                <div class="mock-navbar">
-                  <span class="mock-navbtn">&#8592;</span>
-                  <span class="mock-navbtn">&#8594;</span>
-                  <div class="mock-addr">
-                    <span class="mock-lock">&#128274;</span>sreon://new-tab
-                  </div>
-                </div>
-                <div class="mock-page">
-                  <img
-                    src="assets/sreon-logo.png"
-                    alt=""
-                    width="42"
-                    height="42"
-                  /><strong>Sreon Search</strong
-                  ><span>Less noise. More discovery.</span
-                  ><a href="#try" class="btn btn-ghost">Try it below →</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="why" id="why">
-        <div class="wrap why-inner">
-          <div class="section-head reveal">
-            <span class="section-kicker">sreon://why</span>
-            <h2>Why I built this</h2>
-          </div>
-          <div class="why-body reveal">
-            <p>
-              I kept counting how many things a "normal" browser does before
-              I've typed anything: sync accounts, telemetry pings, extension
-              marketplaces phoning home, a new-tab page quietly profiling what I
-              look at. None of it was there because I asked for it.
-            </p>
-            <blockquote class="pull-quote">
-              I wanted a browser that didn't need a privacy policy longer than
-              its changelog.
-            </blockquote>
-            <p>
-              Sreon started as a weekend project to see how small a real,
-              daily-usable browser could get if it only did what I actually use:
-              tabs, workspaces to keep Personal and Work apart, a command menu
-              instead of hunting through settings, and storage that's encrypted
-              by default instead of as an afterthought.
-            </p>
-            <p>
-              It's open source on purpose — not as a slogan, but so the privacy
-              claims on this page are things you can go verify in the source
-              rather than things you have to take my word for.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="features" id="features">
-        <div class="wrap">
-          <div class="section-head reveal">
-            <span class="section-kicker">sreon://features</span>
-            <h2>
-              Everything you'd want from a browser. Nothing you didn't ask for.
-            </h2>
-          </div>
-          <div class="feature-grid">
-            <div class="feature-card reveal">
-              <div class="f-icon">&#128203;</div>
-              <h3>Real tabs, real workspaces</h3>
-              <p>
-                Keep Personal and Work fully separate — each with its own
-                logins, bookmarks, and history, isolated from the other.
-              </p>
-            </div>
-
-            <div class="feature-card reveal">
-              <div class="f-icon">&#8984;</div>
-              <h3>Command menu (⌘K)</h3>
-              <p>
-                Jump to a site, switch workspace, or change a setting without
-                leaving the keyboard.
-              </p>
-            </div>
-
-            <div class="feature-card reveal">
-              <div class="f-icon">&#128274;</div>
-              <h3>App lock</h3>
-              <p>
-                Gate the whole app behind an optional password, salted and
-                hashed locally. Sreon never stores it in the clear.
-              </p>
-            </div>
-
-            <div class="feature-card reveal">
-              <div class="f-icon">&#128737;&#65039;</div>
-              <h3>Ad &amp; tracker blocking</h3>
-              <p>
-                A local domain list blocks known ad/analytics/tracker requests
-                before they load — no network call needed to check it.
-              </p>
-            </div>
-
-            <div class="feature-card reveal">
-              <div class="f-icon">&#128190;</div>
-              <h3>Encrypted local storage</h3>
-              <p>
-                History, saved logins, and bookmarks are AES-256-GCM encrypted
-                on disk, with per-workspace keys derived by PBKDF2.
-              </p>
-            </div>
-
-            <div class="feature-card reveal">
-              <div class="f-icon">&#127912;</div>
-              <h3>Make it yours</h3>
-              <p>
-                Accent colors, glass blur and opacity, corner radius, and your
-                own photo or video as the background.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="tryit" id="try">
-        <div class="wrap">
-          <div class="section-head reveal">
-            <span class="section-kicker">sreon://try-it</span>
-            <h2>Try the browser</h2>
-            <p class="section-sub">
-              Search with Sreon right inside the browser demo. Use the address
-              bar or the search box, open tabs, and switch workspaces. Search
-              results and web addresses open real websites in a new tab. This is
-              the web demo; download the desktop browser for its encryption and
-              ad blocker.
-            </p>
-          </div>
-
-          <div class="demo-frame reveal">
-            <div class="demo-titlebar">
-              <span class="mock-dot r"></span><span class="mock-dot y"></span
-              ><span class="mock-dot g"></span>
-              <span class="mock-app-name">Sreon — Search</span>
-              <button id="demo-theme-toggle" class="demo-toggle" type="button">
-                &#9728; Toggle theme
-              </button>
-            </div>
-
-            <div class="demo-body" id="demo-body">
-              <div class="demo-sidebar">
-                <div class="demo-ws-row" id="demo-ws-row">
-                  <button
-                    class="demo-ws active"
-                    data-ws="Personal"
-                    type="button"
-                  >
-                    Personal
-                  </button>
-                  <button class="demo-ws" data-ws="Work" type="button">
-                    Work
-                  </button>
-                </div>
-
-                <div
-                  class="demo-tabs"
-                  id="demo-tabs"
-                  aria-label="Browser tabs"
-                ></div>
-
-                <button class="demo-newtab" id="demo-newtab" type="button">
-                  + New Tab
-                </button>
-
-                <div class="demo-sidebar-foot">
-                  <img
-                    src="assets/sreon-logo.png"
-                    class="mock-mini-logo"
-                    alt=""
-                  />
-                  <span>Sreon</span>
-                  <button
-                    class="mock-gear"
-                    id="demo-cmdk-btn"
-                    type="button"
-                    title="Command menu (⌘K)"
-                  >
-                    &#8984;K
-                  </button>
-                </div>
-              </div>
-
-              <div class="demo-content">
-                <form class="demo-navbar" id="demo-address-form" role="search">
-                  <button
-                    type="button"
-                    class="mock-navbtn"
-                    id="demo-back"
-                    aria-label="Go back"
-                    disabled
-                  >
-                    ←
-                  </button>
-                  <button
-                    type="button"
-                    class="mock-navbtn"
-                    id="demo-forward"
-                    aria-label="Go forward"
-                    disabled
-                  >
-                    →
-                  </button>
-                  <button
-                    type="button"
-                    class="mock-navbtn"
-                    id="demo-reload"
-                    aria-label="Reload search"
-                  >
-                    ↻
-                  </button>
-                  <div class="demo-addr">
-                    <img
-                      src="assets/sreon-logo.png"
-                      alt=""
-                      width="14"
-                      height="14"
-                    />
-                    <input
-                      id="demo-addr-text"
-                      type="text"
-                      autocomplete="off"
-                      spellcheck="false"
-                      aria-label="Address bar — search or enter a website"
-                      placeholder="Search with Sreon or enter a website"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    class="demo-go"
-                    aria-label="Search with Sreon"
-                  >
-                    Go
-                  </button>
-                </form>
-                <div class="demo-page" id="demo-page">
-                  <iframe
-                    id="demo-search-frame"
-                    title="Sreon Search browser demo"
-                    src="search/?embed=1"
-                    referrerpolicy="strict-origin"
-                    loading="lazy"
-                  ></iframe>
-                </div>
-              </div>
-
-              <dialog
-                class="demo-cmdk"
-                id="demo-cmdk"
-                aria-labelledby="demo-command-title"
-              >
-                <div class="demo-cmdk-row">
-                  <strong id="demo-command-title">Quick actions</strong
-                  ><button
-                    type="button"
-                    id="demo-close-commands"
-                    aria-label="Close quick actions"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  class="demo-cmdk-opt"
-                  data-action="workspace"
-                >
-                  Switch workspace
-                </button>
-                <button
-                  type="button"
-                  class="demo-cmdk-opt"
-                  data-action="newtab"
-                >
-                  Open a new search tab
-                </button>
-                <button type="button" class="demo-cmdk-opt" data-action="theme">
-                  Toggle theme
-                </button>
-                <button
-                  type="button"
-                  class="demo-cmdk-opt"
-                  data-action="settings"
-                >
-                  Search preferences
-                </button>
-              </dialog>
-            </div>
-          </div>
-          <p class="demo-status" id="demo-status" role="status">
-            Sreon Search · Checking connection…
-          </p>
-          <p class="demo-note">
-            Tabs and workspaces here last for this visit. This demo is not the
-            desktop browser’s encrypted storage.
-            <a
-              id="standalone-search"
-              href="search/"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Open Sreon Search ↗</a
-            >
+      <section class="search-section" aria-labelledby="hero-title">
+        <div class="hero-intro" id="hero-intro">
+          <h1 id="hero-title">Less noise. <em>More discovery.</em></h1>
+          <p class="hero-description">
+            An open web. An open mind. A search engine that stays out of your
+            way.
           </p>
         </div>
-      </section>
-
-      <section class="download" id="download">
-        <div class="wrap">
-          <div class="section-head reveal">
-            <span class="section-kicker">sreon://download</span>
-            <h2>Download Sreon</h2>
-            <p class="section-sub">
-              Free and open source. Built from source with Tauri — see the repo
-              for build instructions.
-            </p>
-          </div>
-
-          <div class="download-grid">
-            <a
-              class="download-card reveal"
-              href="sreon.zip"
-              download
-              data-platform="mac"
+        <div class="search-workspace">
+          <div class="search-tabs" role="tablist" aria-label="Search category">
+            <button
+              class="search-tab active"
+              id="tab-general"
+              role="tab"
+              aria-selected="true"
+              data-category="general"
             >
-              <div class="dl-icon">&#63743;</div>
-              <div class="dl-name">macOS</div>
-              <div class="dl-sub">Apple Silicon &amp; Intel</div>
-            </a>
-            <a
-              class="download-card reveal"
-              href="sreon.zip"
-              download
-              data-platform="windows"
+              <span data-icon="globe"></span>All
+            </button>
+            <button
+              class="search-tab"
+              id="tab-images"
+              role="tab"
+              aria-selected="false"
+              tabindex="-1"
+              data-category="images"
             >
-              <div class="dl-icon">&#8862;</div>
-              <div class="dl-name">Windows</div>
-              <div class="dl-sub">64-bit installer</div>
-            </a>
-            <a
-              class="download-card reveal"
-              href="sreon.zip"
-              download
-              data-platform="linux"
+              <span data-icon="image"></span>Images
+            </button>
+            <button
+              class="search-tab"
+              id="tab-news"
+              role="tab"
+              aria-selected="false"
+              tabindex="-1"
+              data-category="news"
             >
-              <div class="dl-icon">&#128039;</div>
-              <div class="dl-name">Linux</div>
-              <div class="dl-sub">AppImage / .deb</div>
-            </a>
+              <span data-icon="news"></span>News
+            </button>
+            <button
+              class="search-tab"
+              id="tab-videos"
+              role="tab"
+              aria-selected="false"
+              tabindex="-1"
+              data-category="videos"
+            >
+              <span data-icon="video"></span>Videos
+            </button>
           </div>
-          <p class="download-note">
-            Replace these links with your GitHub Releases URLs once you have
-            platform-specific builds — see the README in the site project for
-            exact steps.
-          </p>
-        </div>
-      </section>
-
-      <section class="privacy" id="privacy">
-        <div class="wrap">
-          <div class="section-head reveal">
-            <span class="section-kicker">sreon://privacy</span>
-            <h2>How privacy actually works here</h2>
-            <p class="section-sub">
-              Not a policy — a mechanism. This is the actual order of operations
-              every time you use Sreon.
-            </p>
-          </div>
-
-          <ol class="privacy-steps">
-            <li class="privacy-step reveal">
-              <span class="ps-num">01</span>
-              <div class="ps-body">
-                <h3>You browse normally</h3>
-                <p>
-                  Pages render like they would in any browser. There's no
-                  separate collection layer sitting in front of your traffic,
-                  and no analytics SDK compiled into the app.
-                </p>
-              </div>
-            </li>
-            <li class="privacy-step reveal">
-              <span class="ps-num">02</span>
-              <div class="ps-body">
-                <h3>What you save gets encrypted immediately</h3>
-                <p>
-                  History, saved logins, and bookmarks are encrypted with
-                  AES-256-GCM on your device before they ever touch disk — not
-                  batched, not deferred.
-                </p>
-              </div>
-            </li>
-            <li class="privacy-step reveal">
-              <span class="ps-num">03</span>
-              <div class="ps-body">
-                <h3>Each workspace gets its own key</h3>
-                <p>
-                  Keys are derived per workspace with PBKDF2, so Personal and
-                  Work can't read each other's data even while both are
-                  unlocked.
-                </p>
-              </div>
-            </li>
-            <li class="privacy-step reveal">
-              <span class="ps-num">04</span>
-              <div class="ps-body">
-                <h3>No account required</h3>
-                <p>
-                  The search demo sends queries to your configured search
-                  service and its upstream providers. Opening results connects
-                  to those websites. Search preferences stay in your browser;
-                  optional recent searches are local and unencrypted. See the
-                  search interface’s Privacy panel for details.
-                </p>
-              </div>
-            </li>
-          </ol>
-
-          <a
-            href="https://github.com/FellowPythonCoder/SreonBrowserCode/tree/main"
-            class="btn btn-ghost reveal"
-            >Read the source on GitHub</a
+          <form
+            id="search-form"
+            class="search-form"
+            role="search"
+            action="./"
+            method="get"
           >
+            <span class="input-search-icon" data-icon="search"></span>
+            <label class="sr-only" for="search-input">Search the web</label>
+            <input
+              id="search-input"
+              name="q"
+              type="search"
+              placeholder="Where will your curiosity take you?"
+              maxlength="500"
+              autocomplete="off"
+              spellcheck="false"
+              required
+            />
+            <button
+              type="button"
+              id="clear-search"
+              class="icon-button"
+              aria-label="Clear search"
+              hidden
+            >
+              <span data-icon="x"></span>
+            </button>
+            <kbd class="search-shortcut" aria-hidden="true">/</kbd>
+            <button type="submit" class="search-submit" aria-label="Search">
+              <span data-icon="arrow-right"></span>
+            </button>
+          </form>
+          <div class="search-below" id="search-below">
+            <span class="search-assurance"
+              ><span data-icon="shield"></span>No ads. No profiling. Just
+              possibilities.</span
+            >
+            <span class="keyboard-hint">Press <kbd>↵</kbd> to explore</span>
+          </div>
+          <div id="recent-searches" class="recent-searches" hidden></div>
         </div>
       </section>
-
-      <section class="contact" id="contact">
-        <div class="wrap">
-          <div class="section-head reveal">
-            <span class="section-kicker">sreon://contact</span>
-            <h2>Run into a problem?</h2>
-            <p class="section-sub">
-              Bugs, questions, or feature ideas — email me directly and I'll get
-              back to you.
-            </p>
+      <section
+        class="results-section"
+        id="results-section"
+        aria-label="Search results"
+        hidden
+      >
+        <div class="results-toolbar">
+          <p id="results-meta" role="status" aria-live="polite"></p>
+          <div class="result-filters">
+            <label class="sr-only" for="time-filter">Time range</label
+            ><select id="time-filter">
+              <option value="">Any time</option>
+              <option value="day">Past day</option>
+              <option value="week">Past week</option>
+              <option value="month">Past month</option>
+              <option value="year">Past year</option></select
+            ><button class="text-button" data-dialog="settings">
+              <span data-icon="sliders"></span>Filters
+            </button>
           </div>
-          <a href="mailto:azadpelia13@gmail.com" class="btn btn-primary reveal"
-            >&#9993;&#65039; azadpelia13@gmail.com</a
-          >
+        </div>
+        <div id="results-content" aria-live="polite" aria-busy="false"></div>
+        <div class="pagination" id="pagination" hidden>
+          <button class="secondary-button" id="previous-page">
+            <span data-icon="arrow-left"></span>Previous</button
+          ><span id="page-number"></span
+          ><button class="secondary-button" id="next-page">
+            Next<span data-icon="arrow-right"></span>
+          </button>
         </div>
       </section>
     </main>
-
     <footer class="site-footer">
-      <div class="wrap footer-inner">
-        <div class="brand">
-          <img src="assets/sreon-logo.png" alt="Sreon" class="brand-mark" />
-          <span>Sreon</span>
-        </div>
-        <div class="footer-links">
-          <a href="https://github.com/FellowPythonCoder/Sreon-Browser"
-            >Source code</a
-          >
-          <a href="#privacy">Privacy</a>
-          <a href="#features">Features</a>
-          <a href="#contact">Contact</a>
-        </div>
-      </div>
+      <nav aria-label="Footer">
+        <button data-dialog="privacy">Privacy</button
+        ><button data-dialog="shortcuts">Shortcuts <kbd>?</kbd></button>
+      </nav>
     </footer>
-
-    <script src="app.js" defer></script>
+    <dialog id="modal" aria-labelledby="modal-title">
+      <div class="modal-top">
+        <a class="brand small" href="./" aria-label="Sreon home"
+          ><img
+            src="assets/sreon-logo.png"
+            alt=""
+            width="27"
+            height="27"
+          /><span>sreon.</span></a
+        ><button class="icon-button" id="close-modal" aria-label="Close dialog">
+          <span data-icon="x"></span>
+        </button>
+      </div>
+      <div id="modal-content"></div>
+    </dialog>
+    <div id="toast" role="status" aria-live="polite"></div>
   </body>
 </html>

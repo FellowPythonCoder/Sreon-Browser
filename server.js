@@ -9,16 +9,6 @@ const times = new Set(["", "day", "week", "month", "year"]);
 const languages = new Set(["auto", "en", "de", "es", "fr", "it", "ja"]);
 const publicFiles = new Set([
   "index.html",
-  "site-config.js",
-  "search/index.html",
-  "search/app.js",
-  "search/styles.css",
-  "o/index.html",
-  "sreon.zip",
-  "google8a635a877beef351.html",
-  ...Array.from({ length: 7 }, (_, i) => `games/pack${i + 1}.js`),
-  "games/engine.js",
-  "games/fx.js",
   "styles.css",
   "app.js",
   "theme.js",
@@ -26,7 +16,6 @@ const publicFiles = new Set([
   "LICENSE.txt",
 ]);
 const mimeTypes = {
-  ".zip": "application/zip",
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -108,7 +97,7 @@ export function createSreonServer({
     "Referrer-Policy": "no-referrer",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
     "Content-Security-Policy":
-      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: http:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self' https:",
+      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: http:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'",
   };
   function sendJson(res, status, data) {
     res.writeHead(status, {
@@ -281,14 +270,11 @@ export function createSreonServer({
       } catch {
         return sendJson(res, 400, { message: "Invalid path." });
       }
-      if (name === "search" || name === "o") {
-        res.writeHead(308, { Location: `/${name}/${url.search}` });
+      if (["search", "search/", "search/index.html"].includes(name)) {
+        res.writeHead(308, { Location: `/${url.search}` });
         return res.end();
       }
-      if (name === "search/") name = "search/index.html";
-      if (name === "o/") name = "o/index.html";
       if (name === "") name = "index.html";
-      if (name === "o/index.html") res.removeHeader("Content-Security-Policy");
       const file = resolve(root, name);
       const asset =
         name.startsWith("assets/") &&
