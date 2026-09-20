@@ -1,224 +1,46 @@
 <!doctype html>
 <html lang="en" data-theme="light">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f8f7f2" />
-    <meta
-      name="description"
-      content="Meet Sreon. Independent, open-source search with less noise and more discovery. Your curiosity belongs to you."
-    />
-    <title>Sreon — Less noise. More discovery.</title>
-    <link rel="icon" href="assets/sreon-logo.png" />
-    <link
-      rel="preload"
-      href="assets/fonts/dm-sans-latin-400-normal.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="assets/fonts/instrument-serif-latin-400-normal.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link rel="stylesheet" href="styles.css" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Sreon</title>
+    <link rel="icon" href="assets/sreon-logo.png">
     <script src="theme.js"></script>
+    <link rel="stylesheet" href="styles.css">
     <script src="native.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body>
-    <a class="skip-link" href="#search-input">Skip to search</a>
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="Sreon home"
-        ><img src="assets/sreon-logo.png" alt="" width="34" height="34" /><span
-          >sreon<span class="brand-period">.</span></span
-        ></a
-      >
-      <nav class="header-actions" aria-label="Main navigation">
-        <a
-          class="source-link"
-          aria-label="Open Sreon source code"
-          href="https://github.com/FellowPythonCoder/Sreon-Browser"
-          target="_blank"
-          rel="noopener noreferrer"
-          ><span data-icon="code"></span><span>Open source</span
-          ><span class="tiny-arrow" data-icon="arrow-up-right"></span
-        ></a>
-        <span class="header-divider"></span>
-        <button
-          class="icon-button"
-          id="theme-toggle"
-          aria-label="Switch to dark mode"
-          title="Switch to dark mode"
-        >
-          <span data-icon="moon"></span>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false">
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20.3 14.1A8.5 8.5 0 0 1 9.9 3.7 8.5 8.5 0 1 0 20.3 14.1Z"/></svg>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+    </button>
+    <main id="app">
+      <div class="search-area">
+        <button id="home" class="brand" type="button" aria-label="Sreon start page">
+          <img src="assets/sreon-logo.png" width="112" height="112" alt="Sreon logo">
+          <span>Sreon</span>
         </button>
-        <button
-          class="icon-button"
-          data-dialog="settings"
-          aria-label="Search settings"
-          title="Search settings"
-        >
-          <span data-icon="settings"></span>
-        </button>
-      </nav>
-    </header>
-    <main>
-      <section class="search-section" aria-labelledby="hero-title">
-        <div class="hero-intro" id="hero-intro">
-          <h1 id="hero-title">Less noise. <em>More discovery.</em></h1>
-          <p class="hero-description">
-            An open web. An open mind. A search engine that stays out of your
-            way.
-          </p>
-        </div>
-        <div class="search-workspace">
-          <div class="search-tabs" role="tablist" aria-label="Search category">
-            <button
-              class="search-tab active"
-              id="tab-general"
-              role="tab"
-              aria-selected="true"
-              data-category="general"
-            >
-              <span data-icon="globe"></span>All
-            </button>
-            <button
-              class="search-tab"
-              id="tab-images"
-              role="tab"
-              aria-selected="false"
-              tabindex="-1"
-              data-category="images"
-            >
-              <span data-icon="image"></span>Images
-            </button>
-            <button
-              class="search-tab"
-              id="tab-news"
-              role="tab"
-              aria-selected="false"
-              tabindex="-1"
-              data-category="news"
-            >
-              <span data-icon="news"></span>News
-            </button>
-            <button
-              class="search-tab"
-              id="tab-videos"
-              role="tab"
-              aria-selected="false"
-              tabindex="-1"
-              data-category="videos"
-            >
-              <span data-icon="video"></span>Videos
-            </button>
-          </div>
-          <form
-            id="search-form"
-            class="search-form"
-            role="search"
-            action="./"
-            method="get"
-          >
-            <span class="input-search-icon" data-icon="search"></span>
-            <label class="sr-only" for="search-input">Search the web</label>
-            <input
-              id="search-input"
-              name="q"
-              type="search"
-              placeholder="Where will your curiosity take you?"
-              maxlength="500"
-              autocomplete="off"
-              spellcheck="false"
-              required
-            />
-            <button
-              type="button"
-              id="clear-search"
-              class="icon-button"
-              aria-label="Clear search"
-              hidden
-            >
-              <span data-icon="x"></span>
-            </button>
-            <kbd class="search-shortcut" aria-hidden="true">/</kbd>
-            <button type="submit" class="search-submit" aria-label="Search">
-              <span data-icon="arrow-right"></span>
-            </button>
-          </form>
-          <div class="search-below" id="search-below">
-            <span class="search-assurance"
-              ><span data-icon="shield"></span>No ads. No profiling. Just
-              possibilities.</span
-            >
-            <span class="keyboard-hint">Press <kbd>↵</kbd> to explore</span>
-          </div>
-          <div id="desktop-connection" class="native-connection" hidden>
-            <span>Native Mac app. No local server.</span
-            ><button class="text-button" data-dialog="settings">
-              Connect search →
-            </button>
-          </div>
-          <div id="recent-searches" class="recent-searches" hidden></div>
-        </div>
-      </section>
-      <section
-        class="results-section"
-        id="results-section"
-        aria-label="Search results"
-        hidden
-      >
-        <div class="results-toolbar">
-          <p id="results-meta" role="status" aria-live="polite"></p>
-          <div class="result-filters">
-            <label class="sr-only" for="time-filter">Time range</label
-            ><select id="time-filter">
-              <option value="">Any time</option>
-              <option value="day">Past day</option>
-              <option value="week">Past week</option>
-              <option value="month">Past month</option>
-              <option value="year">Past year</option></select
-            ><button class="text-button" data-dialog="settings">
-              <span data-icon="sliders"></span>Filters
-            </button>
-          </div>
-        </div>
-        <div id="results-content" aria-live="polite" aria-busy="false"></div>
-        <div class="pagination" id="pagination" hidden>
-          <button class="secondary-button" id="previous-page">
-            <span data-icon="arrow-left"></span>Previous</button
-          ><span id="page-number"></span
-          ><button class="secondary-button" id="next-page">
-            Next<span data-icon="arrow-right"></span>
+        <form id="search-form" role="search" autocomplete="off">
+          <label class="sr-only" for="search-input">Search</label>
+          <input id="search-input" type="search" placeholder="Search anything" maxlength="500" spellcheck="false" autocomplete="off" autofocus required>
+          <button class="submit" type="submit" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
           </button>
-        </div>
+        </form>
+      </div>
+      <section id="results-section" aria-label="Search results" hidden>
+        <p id="status" role="status" aria-live="polite"></p>
+        <p id="notice" class="notice" hidden></p>
+        <div id="results" aria-busy="false"></div>
+        <button id="retry" class="text-button" type="button" hidden>Try again</button>
+        <nav id="pagination" aria-label="Results pages" hidden>
+          <button id="previous" class="text-button" type="button">Previous</button>
+          <span id="page-number"></span>
+          <button id="next" class="text-button" type="button">Next</button>
+        </nav>
       </section>
     </main>
-    <footer class="site-footer">
-      <nav aria-label="Footer">
-        <button data-dialog="privacy">Privacy</button
-        ><button data-dialog="shortcuts">Shortcuts <kbd>?</kbd></button>
-      </nav>
-    </footer>
-    <dialog id="modal" aria-labelledby="modal-title">
-      <div class="modal-top">
-        <a class="brand small" href="./" aria-label="Sreon home"
-          ><img
-            src="assets/sreon-logo.png"
-            alt=""
-            width="27"
-            height="27"
-          /><span>sreon.</span></a
-        ><button class="icon-button" id="close-modal" aria-label="Close dialog">
-          <span data-icon="x"></span>
-        </button>
-      </div>
-      <div id="modal-content"></div>
-    </dialog>
-    <div id="toast" role="status" aria-live="polite"></div>
   </body>
 </html>

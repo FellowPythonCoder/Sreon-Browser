@@ -1,5 +1,4 @@
-use crate::search::{self, ApiError, ConnectionStatus, SearchRequest, SearchResponse};
-use std::sync::atomic::{AtomicU64, Ordering};
+use crate::search::{self, ApiError, SearchRequest, SearchResponse};
 use std::sync::Mutex;
 use tauri::menu::{AboutMetadata, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::webview::NewWindowResponse;
@@ -8,7 +7,6 @@ use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindow, Webvi
 struct SearchState {
     client: reqwest::Client,
     active: Mutex<Option<tokio::task::AbortHandle>>,
-    sequence: AtomicU64,
 }
 
 fn require_main(window: &WebviewWindow) -> Result<(), ApiError> {
@@ -19,10 +17,10 @@ fn require_main(window: &WebviewWindow) -> Result<(), ApiError> {
 }
 
 #[tauri::command]
-async fn search(endpoint: String, request: SearchRequest, window: WebviewWindow, state: State<'_, SearchState>) -> Result<SearchResponse, ApiError> {
+async fn search(request: SearchRequest, window: WebviewWindow, state: State<'_, SearchState>) -> Result<SearchResponse, ApiError> {
     require_main(&window)?;
-    search::request_url(&endpoint, &request)?;
-    let task = tokio::spawn(search::perform(state.client.clone(), endpoint, request));
+    search::validate(&request)?;
+    let task = tokio::spawn(search::perform(state.client.clone(), request));
     {
         let mut active = state.active.lock().map_err(|_| ApiError::new(500, "SEARCH_ERROR", "Please restart Sreon."))?;
         if let Some(previous) = active.replace(task.abort_handle()) { previous.abort(); }
@@ -31,28 +29,16 @@ async fn search(endpoint: String, request: SearchRequest, window: WebviewWindow,
 }
 
 #[tauri::command]
-async fn connection_status(endpoint: String, window: WebviewWindow, state: State<'_, SearchState>) -> Result<ConnectionStatus, ApiError> {
-    require_main(&window)?;
-    Ok(search::connection(&state.client, &endpoint).await)
-}
-
-#[tauri::command]
-async fn open_page(url: String, reuse: bool, window: WebviewWindow, app: AppHandle, state: State<'_, SearchState>) -> Result<(), ApiError> {
+async fn open_page(url: String, window: WebviewWindow, app: AppHandle) -> Result<(), ApiError> {
     require_main(&window)?;
     let url = search::web_url(&url).ok_or_else(|| ApiError::new(400, "INVALID_URL", "Sreon opens public HTTP or HTTPS websites only."))?;
-    if reuse {
-        if let Some(existing) = app.get_webview_window("page-reuse") {
-            existing.navigate(url).map_err(window_error)?;
-            existing.set_focus().map_err(window_error)?;
-            return Ok(());
-        }
+    if let Some(existing) = app.get_webview_window("page-browse") {
+        existing.navigate(url).map_err(window_error)?;
+        existing.set_focus().map_err(window_error)?;
+        return Ok(());
     }
-    if app.webview_windows().keys().filter(|label| label.starts_with("page-")).count() >= 12 {
-        return Err(ApiError::new(429, "WINDOW_LIMIT", "Close a browsing window before opening another. Sreon keeps at most 12 browsing windows open."));
-    }
-    let label = if reuse { "page-reuse".to_string() } else { format!("page-{}", state.sequence.fetch_add(1, Ordering::Relaxed)) };
     let title = format!("{} — Sreon", url.origin().ascii_serialization());
-    WebviewWindowBuilder::new(&app, label, WebviewUrl::External(url))
+    WebviewWindowBuilder::new(&app, "page-browse", WebviewUrl::External(url))
         .title(title)
         .inner_size(1180.0, 800.0)
         .min_inner_size(480.0, 400.0)
@@ -107,7 +93,7 @@ fn menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            app.manage(SearchState { client: search::client()?, active: Mutex::new(None), sequence: AtomicU64::new(1) });
+            app.manage(SearchState { client: search::client()?, active: Mutex::new(None) });
             WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
                 .title("Sreon")
                 .inner_size(1120.0, 780.0)
@@ -136,7 +122,7 @@ pub fn run() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler![search, connection_status, open_page])
+        .invoke_handler(tauri::generate_handler![search, open_page])
         .run(tauri::generate_context!())
         .expect("Could not start Sreon");
 }

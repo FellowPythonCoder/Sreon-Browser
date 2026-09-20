@@ -6,13 +6,16 @@ on:
       - arena/01a0bffb-sreon-browser
     paths:
       - src-tauri/**
-      - scripts/prepare-desktop.mjs
+      - scripts/**
+      - tests/**
       - native.js
       - app.js
       - index.html
       - styles.css
       - theme.js
       - assets/**
+      - HOW-IT-WORKS.md
+      - sreon.sh
       - package.json
       - package-lock.json
       - .github/workflows/desktop.yml
@@ -42,8 +45,20 @@ jobs:
       - run: npm ci
       - name: Test Rust search core
         run: cargo test --manifest-path src-tauri/Cargo.toml --no-default-features
-      - name: Test server and desktop asset preparation
+      - name: Test desktop assets and launcher
         run: npm test
+      - name: Check live search sources
+        id: live
+        run: |
+          if cargo run --manifest-path src-tauri/Cargo.toml --no-default-features --example live-search -- "rust programming language" > /tmp/sreon-live.json; then
+            node -e 'const fs=require("fs"); const result=JSON.parse(fs.readFileSync("/tmp/sreon-live.json","utf8")); fs.appendFileSync(process.env.GITHUB_OUTPUT, "status="+(result.notice ? "reference fallback verified" : "web results verified")+"\n");'
+          else
+            echo 'status=sources unavailable from this runner' >> "$GITHUB_OUTPUT"
+          fi
+      - name: "Live source report: ${{ steps.live.outputs.status }}"
+        run: echo "${{ steps.live.outputs.status }}"
+      - name: Consolidate dependency notices and exact source
+        run: node scripts/append-licenses.mjs
       - name: Build universal native app
         run: npm run desktop:build -- --target universal-apple-darwin --bundles app,dmg
       - name: Package the app bundle
@@ -52,18 +67,17 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app artifacts/Sreon-mac-universal.zip
           cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg artifacts/
           cp src-tauri/Cargo.lock artifacts/Cargo.lock
-          cp LICENSE.txt README.md artifacts/
-          printf 'Corresponding source: https://github.com/%s/tree/%s\n' "$GITHUB_REPOSITORY" "$GITHUB_SHA" > artifacts/SOURCE.txt
+          cp HOW-IT-WORKS.md artifacts/
           codesign --verify --deep --strict src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app
-          shasum -a 256 artifacts/*.zip artifacts/*.dmg > artifacts/SHA256SUMS.txt
+          printf '\n## Package verification\n\nLive source check: %s. This is not an availability guarantee.\n\nSHA-256 checksums:\n\n```\n' '${{ steps.live.outputs.status }}' >> artifacts/HOW-IT-WORKS.md
+          shasum -a 256 artifacts/*.zip artifacts/*.dmg >> artifacts/HOW-IT-WORKS.md
+          printf '```\n' >> artifacts/HOW-IT-WORKS.md
           du -sh src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app
           file src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app/Contents/MacOS/sreon
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Sreon-mac-universal
-          path: |
-            artifacts/*
-            src-tauri/Cargo.lock
+          path: artifacts/
           if-no-files-found: warn
           retention-days: 30

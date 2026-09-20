@@ -3,7 +3,7 @@ fn main() {
     tauri_build::try_build(
         tauri_build::Attributes::new().app_manifest(
             tauri_build::AppManifest::new()
-                .commands(&["search", "connection_status", "open_page"]),
+                .commands(&["search", "open_page"]),
         ),
     )
     .expect("Could not prepare Sreon desktop permissions");

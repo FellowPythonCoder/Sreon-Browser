@@ -1,3 +1,85 @@
+# How Sreon works
+
+Sreon is a minimal native Mac search app: the Sreon logo, a search box, results, and a dark-mode button. There are no settings, service addresses, accounts, or source-code links in the interface.
+
+## Run it on your Mac
+
+1. Open [Build Sreon Mac app](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/desktop.yml) and choose the latest successful run for `arena/01a0bffb-sreon-browser`.
+2. Download `Sreon-mac-universal` under **Artifacts**. GitHub may require sign-in. Unzip it, open the DMG, and drag **Sreon** into **Applications**. Alternatively, unzip `Sreon-mac-universal.zip` to obtain the app directly.
+3. Open Sreon and search. No server address or setup is needed. Internet access is required for live results.
+
+The universal app supports Apple Silicon and Intel Macs running macOS 11 or later. It uses ad-hoc signing, not Apple notarization. If macOS blocks this downloaded app, review it and use the per-app approval in **System Settings → Privacy & Security** if you trust this build. Do not disable Gatekeeper globally.
+
+The installed app does not require Node.js, Docker, Rust, a terminal, or a localhost server. Release builds are compiled on macOS and signature-checked in CI; automated UI tests simulate native IPC and are not a substitute for testing the app on a physical Mac.
+
+## Use it
+
+Type a query and press Return. Even a typed domain is treated as a search, not an address-bar navigation. Click a result to open it in Sreon's separate WebKit browsing window. The search window stays in place. Further results reuse the browsing window.
+
+The moon button toggles dark mode. Click the logo to return to the start page. **Command-L** focuses search; the native Navigate menu supports back, forward, and reload in a browsing window. Previous/Next appears only when more result pages are available.
+
+## The built-in search engine
+
+Sreon's compiled Rust core sends search requests directly over HTTPS, parses results, excludes advertisements, removes duplicate links and provider redirect wrappers, and returns plain titles, destination URLs, and snippets to the interface. Requests reuse a connection pool, have bounded response sizes and timeouts, and newer searches cancel earlier native requests. Result markup is never inserted as HTML or executed.
+
+**Built-in does not mean an independently crawled web index.** The current web source is DuckDuckGo's public HTML search endpoint (`html.duckduckgo.com/html/`). Sreon uses ordinary search and next-page form requests. It does not solve or bypass CAPTCHA, impersonate a browser to evade checks, or guarantee third-party availability.
+
+If the initial web search fails or is challenged, Sreon tries Wikipedia's public search API (`en.wikipedia.org/w/api.php`). These are limited reference articles, not equivalent full-web results. The results screen explicitly says when this fallback is in use. A failed later web page does not silently switch sources. If both sources fail, Sreon shows an error and a retry button, never invented results. HTML-source changes or rate limits can temporarily break web search.
+
+The interface is bundled with the app and talks to Rust through Tauri IPC, not HTTP. macOS provides WebKit. There is no bundled Chromium/Electron, listening web server, hosted Sreon proxy, API key, or domain to configure. Only the local search window can invoke the search/open-page commands; browsing windows have no native IPC permissions. URLs are restricted to public HTTP(S) destinations with private literal addresses blocked; this is not a complete DNS-rebinding defense.
+
+The developer browser preview is only an interface preview: it does not perform searches or pretend to be the native app. GitHub Pages cannot execute the Rust search core.
+
+## Privacy and storage
+
+Search text and your IP address go to the web source; if fallback is needed, the same query goes to the reference source. A result website receives normal browsing traffic when opened. Sreon is not a VPN or anonymity service. It adds no analytics or telemetry and fetches no external fonts, favicons, or images on the search page.
+
+Only the theme is saved locally. Queries and result pages are kept in memory for the current search, not written to a Sreon search-history database or browser URL. Returning home clears that state. Old Sreon endpoint/preferences/history entries are removed on startup. Website windows use WebKit's incognito mode; that does not hide traffic from websites, your network, or providers. System-level caches, memory, and crash reporting are outside this application's storage guarantees.
+
+## Build from source in Terminal
+
+Install Apple's command-line tools (`xcode-select --install`), Node.js 22 or newer, and stable Rust from [rustup.rs](https://rustup.rs). Then:
+
+```sh
+git clone https://github.com/FellowPythonCoder/Sreon-Browser.git
+cd Sreon-Browser
+git checkout arena/01a0bffb-sreon-browser
+bash sreon.sh build
+```
+
+The launcher builds a native `Sreon.app` for your Mac and opens it. Later, `bash sreon.sh` reopens an existing build without rebuilding. The app is under `src-tauri/target/release/bundle/macos/`. Move it to Applications if desired.
+
+For a universal app and DMG:
+
+```sh
+rustup target add aarch64-apple-darwin x86_64-apple-darwin
+npm ci
+npm run desktop:build -- --target universal-apple-darwin --bundles app,dmg
+```
+
+Tests:
+
+```sh
+npm ci
+npm test
+npm run test:rust
+npx playwright install chromium
+npm run test:ui
+```
+
+A non-mocked live source check is available with `cargo run --manifest-path src-tauri/Cargo.toml --no-default-features --example live-search -- "rust programming language"`. This makes actual online requests; source availability varies. `npm run preview` starts a developer-only static interface preview, not the application or its search engine.
+
+`src-tauri/src/search.rs` implements search and source parsing. `src-tauri/src/desktop.rs` owns native windows and IPC permissions. `index.html`, `app.js`, `native.js`, `theme.js`, and `styles.css` are the bundled interface. `scripts/prepare-desktop.mjs` includes only app assets. CI builds both Mac architectures and distributes the app, DMG, dependency lockfile, and this document. The old Docker/SearXNG setup has been removed. The existing secret page, games, verification file, domain file, and legacy ZIP remain untouched and are not bundled with the app.
+
+## Source and licenses
+
+Sreon is open source under **AGPL-3.0-only**. Corresponding source and build scripts: [FellowPythonCoder/Sreon-Browser](https://github.com/FellowPythonCoder/Sreon-Browser/tree/arena/01a0bffb-sreon-browser). CI packages append the exact source commit below. Keep this document with redistributed builds: it consolidates the previously separate project and font license files. Dependencies retain their respective licenses; CI also appends available Rust dependency license notices and includes `Cargo.lock`.
+
+The public search form protocol was checked against the [SearXNG DuckDuckGo adapter](https://github.com/searxng/searxng/blob/master/searx/engines/duckduckgo.py) (AGPL-3.0-or-later). Sreon does not embed or require a SearXNG server.
+
+### Sreon — GNU Affero General Public License
+
+```text
 GNU AFFERO GENERAL PUBLIC LICENSE
 Version 3, 19 November 2007
 
@@ -233,3 +315,204 @@ Also add information on how to contact you by electronic and paper mail.
 If your software can interact with users remotely through a computer network, you should also make sure that it provides a way for users to get its source.  For example, if your program is a web application, its interface could display a "Source" link that leads users to an archive of the code.  There are many ways you could offer source, and different solutions will be better for different programs; see section 13 for the specific requirements.
 
 You should also get your employer (if you work as a programmer) or school, if any, to sign a "copyright disclaimer" for the program, if necessary. For more information on this, and how to apply and follow the GNU AGPL, see <http://www.gnu.org/licenses/>.
+
+```
+
+### DM Sans — font copyright and SIL Open Font License
+
+```text
+Copyright 2014 The DM Sans Project Authors (https://github.com/googlefonts/dm-fonts) DMSans-Italic[opsz,wght].ttf: Copyright 2014 The DM Sans Project Authors (https://github.com/googlefonts/dm-fonts)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded,
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+
+```
+
+### Instrument Serif — font copyright and SIL Open Font License
+
+```text
+Copyright 2022 The Instrument Serif Project Authors (https://github.com/Instrument/instrument-serif) InstrumentSerif-Italic.ttf: Copyright 2022 The Instrument Serif Project Authors (https://github.com/Instrument/instrument-serif)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded,
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+
+```
+

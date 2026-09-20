@@ -2,6 +2,13 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
   "description": "Only the bundled search window can call the native search core. External browser windows receive no native permissions.",
-  "windows": ["main"],
-  "permissions": ["allow-search", "allow-connection-status", "allow-open-page", "core:event:allow-listen", "core:event:allow-unlisten"]
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "allow-search",
+    "allow-open-page",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
+  ]
 }

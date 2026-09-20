@@ -1,6 +1,6 @@
 [package]
 name = "sreon"
-version = "0.2.0"
+version = "0.3.0"
 description = "Sreon native search app"
 authors = ["Sreon contributors"]
 edition = "2021"
@@ -24,8 +24,7 @@ desktop = ["dep:tauri"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-html-escape = "0.2"
-regex = "1"
+scraper = "0.24"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "gzip", "brotli"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
