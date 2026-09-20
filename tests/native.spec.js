@@ -184,3 +184,27 @@ test("browser preview makes no pretend backend request", async ({ page }) => {
   await expect(page.getByRole("status")).toContainText("Search runs in the Sreon Mac app");
   await expect(page.getByRole("link")).toHaveCount(0);
 });
+
+test("corrupt old preferences do not prevent theme restoration or data cleanup", async ({ page }) => {
+  await nativeApp(page);
+  await page.evaluate(() => {
+    localStorage.setItem("sreon.theme", "dark");
+    localStorage.setItem("sreon.preferences", "invalid json");
+    localStorage.setItem("sreon.endpoint", "https://old.example.org");
+    localStorage.setItem("sreon.history", '["old search"]');
+  });
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(["sreon.theme"]);
+});
+
+test("search and theme toggle work when persistent storage is blocked", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "localStorage", { get() { throw new Error("Storage blocked"); } });
+  });
+  await nativeApp(page);
+  await page.getByRole("button", { name: "Dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await search(page, "forest");
+  await expect(page.getByRole("link", { name: "Result for forest" })).toBeVisible();
+});

@@ -47,6 +47,10 @@ jobs:
         run: cargo test --manifest-path src-tauri/Cargo.toml --no-default-features
       - name: Test desktop assets and launcher
         run: npm test
+      - name: Test the minimal interface
+        run: |
+          npx playwright install chromium
+          npm run test:ui
       - name: Check live search sources
         id: live
         run: |
