@@ -4,10 +4,17 @@ on:
   push:
     paths:
       - "Browser/**"
+      - "Extra/Source/src-tauri/**"
       - "unable.txt"
       - "Extra/HOW-IT-WORKS.md"
       - ".github/workflows/browser.yml"
+      - "index.html"
+      - "site/**"
   workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
 
 jobs:
   test:
@@ -40,7 +47,7 @@ jobs:
       QT_QPA_PLATFORM: offscreen
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.85.0
+      - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -50,7 +57,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libnss3 libasound2 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libgbm1 libcups2 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 libfontconfig1
       - name: Compile search engine
-        run: cargo build --release --manifest-path Browser/search/Cargo.toml --bin sreon-api
+        run: cargo build --manifest-path Extra/Source/src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api
       - run: python -m pip install -r Browser/requirements.txt
       - name: Freeze Sreon
         run: python Browser/tools/build.py --skip-engine
@@ -78,11 +85,10 @@ jobs:
           cp Browser/assets/mark.png AppDir/sreon.png
           ARCH=x86_64 ./appimagetool -n AppDir out/Linux/Sreon.AppImage || true
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: success()
         with:
           name: sreon-${{ matrix.pack }}
           path: out
-          if-no-files-found: warn
 
   assemble:
     needs: build
@@ -95,20 +101,20 @@ jobs:
           path: artifacts
       - name: One folder
         run: |
-          mkdir -p Sreon/Windows Sreon/macOS Sreon/Linux Sreon/Source Sreon/Website
-          cp -a artifacts/sreon-windows/Windows/. Sreon/Windows/ 2>/dev/null || true
-          cp -a artifacts/sreon-macos/macOS/. Sreon/macOS/ 2>/dev/null || true
-          cp -a artifacts/sreon-linux/Linux/. Sreon/Linux/ 2>/dev/null || true
+          mkdir -p Sreon
           cp Extra/HOW-IT-WORKS.md Sreon/HOW-IT-WORKS.md
           cp unable.txt Sreon/unable.txt
-          cp unable.txt Sreon/unable
-          rsync -a --exclude node_modules --exclude .venv --exclude dist --exclude search/target Browser Sreon/Source/
+          if [ -d artifacts/sreon-windows/Windows ]; then cp -a artifacts/sreon-windows/Windows Sreon/Windows; fi
+          if [ -d artifacts/sreon-macos/macOS ]; then cp -a artifacts/sreon-macos/macOS Sreon/macOS; fi
+          if [ -d artifacts/sreon-linux/Linux ]; then cp -a artifacts/sreon-linux/Linux Sreon/Linux; fi
+          mkdir -p Sreon/Website Sreon/Source
           cp -a index.html CNAME site Sreon/Website/
+          rsync -a --exclude node_modules --exclude .venv --exclude dist --exclude target --exclude __pycache__ Browser Extra/Source Extra/HOW-IT-WORKS.md Sreon/Source/
           python3 - <<'PY'
           import zipfile
           from pathlib import Path
           root = Path('Sreon')
-          with zipfile.ZipFile('Sreon-Browser.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+          with zipfile.ZipFile('Sreon.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
               for path in root.rglob('*'):
                   if path.is_file():
                       archive.write(path, path.as_posix())
@@ -118,4 +124,10 @@ jobs:
           name: Sreon
           path: |
             Sreon
-            Sreon-Browser.zip
+            Sreon.zip
+      - name: Publish download
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete sreon-preview --yes || true
+          gh release create sreon-preview Sreon.zip --title "Sreon" --notes "One folder: double-click Sreon on Windows (Windows/Sreon.exe), macOS (macOS/Sreon.dmg), or Linux (Linux/Sreon.AppImage). Includes HOW-IT-WORKS.md, unable.txt, website code, and source." --target "${GITHUB_SHA}"

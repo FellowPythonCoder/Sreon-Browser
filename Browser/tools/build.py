@@ -101,13 +101,7 @@ def main():
     if not skip:
         engine()
     else:
-        name = "sreon-api.exe" if sys.platform == "win32" else "sreon-api"
-        dest = ROOT / "engine"
-        dest.mkdir(exist_ok=True)
-        built = ROOT / "search" / "target" / "release" / name
-        if not built.is_file():
-            raise SystemExit("search engine binary missing")
-        shutil.copy2(built, dest / name)
+        place_engine()
     pyinstaller()
     if sys.platform == "darwin":
         dmg()
