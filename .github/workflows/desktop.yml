@@ -74,7 +74,7 @@ jobs:
           cache-on-failure: true
       - run: npm ci
       - name: Test Rust and integration API
-        run: node scripts/run-check.mjs cargo test --manifest-path src-tauri/Cargo.toml --no-default-features
+        run: node scripts/run-check.mjs cargo test --manifest-path src-tauri/Cargo.toml --no-default-features --features api
       - name: Test assets and packaging
         run: node scripts/run-check.mjs npm test
       - name: Test interface
@@ -105,12 +105,12 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN: '1'
       - name: Build integration API
         if: runner.os != 'macOS'
-        run: cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --bin sreon-api
+        run: cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api
       - name: Build universal integration API
         if: runner.os == 'macOS'
         run: |
-          cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --bin sreon-api --target aarch64-apple-darwin
-          cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --bin sreon-api --target x86_64-apple-darwin
+          cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api --target aarch64-apple-darwin
+          cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api --target x86_64-apple-darwin
           lipo -create src-tauri/target/aarch64-apple-darwin/release/sreon-api src-tauri/target/x86_64-apple-darwin/release/sreon-api -output artifacts/sreon-api
       - name: Test packaged integration API
         run: |

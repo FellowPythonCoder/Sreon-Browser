@@ -20,6 +20,7 @@ required-features = ["desktop"]
 [features]
 default = ["desktop"]
 desktop = ["dep:tauri"]
+api = []
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -44,3 +45,4 @@ strip = true
 [[bin]]
 name = "sreon-api"
 path = "src/api.rs"
+required-features = ["api"]

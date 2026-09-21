@@ -104,7 +104,7 @@ The desktop packages also contain `sreon-api` (Mac/Linux) or `sreon-api.exe` (Wi
 Build just the helper without desktop dependencies:
 
 ```sh
-cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --bin sreon-api
+cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api
 ```
 
 Protocol version 1, method `search`, categories `web`, `images`, `photos`, `videos`. A query is 1–500 characters. The entire request must fit in 16 KiB. `cursor` is null initially; pass `nextCursor` back unchanged for another page. Request IDs are echoed for valid requests.
