@@ -1,0 +1,112 @@
+name: Sreon Browser
+
+on:
+  push:
+    paths:
+      - "Browser/**"
+      - "unable.txt"
+      - "Extra/HOW-IT-WORKS.md"
+      - ".github/workflows/browser.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest cryptography
+      - run: python -m pytest Browser/tests
+        env:
+          PYTHONPATH: Browser
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            pack: windows
+          - os: macos-14
+            pack: macos
+          - os: ubuntu-22.04
+            pack: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Linux WebEngine libraries
+        if: matrix.pack == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libnss3 libasound2 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libgbm1 libcups2
+      - run: python -m pip install -r Browser/requirements.txt
+      - run: python Browser/tools/build.py
+      - name: Windows folder
+        if: matrix.pack == 'windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out/Windows | Out-Null
+          Copy-Item -Recurse Browser/dist/Sreon/* out/Windows/
+      - name: macOS folder
+        if: matrix.pack == 'macos'
+        run: |
+          mkdir -p out/macOS
+          cp Browser/dist/Sreon.dmg out/macOS/
+      - name: Linux folder
+        if: matrix.pack == 'linux'
+        run: |
+          mkdir -p out/Linux
+          cp Browser/dist/Sreon-linux.tar.gz out/Linux/
+          curl -L -o appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x appimagetool
+          mkdir -p AppDir/usr/bin AppDir/usr/lib AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/256x256/apps
+          cp -a Browser/dist/Sreon/. AppDir/usr/bin/
+          printf '%s\n' '[Desktop Entry]' 'Type=Application' 'Name=Sreon' 'Exec=Sreon' 'Icon=sreon' 'Categories=Network;WebBrowser;' > AppDir/sreon.desktop
+          cp Browser/assets/mark.png AppDir/sreon.png
+          ARCH=x86_64 ./appimagetool -n AppDir out/Linux/Sreon.AppImage || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sreon-${{ matrix.pack }}
+          path: out
+
+  assemble:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: One folder
+        run: |
+          mkdir -p Sreon/Windows Sreon/macOS Sreon/Linux Sreon/Source Sreon/Website
+          cp -a artifacts/sreon-windows/Windows/. Sreon/Windows/ || true
+          cp -a artifacts/sreon-macos/macOS/. Sreon/macOS/ || true
+          cp -a artifacts/sreon-linux/Linux/. Sreon/Linux/ || true
+          cp Extra/HOW-IT-WORKS.md Sreon/HOW-IT-WORKS.md
+          cp unable.txt Sreon/unable.txt
+          cp unable.txt Sreon/unable
+          rsync -a --exclude node_modules --exclude .venv --exclude dist --exclude search/target Browser Sreon/Source/
+          cp -a index.html CNAME site Sreon/Website/
+          python3 - <<'PY'
+          import zipfile
+          from pathlib import Path
+          root = Path('Sreon')
+          with zipfile.ZipFile('Sreon-Browser.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+              for path in root.rglob('*'):
+                  if path.is_file():
+                      archive.write(path, path.as_posix())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Sreon
+          path: |
+            Sreon
+            Sreon-Browser.zip

@@ -1,30 +1,36 @@
 # How Sreon works
 
-Sreon is a native desktop search app and lightweight browser. Its start page keeps the original Sreon logo, purple-and-cream styling, and dark mode. Search, media tabs, and a source-linked overview are built in. There are no service-address settings, accounts, or source-code links in the interface.
+Sreon Browser is a real desktop browser. The window, tabs, and downloads are native. Pages run in Qt WebEngine (Chromium), the same engine family other serious embedded browsers use: a small UI process and sandboxed renderer processes. It is not a website wrapper and not Electron.
+
+The start page keeps the original Sreon mark and the line **Search privately. Browse freely.** Type `youtube.com` to open YouTube. Type `YouTube` to search the existing Sreon Rust engine. Result clicks open the real site in a tab. There is no Sreon account, no telemetry, and no extra AI, games, VPN, or ad blocker in the desktop app. Things that are not built, and why, are listed in `unable.txt`.
 
 ## Install
 
-Open [Build Sreon desktop apps](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/desktop.yml), select a successful build, and download the artifact for your operating system. GitHub may require sign-in. Artifacts expire after 30 days; source builds remain available.
+Open [Sreon Browser](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/browser.yml), pick a successful run, and download the **Sreon** artifact. GitHub may require sign-in. Artifacts expire. One folder contains Windows, macOS, Linux, source, this guide, the website code, and `unable.txt`.
 
-| System | Download | Run |
+| System | In the folder | Run |
 | --- | --- | --- |
-| Windows 10/11, x64 | Sreon-Windows | Unzip, open **Builds**, then open the setup EXE. The installer installs Sreon and downloads Microsoft WebView2 if needed. |
-| Linux x86-64, Ubuntu 22.04 or compatible | Sreon-Linux | Unzip, open **Builds**, make the AppImage executable, then open it. A DEB package is also provided. |
-| macOS 11+, Apple Silicon or Intel | Sreon-Mac | Unzip, open **Builds**, open the DMG, and drag Sreon into Applications. The app ZIP is an alternative. |
+| Windows 10/11, x64 | `Windows/Sreon.exe` | Unzip and open `Sreon.exe`. SmartScreen may warn because the build is not publisher-signed. |
+| macOS 11+ | `macOS/Sreon.dmg` | Open the DMG and drag Sreon to Applications. Gatekeeper may warn because the build is not notarized. |
+| Linux x86-64 | `Linux/Sreon.AppImage` and `Sreon-linux.tar.gz` | `chmod +x Sreon.AppImage && ./Sreon.AppImage`. If FUSE is missing: `./Sreon.AppImage --appimage-extract-and-run`, or unpack the tar.gz and run `./Sreon`. |
 
-The installed app needs no Rust, Node.js, Docker, terminal server, or service URL. Internet is required for live searches and websites. Native runtime libraries are still required: WebKit on Mac, WebView2 on Windows, and compatible system libraries on Linux. AppImage support varies by distribution; Linux packages are built on Ubuntu 22.04, not claimed to work on every distribution.
+Internet is required for websites and live search. The app does not phone home to Sreon. Search queries go to the public sources used by the Rust engine only when you search. Website visits are ordinary HTTPS to that site.
 
-Linux example, replacing the filename with the downloaded name:
+### Run from source on a Mac
+
+Install Xcode command-line tools, [Rust](https://rustup.rs), and Python 3.12+. In Terminal, from the repository or the `Source` folder:
 
 ```sh
-cd Builds
-chmod +x Sreon_*.AppImage
-./Sreon_*.AppImage
+cd Browser
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python tools/build.py
+.venv/bin/python -m app
 ```
 
-If FUSE is unavailable, try `./Sreon_*.AppImage --appimage-extract-and-run` or install the DEB using your distribution's package installer.
+`tools/build.py` compiles the search engine and can also freeze a .app. For day-to-day work you only need the last line after the engine exists at `Browser/engine/sreon-api`.
 
-Windows builds are not publisher-signed; SmartScreen may warn. Mac builds are ad-hoc signed, not Apple-notarized. Approve a downloaded application only if you trust its source; do not disable operating-system protections globally. Automated builds do not replace hands-on testing on your machine. Playback, DRM, extensions, and site compatibility depend on the system webview; this is not a complete replacement for every Safari/Chrome feature.
+Windows and Linux are the same idea: install Rust and Python, then `python tools/build.py` or `python -m app` from `Browser`.
 
 ## Search and visit sites
 
@@ -55,59 +61,42 @@ Only the theme is saved locally by Sreon. Query/cache data is temporary memory, 
 
 A local webview renders the controls; a separate, unprivileged child webview renders websites inside the same native window. Only the local **main webview**, not every view sharing its window, can invoke native commands. Remote views have no IPC permissions. Search result markup is rendered as text, not executable HTML. Website views use incognito mode and public HTTP(S) navigation restrictions. Private literal addresses are blocked, but this is not a complete DNS-rebinding defense. System caches/crash reporting are outside the application's storage guarantees. Pop-up windows are blocked.
 
-## Two-folder layout
+## Delivery folder
 
-Every platform download contains only these top-level folders:
+A complete browser download is one `Sreon/` folder:
 
 ```text
-Builds/
-Extra/
+Sreon/
+  Windows/          Sreon.exe and Chromium runtime
+  macOS/            Sreon.dmg
+  Linux/            Sreon.AppImage and Sreon-linux.tar.gz
+  Source/Browser/   desktop browser source
+  Website/          website and hidden workspace
   HOW-IT-WORKS.md
-  API/
-  Source/
+  unable.txt
 ```
 
-**Builds** holds the runnable app or installers for that platform, without source code mixed in. **Extra** holds this guide, the optional compiled integration helper under `API/`, and the unpacked app source under `Source/`. The source includes its build lockfile when generated by CI. Keep Extra with redistributed builds because it contains source and license notices.
+Generated installers are not committed to Git. The website still has no in-page download buttons.
 
-In the repository, source is also under `Extra/Source/`. `Extra/Sreon-source.zip` is a separate source-only download. Extracting it gives the same layout inside a `Sreon/` folder, but its Builds folder starts empty: it does not contain installers. Run a source build to populate Builds, or download a platform package for precompiled apps. Generated installers are not committed to Git.
+The desktop app lives under `Browser/`. It is a Qt WebEngine shell plus the Rust search crate in `Browser/search/`. It does not wrap `index.html`. The older Tauri project under `Extra/Source` remains the website’s search helper source; do not treat that old single-webview app as this browser.
 
-The source contains only the desktop app and its development tools:
+New application code has no explanatory comments. Instructions and omitted-feature notes are this file and `unable.txt`.
 
-- `app/`: the native app's bundled interface and local assets.
-- `src-tauri/`: compiled Rust search, native windows, integration API, configuration, and app icons.
-- `integrations/`: Python and Node clients for the compiled API helper.
-- `scripts/`: native asset preparation, source packaging, build collection, and license collection.
-- `tests/`: app-interface, API, packaging, and launcher tests.
+## Build the browser
 
-The app's `app/index.html`, CSS, and JavaScript are necessary desktop interface assets—not a separate website. There is no standalone website entry point, preview server, website domain configuration, or website ZIP in the app source or downloads. Interface tests intercept bundled files directly; they do not start a web server. The separate website, hidden workspace, and renamed interactive modules are excluded from desktop app packages and the app-only source ZIP. Website changes were requested separately after the app-only delivery.
-
-New application/integration code has no explanatory comments. Instructions and legal notices are consolidated here. To regenerate the source ZIP, run `python scripts/package-source.py` from `Extra/Source` (use `python3` where needed). New source files are included without Git staging; this also works from an extracted archive. Packaging skips dependencies, generated files, nested ZIPs, symlinks, and common private-file names. It cannot detect secrets embedded inside normal source code: review your source before distributing it. Missing required files or a write failure leave the previous ZIP intact.
-
-## Build the app
-
-Install Node.js 22+, stable Rust, and native build prerequisites: Xcode command-line tools on Mac; Visual Studio C++ Build Tools and WebView2 on Windows; GTK/WebKitGTK 4.1 development libraries on Linux. Then, from the extracted Sreon folder or repository root:
+Install Python 3.12+, stable Rust 1.85+, and a C toolchain (Xcode CLT on Mac, Visual Studio C++ on Windows, gcc on Linux). From the repository:
 
 ```sh
-cd Extra/Source
-npm ci
-npm run desktop:build
+cd Browser
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m pytest tests
+.venv/bin/python tools/build.py
 ```
 
-Platform-specific package builds:
+`tools/build.py` compiles `sreon-api`, copies it to `engine/`, and freezes the desktop app with PyInstaller. On a Mac it also writes `dist/Sreon.dmg`. On Linux it writes `dist/Sreon-linux.tar.gz`. GitHub Actions attaches platform folders and packs them together.
 
-```sh
-npm run desktop:build -- --bundles nsis
-npm run desktop:build -- --bundles appimage,deb
-```
-
-Run only the appropriate command for your operating system. Finished app bundles are copied into the top-level `Builds/` folder automatically. Intermediate compiler output remains under `Extra/Source/src-tauri/target/`. For Mac, `bash sreon.sh build` builds and opens the app. A universal Mac build requires:
-
-```sh
-rustup target add aarch64-apple-darwin x86_64-apple-darwin
-npm run desktop:build -- --target universal-apple-darwin --bundles app,dmg
-```
-
-The desktop source has no website or preview command. Its search and browsing run in the installed application. The separate website described below is optional and is not needed by the desktop app.
+The website is separate and is not required to use the installed browser.
 
 ## Integrate into another application
 
