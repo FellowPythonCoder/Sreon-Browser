@@ -281,8 +281,11 @@ pub fn parse_media(data: Value) -> Result<SearchResponse, ApiError> {
         let info = item.get("imageinfo")?.as_array()?.first()?;
         let url = web_url(info.get("descriptionurl")?.as_str()?)?;
         if url.host_str()? != "commons.wikimedia.org" { return None; }
-        let thumbnail = web_url(info.get("thumburl").or_else(|| info.get("url"))?.as_str()?)?;
-        if thumbnail.scheme() != "https" || thumbnail.host_str()? != "upload.wikimedia.org" { return None; }
+        let mut thumbnail = web_url(info.get("thumburl").or_else(|| info.get("url"))?.as_str()?)?;
+        if thumbnail.scheme() != "https" || !["upload.wikimedia.org", "thumb.wikimedia.org"].contains(&thumbnail.host_str()?) { return None; }
+        let params: Vec<(String, String)> = thumbnail.query_pairs().filter(|(key, _)| !key.starts_with("utm_")).map(|(key, value)| (key.into_owned(), value.into_owned())).collect();
+        thumbnail.set_query(None);
+        if !params.is_empty() { thumbnail.query_pairs_mut().extend_pairs(params); }
         let meta = |key: &str| clean_text(info.get("extmetadata").and_then(|m| m.get(key)).and_then(|m| m.get("value")).and_then(Value::as_str).unwrap_or(""));
         let credit = format!("{} · {}", meta("Artist").chars().take(180).collect::<String>(), meta("LicenseShortName"));
         Some(SearchResult { title: plain_text(item.get("title")?.as_str()?.trim_start_matches("File:")), url: url.to_string(), content: meta("ImageDescription").chars().take(500).collect(), thumbnail: Some(thumbnail.to_string()), credit: Some(credit) })
@@ -404,10 +407,11 @@ mod tests {
 
     #[test]
     fn media_results_retain_credit_and_safe_thumbnails() {
-        let data = json!({"batchcomplete":true,"query":{"pages":[{"title":"File:Forest.jpg","index":1,"imageinfo":[{"descriptionurl":"https://commons.wikimedia.org/wiki/File:Forest.jpg","thumburl":"https://upload.wikimedia.org/forest.jpg","extmetadata":{"Artist":{"value":"A photographer"},"LicenseShortName":{"value":"CC BY-SA"}}}]}]},"continue":{"gsroffset":24}});
+        let data = json!({"batchcomplete":true,"query":{"pages":[{"title":"File:Forest.jpg","index":1,"imageinfo":[{"descriptionurl":"https://commons.wikimedia.org/wiki/File:Forest.jpg","thumburl":"https://thumb.wikimedia.org/forest.jpg?utm_source=test","extmetadata":{"Artist":{"value":"A photographer"},"LicenseShortName":{"value":"CC BY-SA"}}}]}]},"continue":{"gsroffset":24}});
         let response = parse_media(data).unwrap();
         assert_eq!(response.results[0].credit.as_deref(), Some("A photographer · CC BY-SA"));
         assert!(matches!(response.next_cursor, Some(SearchCursor::Media { offset: 24 })));
+        assert_eq!(response.results[0].thumbnail.as_deref(), Some("https://thumb.wikimedia.org/forest.jpg"));
     }
 
     #[test]

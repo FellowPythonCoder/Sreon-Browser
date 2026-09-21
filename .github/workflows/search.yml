@@ -41,7 +41,7 @@ jobs:
           try:
               params = {'action':'query','format':'json','formatversion':'2','generator':'search','gsrnamespace':'6','gsrsearch':'forest filetype:bitmap','gsrlimit':'3','prop':'imageinfo','iiprop':'url|extmetadata','iiurlwidth':'480'}
               data = json.loads(get('https://commons.wikimedia.org/w/api.php?' + urllib.parse.urlencode(params)))
-              images = any(page.get('imageinfo',[{}])[0].get('thumburl','').startswith('https://upload.wikimedia.org/') for page in data.get('query',{}).get('pages',[]))
+              images = any(page.get('imageinfo',[{}])[0].get('thumburl','').startswith(('https://upload.wikimedia.org/', 'https://thumb.wikimedia.org/')) for page in data.get('query',{}).get('pages',[]))
               params = {'format':'rss','q':'cats (site:youtube.com/watch OR site:vimeo.com OR site:dailymotion.com/video)','count':'20'}
               rss = ET.fromstring(get('https://www.bing.com/search?' + urllib.parse.urlencode(params)))
               videos = any('youtube.com/watch?' in item.findtext('link','') or 'vimeo.com/' in item.findtext('link','') for item in rss.findall('./channel/item'))

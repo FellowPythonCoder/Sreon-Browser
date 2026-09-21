@@ -101,7 +101,7 @@
         preview.className = "media-preview";
         preview.setAttribute("aria-label", `Open ${item.title}`);
         const thumbnail = safeUrl(item.thumbnail);
-        if (thumbnail?.protocol === "https:" && ["upload.wikimedia.org", "i.ytimg.com"].includes(thumbnail.hostname)) {
+        if (thumbnail?.protocol === "https:" && ["upload.wikimedia.org", "thumb.wikimedia.org", "i.ytimg.com"].includes(thumbnail.hostname)) {
           const image = document.createElement("img");
           image.src = thumbnail.href;
           image.alt = item.title;

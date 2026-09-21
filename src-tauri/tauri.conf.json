@@ -15,7 +15,7 @@
       "capabilities": [
         "main"
       ],
-      "csp": "default-src 'self' customprotocol: asset:; script-src 'self'; style-src 'self'; img-src 'self' asset: https://upload.wikimedia.org https://i.ytimg.com; font-src 'self' asset:; connect-src ipc: http://ipc.localhost https://ipc.localhost; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'"
+      "csp": "default-src 'self' customprotocol: asset:; script-src 'self'; style-src 'self'; img-src 'self' asset: https://upload.wikimedia.org https://thumb.wikimedia.org https://i.ytimg.com; font-src 'self' asset:; connect-src ipc: http://ipc.localhost https://ipc.localhost; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self'"
     }
   },
   "bundle": {

@@ -11,7 +11,7 @@ async function app(page, mode = "normal") {
         const { q, category, cursor } = payload.request;
         if (mode === "error" && window.calls.filter(x => x.command === "search").length === 1) throw { message: "Web search is unavailable right now." };
         if (mode === "race" && q === "old") await new Promise(resolve => setTimeout(resolve, 400));
-        const item = { title: mode === "unsafe" ? "<img src=x onerror=alert(1)>" : `${q}${cursor ? " page 2" : ""}`, url: "https://www.youtube.com/", content: "Watch and share videos.", thumbnail: category === "images" ? "https://upload.wikimedia.org/example.jpg" : null, credit: category === "images" ? "Photographer · CC BY-SA" : null };
+        const item = { title: mode === "unsafe" ? "<img src=x onerror=alert(1)>" : `${q}${cursor ? " page 2" : ""}`, url: "https://www.youtube.com/", content: "Watch and share videos.", thumbnail: category === "images" ? "https://thumb.wikimedia.org/example.jpg" : null, credit: category === "images" ? "Photographer · CC BY-SA" : null };
         return { results: mode === "empty" ? [] : [item], overview: category === "web" && mode !== "empty" ? [item] : [], nextCursor: cursor ? null : { source: "web", fields: { s: "10", vqd: "test" } }, notice: category === "images" ? "Images from Wikimedia Commons." : null };
       } },
     };
@@ -90,7 +90,7 @@ test("overview references results rather than generating an unsupported answer",
 });
 
 test("image category requests real media data and displays attribution", async ({ page }) => {
-  await page.route("https://upload.wikimedia.org/**", route => route.abort());
+  await page.route("https://thumb.wikimedia.org/**", route => route.abort());
   await app(page);
   await search(page, "forest");
   await page.getByRole("tab", { name: "Images", exact: true }).click();
