@@ -7,29 +7,46 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-def run(command, **kwargs):
-    print("+", *command, flush=True)
-    subprocess.check_call(command, **kwargs)
+def engine_name():
+    return "sreon-api.exe" if sys.platform == "win32" else "sreon-api"
 
-def cargo():
-    found = shutil.which("cargo")
-    if not found:
-        found = str(Path.home() / ".cargo" / "bin" / ("cargo.exe" if sys.platform == "win32" else "cargo"))
-    if not Path(found).is_file() and not shutil.which("cargo"):
-        raise SystemExit("cargo not found")
-    return found if Path(found).is_file() else "cargo"
+def find_engine():
+    name = engine_name()
+    for path in (
+        ROOT / "engine" / name,
+        ROOT / "search" / "target" / "release" / name,
+        ROOT.parent / "Extra" / "Source" / "src-tauri" / "target" / "release" / name,
+    ):
+        print("engine candidate", path, path.is_file(), flush=True)
+        if path.is_file():
+            return path
+    return None
 
-def engine():
-    name = "sreon-api.exe" if sys.platform == "win32" else "sreon-api"
+def place_engine():
     dest = ROOT / "engine"
     dest.mkdir(exist_ok=True)
-    run([cargo(), "build", "--release", "--manifest-path", str(ROOT / "search" / "Cargo.toml"), "--bin", "sreon-api"])
-    built = ROOT / "search" / "target" / "release" / name
-    if not built.is_file():
-        raise SystemExit("search engine failed to build")
-    shutil.copy2(built, dest / name)
+    built = find_engine()
+    if built is None:
+        raise SystemExit("search engine binary missing")
+    target = dest / engine_name()
+    if built.resolve() != target.resolve():
+        shutil.copy2(built, target)
     if sys.platform != "win32":
-        os.chmod(dest / name, 0o755)
+        os.chmod(target, 0o755)
+    print("engine ready", target, flush=True)
+
+def run(command):
+    print("+", *command, flush=True)
+    log = ROOT / "freeze.log"
+    with log.open("a", encoding="utf-8") as handle:
+        handle.write(" ".join(map(str, command)) + "\n")
+        process = subprocess.run(command, stdout=handle, stderr=subprocess.STDOUT, text=True)
+    text = log.read_text(encoding="utf-8", errors="replace")
+    print(text[-4000:], flush=True)
+    if process.returncode:
+        snippet = text[-2000:].replace("\r", " ").replace("%", "/")
+        print("::error::" + snippet[:3900], flush=True)
+        raise SystemExit(process.returncode)
 
 def pyinstaller():
     os.chdir(ROOT)
@@ -48,17 +65,11 @@ def pyinstaller():
         "--hidden-import", "PySide6.QtTextToSpeech",
         "--hidden-import", "shiboken6",
         "--hidden-import", "cryptography",
-        "--collect-binaries", "PySide6",
-        "--collect-data", "PySide6",
         "--add-data", f"assets{sep}assets",
         "--add-data", f"engine{sep}engine",
         "--exclude-module", "tkinter",
         "--exclude-module", "matplotlib",
         "--exclude-module", "numpy",
-        "--exclude-module", "PySide6.Qt3DCore",
-        "--exclude-module", "PySide6.QtCharts",
-        "--exclude-module", "PySide6.QtDesigner",
-        "--exclude-module", "PySide6.QtBluetooth",
         "app/main.py",
     ]
     if sys.platform == "darwin":
@@ -99,9 +110,8 @@ def linux_tar():
 def main():
     skip = "--skip-engine" in sys.argv
     if not skip:
-        engine()
-    else:
-        place_engine()
+        run(["cargo", "build", "--release", "--manifest-path", str(ROOT.parent / "Extra" / "Source" / "src-tauri" / "Cargo.toml"), "--no-default-features", "--features", "api", "--bin", "sreon-api"])
+    place_engine()
     pyinstaller()
     if sys.platform == "darwin":
         dmg()

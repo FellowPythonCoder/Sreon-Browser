@@ -58,9 +58,23 @@ jobs:
           sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libnss3 libasound2 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libgbm1 libcups2 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 libfontconfig1
       - name: Compile search engine
         run: cargo build --manifest-path Extra/Source/src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api
+      - name: Place engine
+        shell: bash
+        run: |
+          mkdir -p Browser/engine
+          if [ -f Extra/Source/src-tauri/target/release/sreon-api.exe ]; then cp Extra/Source/src-tauri/target/release/sreon-api.exe Browser/engine/; fi
+          if [ -f Extra/Source/src-tauri/target/release/sreon-api ]; then cp Extra/Source/src-tauri/target/release/sreon-api Browser/engine/; fi
+          ls -la Browser/engine Extra/Source/src-tauri/target/release
       - run: python -m pip install -r Browser/requirements.txt
       - name: Freeze Sreon
-        run: python Browser/tools/build.py --skip-engine
+        run: python -u Browser/tools/build.py --skip-engine
+      - name: Freeze log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: freeze-log-${{ matrix.pack }}
+          path: Browser/freeze.log
+          if-no-files-found: warn
       - name: Windows folder
         if: matrix.pack == 'windows'
         shell: pwsh
