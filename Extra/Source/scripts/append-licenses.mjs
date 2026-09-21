@@ -36,4 +36,4 @@ for (const [text, labels] of notices) {
 }
 if (/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(process.env.GITHUB_REPOSITORY || "") && /^[a-f0-9]{40}$/.test(process.env.GITHUB_SHA || ""))
   output += `\n## Exact source for this build\n\nhttps://github.com/${process.env.GITHUB_REPOSITORY}/tree/${process.env.GITHUB_SHA}\n`;
-await appendFile("HOW-IT-WORKS.md", output);
+await appendFile("../HOW-IT-WORKS.md", output);

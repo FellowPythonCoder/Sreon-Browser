@@ -61,13 +61,24 @@ test("only the local main window receives explicitly scoped native commands", as
 
 test("one explanatory document retains every original project and font license", async () => {
   const root = new URL("../", import.meta.url);
-  const docs = (await readdir(root)).filter((file) => /\.(md|txt)$/i.test(file));
+  const docs = (await readdir(new URL("../../", import.meta.url))).filter((file) => /\.(md|txt)$/i.test(file));
   assert.deepEqual(docs, ["HOW-IT-WORKS.md"]);
-  const document = await readFile(new URL("HOW-IT-WORKS.md", root), "utf8");
+  const document = await readFile(new URL("../HOW-IT-WORKS.md", root), "utf8");
   const config = JSON.parse(await readFile(new URL("src-tauri/tauri.conf.json", root), "utf8"));
-  assert.deepEqual(config.bundle.resources, { "../HOW-IT-WORKS.md": "HOW-IT-WORKS.md" });
-  const notices = document.split("```text\n").slice(1).map((part) => part.split("\n```")[0]);
+  assert.deepEqual(config.bundle.resources, { "../../HOW-IT-WORKS.md": "HOW-IT-WORKS.md" });
+  const notices = document.slice(document.indexOf("### Sreon —")).split("```text\n").slice(1, 4).map((part) => part.split("\n```")[0]);
   assert.equal(notices.length, 3);
   assert.deepEqual(notices.map((notice) => createHash("sha256").update(notice).digest("hex")), ["d8a6cc31abc16b6748c7a21f21611f5a1ec33f67d22ca23d7da1c19b95496bee", "6fbd040a29c2037a765dfb9f2561e9965b5c95c6dcb5dce516089d63d5f17af7", "b6106a757902d2d412e09d94dc4a226fe3da80485208a98003969f1b8b6b1d74"]);
-  assert.equal((await readdir(new URL("assets/fonts/", root))).some((file) => file.endsWith(".txt")), false);
+  assert.equal((await readdir(new URL("app/assets/fonts/", root))).some((file) => file.endsWith(".txt")), false);
+});
+
+test("source has no standalone website entry point or preview command", async () => {
+  const root = new URL("../", import.meta.url);
+  const files = await readdir(root);
+  assert.ok(!files.includes("index.html"));
+  assert.ok(!files.includes("CNAME"));
+  assert.ok(!files.includes("server.js"));
+  const packageJson = JSON.parse(await readFile(new URL("package.json", root), "utf8"));
+  assert.equal(packageJson.scripts.preview, undefined);
+  assert.ok(!(await readdir(new URL("scripts/", root))).includes("preview.mjs"));
 });

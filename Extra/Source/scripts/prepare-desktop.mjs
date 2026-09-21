@@ -14,6 +14,6 @@ for (const file of [
   "theme.js",
   "assets",
 ]) {
-  await cp(join(root, file), join(destination, file), { recursive: true });
+  await cp(join(root, "app", file), join(destination, file), { recursive: true });
 }
 console.log("Sreon desktop assets are ready. No web server is started.");

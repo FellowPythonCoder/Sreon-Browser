@@ -36,7 +36,7 @@
       "signingIdentity": "-"
     },
     "resources": {
-      "../HOW-IT-WORKS.md": "HOW-IT-WORKS.md"
+      "../../HOW-IT-WORKS.md": "HOW-IT-WORKS.md"
     },
     "windows": {
       "webviewInstallMode": {

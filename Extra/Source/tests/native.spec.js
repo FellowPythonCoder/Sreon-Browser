@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./interface-fixture.js";
 
 async function app(page, mode = "normal") {
   await page.addInitScript(({ mode }) => {
@@ -160,10 +160,10 @@ test("narrow windows retain the address field without overflow", async ({ page }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test("preview does not invent native search results", async ({ page }) => {
+test("interface refuses search without the native runtime", async ({ page }) => {
   await page.goto("/");
   await search(page, "forest");
-  await expect(page.getByRole("status")).toContainText("installed Sreon app");
+  await expect(page.getByRole("status")).toContainText("installed Sreon desktop app");
   await expect(page.locator("#results a")).toHaveCount(0);
 });
 

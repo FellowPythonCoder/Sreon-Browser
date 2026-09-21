@@ -6,7 +6,7 @@ export default defineConfig({
   fullyParallel: true,
   workers: 2,
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: "https://sreon.test",
     headless: true,
     launchOptions: process.env.PLAYWRIGHT_EXECUTABLE_PATH
       ? {
@@ -14,11 +14,5 @@ export default defineConfig({
           args: ["--no-sandbox", "--disable-dev-shm-usage", "--no-zygote"],
         }
       : {},
-  },
-  webServer: {
-    command: "node scripts/preview.mjs",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-    env: { PORT: "3000" },
   },
 });

@@ -14,9 +14,9 @@
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features --features api",
-    "preview": "node scripts/preview.mjs",
     "source:zip": "python scripts/package-source.py",
-    "api:build": "cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api"
+    "api:build": "cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api",
+    "postdesktop:build": "node scripts/collect-builds.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

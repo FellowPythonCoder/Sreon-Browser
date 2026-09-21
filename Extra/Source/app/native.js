@@ -2,7 +2,7 @@
   const invoke = window.__TAURI__?.core?.invoke;
   const isNative = typeof invoke === "function";
   async function call(command, payload) {
-    if (!isNative) throw new Error("Use the installed Sreon app to search and visit sites. This is an interface preview.");
+    if (!isNative) throw new Error("Search and browsing require the installed Sreon desktop app.");
     return invoke(command, payload);
   }
   window.sreonRuntime = Object.freeze({

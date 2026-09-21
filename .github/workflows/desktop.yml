@@ -4,18 +4,7 @@ on:
   push:
     branches: [arena/01a0bffb-sreon-browser]
     paths:
-      - src-tauri/**
-      - scripts/**
-      - integrations/**
-      - tests/**
-      - '*.js'
-      - '*.html'
-      - '*.css'
-      - assets/**
-      - HOW-IT-WORKS.md
-      - sreon.sh
-      - package.json
-      - package-lock.json
+      - Extra/**
       - .github/workflows/desktop.yml
 permissions:
   contents: read
@@ -45,14 +34,17 @@ jobs:
     defaults:
       run:
         shell: bash
+        working-directory: Extra/Source
     steps:
       - name: Preserve source line endings
+        working-directory: ${{ github.workspace }}
         run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: Extra/Source/package-lock.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -70,7 +62,7 @@ jobs:
         run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri -> target
+          workspaces: Extra/Source/src-tauri -> target
           cache-on-failure: true
       - run: npm ci
       - name: Test Rust and integration API
@@ -92,11 +84,10 @@ jobs:
           fi
       - name: "Live result: ${{ steps.live.outputs.status }}"
         run: echo '${{ steps.live.outputs.status }}'
-      - name: Package source
+      - name: Package app source and guide
         run: |
-          python scripts/package-source.py
-          mkdir -p artifacts
-          cp Sreon-source.zip artifacts/
+          python scripts/package-source.py --stage ../../artifacts
+          mkdir -p ../../artifacts/Extra/API
       - name: Consolidate dependency licenses
         run: node scripts/append-licenses.mjs
       - name: Build app
@@ -111,11 +102,11 @@ jobs:
         run: |
           cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api --target aarch64-apple-darwin
           cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api --target x86_64-apple-darwin
-          lipo -create src-tauri/target/aarch64-apple-darwin/release/sreon-api src-tauri/target/x86_64-apple-darwin/release/sreon-api -output artifacts/sreon-api
+          lipo -create src-tauri/target/aarch64-apple-darwin/release/sreon-api src-tauri/target/x86_64-apple-darwin/release/sreon-api -output ../../artifacts/Extra/API/sreon-api
       - name: Test packaged integration API
         run: |
           if [ "$RUNNER_OS" = macOS ]; then
-            python tests/api-smoke.py artifacts/sreon-api
+            python tests/api-smoke.py ../../artifacts/Extra/API/sreon-api
           elif [ "$RUNNER_OS" = Windows ]; then
             python tests/api-smoke.py src-tauri/target/release/sreon-api.exe
           else
@@ -124,24 +115,26 @@ jobs:
       - name: Package Mac
         if: runner.os == 'macOS'
         run: |
-          ditto -c -k --sequesterRsrc --keepParent src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app artifacts/Sreon-Mac.zip
-          cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg artifacts/
+          ditto -c -k --sequesterRsrc --keepParent src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app ../../artifacts/Builds/Sreon-Mac.zip
+          cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg ../../artifacts/Builds/
           codesign --verify --deep --strict src-tauri/target/universal-apple-darwin/release/bundle/macos/Sreon.app
       - name: Package Windows
         if: runner.os == 'Windows'
         run: |
-          cp src-tauri/target/release/bundle/nsis/*.exe artifacts/
-          cp src-tauri/target/release/sreon-api.exe artifacts/
+          cp src-tauri/target/release/bundle/nsis/*.exe ../../artifacts/Builds/
+          cp src-tauri/target/release/sreon-api.exe ../../artifacts/Extra/API/
       - name: Package Linux
         if: runner.os == 'Linux'
         run: |
-          cp src-tauri/target/release/bundle/appimage/*.AppImage artifacts/
-          cp src-tauri/target/release/bundle/deb/*.deb artifacts/
-          cp src-tauri/target/release/sreon-api artifacts/
+          cp src-tauri/target/release/bundle/appimage/*.AppImage ../../artifacts/Builds/
+          cp src-tauri/target/release/bundle/deb/*.deb ../../artifacts/Builds/
+          cp src-tauri/target/release/sreon-api ../../artifacts/Extra/API/
       - name: Package instructions
         run: |
-          cp src-tauri/Cargo.lock HOW-IT-WORKS.md artifacts/
-          printf '\n## Build check\n\nLive web search: %s. Third-party availability can change.\n' '${{ steps.live.outputs.status }}' >> artifacts/HOW-IT-WORKS.md
+          cp ../HOW-IT-WORKS.md ../../artifacts/Extra/HOW-IT-WORKS.md
+          printf '\n## Build check\n\nLive web search: %s. Third-party availability can change.\n' '${{ steps.live.outputs.status }}' >> ../../artifacts/Extra/HOW-IT-WORKS.md
+      - name: Verify two-folder package
+        run: python scripts/verify-package.py ../../artifacts
       - uses: actions/upload-artifact@v4
         with:
           name: Sreon-${{ matrix.name }}
