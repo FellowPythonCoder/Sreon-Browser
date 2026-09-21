@@ -2,7 +2,6 @@ const $ = (selector) => document.querySelector(selector);
 const games = Array.from({ length: 7 }, (_, index) => window[`GAME_PACK_${index+1}`] || []).flat();
 games.sort((a, b) => Number(b.id === 'geodash')-Number(a.id === 'geodash'));
 let running = null;
-let previousSelection = null;
 let announcement = '';
 function renderGames() {
   const filter = $('#game-filter').value.trim().toLowerCase();
@@ -15,25 +14,26 @@ function renderGames() {
     const symbol = document.createElement('span'); symbol.className = 'game-symbol'; symbol.textContent = game.id === 'geodash' ? '◇' : game.name.slice(0, 1); symbol.setAttribute('aria-hidden', 'true');
     const arrow = document.createElement('span'); arrow.className = 'card-arrow'; arrow.textContent = '↗'; arrow.setAttribute('aria-hidden', 'true');
     const title = document.createElement('h3'); title.textContent = game.name;
-    const description = document.createElement('p'); description.textContent = game.id === 'geodash' ? 'Gentler levels. Safe platforms. Press 4 for autoplay.' : `Best score ${Arcade.Scores.get(game.id)} · Pick up and play`;
+    const description = document.createElement('p'); description.textContent = game.id === 'geodash' ? 'Cube → spaceship → wave. Ten levels + endless. Press 4 for autoplay.' : `Best score ${Arcade.Scores.get(game.id)} · Pick up and play`;
     card.append(symbol, arrow, title, description);
     card.addEventListener('click', () => startGame(game, card));
     $('#game-grid').append(card);
   }
 }
 function startGame(game, card) {
-  previousSelection = card;
   $('#library').hidden = true;
   $('#player').hidden = false;
   $('#play-name').textContent = game.name;
   $('#play-controls').textContent = game.controls || 'Follow the on-screen instructions.';
   $('#auto-play').hidden = game.id !== 'geodash';
+  $('#endless-play').hidden = game.id !== 'geodash';
   announcement = '';
   running = Arcade.start(game, $('#game-canvas'), (state) => {
     $('#play-score').textContent = `SCORE ${Math.floor(state.score)}${state.autoPlay ? ' · AUTOPLAY' : ''}`;
     $('#auto-play').setAttribute('aria-pressed', String(Boolean(state.autoPlay)));
     $('#auto-play').textContent = state.autoPlay ? 'Take over · 4' : 'Autoplay · 4';
     $('#auto-play').disabled = Boolean(state.selMode);
+    $('#endless-play').hidden = game.id !== 'geodash' || !state.selMode;
     if (state.completed && state.completed !== announcement) {
       announcement = state.completed;
       $('#play-announcement').textContent = announcement;
@@ -49,6 +49,7 @@ function exitGame() {
 }
 $('#exit-game').addEventListener('click', exitGame);
 $('#auto-play').addEventListener('click', () => { if (running && !running.selMode) { running.toggleAuto(running); $('#game-canvas').focus(); } });
+$('#endless-play').addEventListener('click', () => { if (running) { running.startLevel(running, 0, true); $('#game-canvas').focus(); } });
 $('#game-filter').addEventListener('input', renderGames);
 for (const name of ['play', 'chat']) {
   const tab = $(`#${name}-tab`);
@@ -132,7 +133,7 @@ $('#attach-file').addEventListener('change', async () => {
 function addMessage(role, value) {
   $('#chat-empty')?.remove();
   const article = document.createElement('article'); article.className = `message ${role}`;
-  const label = document.createElement('p'); label.className = 'role'; label.textContent = role === 'user' ? 'YOU' : 'REPLY';
+  const label = document.createElement('p'); label.className = 'role'; label.textContent = role === 'user' ? 'YOU' : 'SREON ASSISTANT';
   const body = document.createElement('div'); body.className = 'message-body';
   let position = 0;
   for (const match of value.matchAll(/```[^\n]*\n([\s\S]*?)```/g)) {

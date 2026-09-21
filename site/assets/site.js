@@ -63,5 +63,5 @@ async function search(append = false) {
   }
 }
 form.addEventListener('submit', (event) => { event.preventDefault(); search(); });
-document.querySelectorAll('[data-query]').forEach((button) => button.addEventListener('click', () => { query.value = button.dataset.query; search(); }));
+document.querySelectorAll('[data-query]').forEach((button) => button.addEventListener('click', () => { query.value = button.dataset.query; document.querySelector('#try').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'}); search(); }));
 more.addEventListener('click', () => search(true));

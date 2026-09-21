@@ -89,3 +89,28 @@ test('all 24 relocated modules can start without script or canvas errors', async
   }
   expect(errors).toEqual([]);
 });
+
+test('endless mode starts from an accessible button and retains all three forms', async ({page}) => {
+  await page.goto('/site/notes/'); await page.getByRole('button',{name:/Geometry Rush/}).click();
+  await page.getByRole('button',{name:'∞ Endless'}).click();
+  await expect(page.locator('#auto-play')).toBeEnabled();
+  await page.keyboard.press('4');
+  await expect(page.locator('#auto-play')).toHaveAttribute('aria-pressed','true');
+  const modes = await page.evaluate(() => {
+    const seen = new Set();
+    for(let frame=0;frame<2000;frame++) { GAME_GD.update(running,1/60); seen.add(running.mode); }
+    return {modes:[...seen].sort(),endless:running.endless,stage:running.stage,dead:running.dead};
+  });
+  expect(modes).toEqual({modes:['cube','ship','wave'],endless:true,stage:1,dead:false});
+});
+
+test('all three photographs load and the discovery cards submit a real API request', async ({page}) => {
+  let query;
+  await page.route('**/api/search',route=>{query=route.request().postDataJSON().q;return route.fulfill({json:{results:[]}});});
+  await page.goto('/');
+  await page.locator('.discovery-grid').scrollIntoViewIfNeeded();
+  for(const image of await page.locator('.discovery-image img').all()) await expect.poll(()=>image.evaluate(img=>img.complete && img.naturalWidth>0)).toBe(true);
+  await page.getByRole('button',{name:/Take the scenic route/}).click();
+  await expect(page.locator('#query')).toHaveValue('quiet coastal walking trails');
+  await expect.poll(()=>query).toBe('quiet coastal walking trails');
+});

@@ -79,7 +79,7 @@ The source contains only the desktop app and its development tools:
 - `scripts/`: native asset preparation, source packaging, build collection, and license collection.
 - `tests/`: app-interface, API, packaging, and launcher tests.
 
-The app's `app/index.html`, CSS, and JavaScript are necessary desktop interface assets—not a separate website. There is no standalone website entry point, preview server, website domain configuration, or website ZIP in the app source or downloads. Interface tests intercept bundled files directly; they do not start a web server. The previously protected secret page and games remain untouched in the repository only and are excluded from every app/source package.
+The app's `app/index.html`, CSS, and JavaScript are necessary desktop interface assets—not a separate website. There is no standalone website entry point, preview server, website domain configuration, or website ZIP in the app source or downloads. Interface tests intercept bundled files directly; they do not start a web server. The separate website, hidden workspace, and renamed interactive modules are excluded from desktop app packages and the app-only source ZIP. Website changes were requested separately after the app-only delivery.
 
 New application/integration code has no explanatory comments. Instructions and legal notices are consolidated here. To regenerate the source ZIP, run `python scripts/package-source.py` from `Extra/Source` (use `python3` where needed). New source files are included without Git staging; this also works from an extracted archive. Packaging skips dependencies, generated files, nested ZIPs, symlinks, and common private-file names. It cannot detect secrets embedded inside normal source code: review your source before distributing it. Missing required files or a write failure leave the previous ZIP intact.
 
@@ -107,7 +107,7 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin
 npm run desktop:build -- --target universal-apple-darwin --bundles app,dmg
 ```
 
-There is no website or preview command. Search and browsing run in the installed desktop application.
+The desktop source has no website or preview command. Its search and browsing run in the installed application. The separate website described below is optional and is not needed by the desktop app.
 
 ## Integrate into another application
 
@@ -155,6 +155,57 @@ try {
 After extracting a Mac/Linux artifact, run `chmod +x Extra/API/sreon-api` from the download folder before using the helper. On Windows, use the path to `sreon-api.exe`. Do not launch the graphical Sreon EXE as the API helper. Python/Node are needed only by these example clients, not by the installed desktop app or compiled helper. Rust applications can instead depend on package `sreon` at `src-tauri/` with `default-features = false` and call `sreon_core::search::Engine::new()?.search(SearchRequest { ... }).await` directly.
 
 The supplied clients serialize requests. Node allows at most 32 pending requests; Python serializes callers with a lock. Each active request has a 20-second default timeout, including pipe I/O. Set `timeoutMs` in the Node constructor or `timeout` (seconds) in the Python constructor to change it. Both clients limit request frames to 16 KiB and responses to 4 MiB, check protocol version/IDs, and stop the helper after a timeout or broken protocol. Create a new client after a fatal error. Ordinary search errors reject the current request without disconnecting the client. Closing twice is safe; Python close waits for an active request to finish or time out. Optional constructor `args` can be used with a wrapper executable.
+
+## Website and hidden workspace
+
+The full repository also contains a separate website at `index.html`, with styling, scripts, and compressed images under `site/assets/`. These files are not included in desktop app packages. No app download links have been added to the redesigned website.
+
+The colon in `sreon://privacy` is the only public navigation link to the notes area at `site/notes/`. The previous `games/` folder is now `site/assets/modules/`, with neutral module filenames. The old `/o/` and `/games/` paths are not served by the included server. Renaming paths and adding noindex metadata makes the area less obvious; it is not authentication, encryption, or access control. Public source history and browser developer tools can reveal it. Do not store private information there.
+
+The hidden workspace includes 24 games and an optional bring-your-own-key AI chat. Geometry Rush has ten seeded levels with cube, spaceship, and wave sections, safe square platforms, buffered jumps, and more generous spacing. Space/click/tap jumps; hold repeats jumps or flies upward. Arrow keys select a level; Enter starts it. Press `4` during play to toggle assisted autoplay, or use its on-screen button. Completed assisted runs are marked and do not earn manual-run points. The Endless button or `i` on the selection screen starts an endless run. Its speed and corridor difficulty increase toward bounded limits; obstacle clusters have at most three spikes and retain tested jump clearances. This avoids simply accelerating into mathematically impossible obstacles. Automated tests complete every finite level with ordinary controls and collisions enabled, and check sampled endless sectors; they are not a claim of exhaustive human playtesting of every possible sequence.
+
+AI chat calls the configured Gemini model directly only after Send. It requires the visitor’s own valid API key and may incur provider charges. Keys stay in memory by default; “Remember for this tab” opts into session storage. Forget removes the key. A key previously saved by the old page is moved out of persistent storage into memory. Chat history stays in memory; Clear chat removes it from the page. Messages and optional text attachments go to the provider, whose policies also apply. Attachments are limited to 128 KiB, requests to 512 KiB, and the conversation context to the most recent 20 messages. Replies are rendered as text with safe code blocks; they are not executed. Stop cancels waiting on the browser side but cannot guarantee the provider stops processing or charging for an already submitted request. No AI responses or paid API calls were used in the automated UI tests.
+
+### Run the actual website search engine
+
+The website does not fake results or replace the engine. Browser requests go to `POST /api/search`; `site/server.mjs` uses the existing Node integration client to communicate with the compiled Rust `sreon-api` process. Queries are forwarded to the same search core used by the app. The server is required only for the website demo, never for installed desktop apps.
+
+From the repository root, with Node 22 and Rust installed:
+
+```sh
+cargo build --manifest-path Extra/Source/src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api
+node site/server.mjs
+```
+
+The website listens on all interfaces on port 3000. Set `PORT` to change it. `SREON_API` can point to another compiled helper; otherwise the server uses the release binary at the path above, adding `.exe` on Windows. It does not need an upstream search API key. If the helper or provider is unavailable, search returns an explicit error rather than invented results.
+
+Alternatively, build and run the complete website plus Rust engine as a container from the full repository or website archive:
+
+```sh
+docker build -f site/Dockerfile -t sreon-website .
+docker run --rm -p 3000:3000 sreon-website
+```
+
+For public use, deploy this container behind HTTPS. The shipped API validates methods, origins, query/body size, concurrency, and per-connection-IP request rate. It does not log queries. It deliberately does not trust forwarded IP headers; behind a reverse proxy, visitors may share its limit. Configure visitor-aware rate limiting at your trusted edge before scaling. This is a public search endpoint, not an authenticated private API.
+
+**GitHub Pages cannot run the Rust process or this Node adapter.** Static files alone do not make live search work. Either host the complete container for the website, or host the API separately over HTTPS and change the `sreon-search-endpoint` meta tag in `index.html` to that host’s `/api/search` URL. `SREON_ALLOWED_ORIGINS` is a comma-separated exact origin allowlist and defaults to the two opensreon.com HTTPS origins. No public API hosting or DNS changes have been performed by these source changes. The existing GitHub Pages site uses `main`; changes on the working branch need review/merge before they appear there.
+
+### Website checks and files
+
+```sh
+npm ci --prefix Extra/Source
+node --test site/tests/*.test.mjs
+cd Extra/Source
+npx playwright install chromium
+cd ../..
+Extra/Source/node_modules/.bin/playwright test --config site/playwright.config.mjs
+node site/tests/live-api.mjs
+python3 site/package.py
+```
+
+The last API check requires a built Rust helper and verifies a real YouTube destination through the HTTP adapter. UI tests mock API and AI responses to test rendering and errors without paid provider calls. The website workflow runs the real-engine check as well. `Extra/Sreon-website.zip` contains the website, required engine source, and this guide; it is not a compiled app download. `Extra/Sreon-source.zip` remains the separate app-only source archive. Website instructions require the website archive or full repository, not the app-only ZIP.
+
+The three editorial landscape/interior images are AI-generated illustrative assets, not photographs documenting real locations. Website fonts reuse the same DM Sans and Instrument Serif files whose original notices are retained below.
 
 ## Tests and licenses
 
