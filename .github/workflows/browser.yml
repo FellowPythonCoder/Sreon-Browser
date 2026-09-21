@@ -144,4 +144,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release delete sreon-preview --yes || true
-          gh release create sreon-preview Sreon.zip --title "Sreon" --notes "One folder: double-click Sreon on Windows (Windows/Sreon.exe), macOS (macOS/Sreon.dmg), or Linux (Linux/Sreon.AppImage). Includes HOW-IT-WORKS.md, unable.txt, website code, and source." --target "${GITHUB_SHA}"
+          extras=""
+          if [ -f Sreon/macOS/Sreon.dmg ]; then cp Sreon/macOS/Sreon.dmg Sreon.dmg; extras="Sreon.dmg"; fi
+          gh release create sreon-preview Sreon.zip $extras --title "Sreon" --notes "Double-click Sreon.dmg on a Mac and drag Sreon into Applications. The zip is the full folder for Windows, Mac, and Linux, plus HOW-IT-WORKS.md, unable.txt, website code, and source." --target "${GITHUB_SHA}"
