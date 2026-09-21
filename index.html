@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A quieter way to explore. Meet Sreon, a small desktop browser with built-in search and a little more room to think.">
+<meta name="sreon-search-endpoint" content="/api/search">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Sreon — A little more room to explore.</title>
+<link rel="icon" href="/site/assets/mark.png">
+<link rel="stylesheet" href="/site/assets/site.css">
+<script src="/site/assets/theme.js"></script>
+<script src="/site/assets/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+<a class="brand" href="#top" aria-label="Sreon home"><img src="/site/assets/mark.png" alt="" width="34" height="34">Sreon<span class="brand-period">.</span></a>
+<nav aria-label="Main navigation"><a href="#about">The idea</a><a href="#privacy">Privacy</a><a href="#try">Try it</a></nav>
+<button class="theme" id="theme" type="button" aria-label="Switch to dark mode">◐</button>
+</header>
+<main id="main">
+<section class="hero wrap" id="top">
+<div class="hero-copy"><p class="eyebrow"><span class="small-dot"></span> LESS NOISE. MORE POSSIBILITY.</p><h1>A little more<br>room to <em>explore.</em></h1><p class="lede">The internet is a big place.<br>Your browser doesn’t have to get in the way.</p><a class="button" href="#try">Take a look around <span aria-hidden="true">↗</span></a><p class="hero-foot">Small by design. Open by nature.</p></div>
+<figure class="hero-photo"><img src="/site/assets/landscape.webp" alt="An illustrative landscape of pale dunes and purple mountains beneath a quiet evening sky" fetchpriority="high" width="1536" height="1024"><figcaption><span>A different point of view.</span><span>01 / EXPLORE</span></figcaption></figure>
+</section>
+<section class="intro wrap" id="about"><p class="eyebrow">A BROWSER, NOT A DISTRACTION</p><div><h2>Keep the useful.<br>Leave the rest.</h2><p>Sreon brings search and browsing into one small desktop app. A familiar address bar, real website results, and a clear path back to where you started.</p></div><div class="principles"><article><span>01</span><h3>Find your own way.</h3><p>Search the web, explore images, or go straight to a website.</p></article><article><span>02</span><h3>A quieter space.</h3><p>Local interface assets. Light and dark themes. No account needed to search.</p></article><article><span>03</span><h3>Nothing mysterious.</h3><p>A Rust core and your system’s webview. Not a new browser engine pretending to be one.</p></article></div></section>
+<section class="try-section" id="try"><div class="wrap try-layout"><div><p class="eyebrow">A SMALL WINDOW INTO SREON</p><h2>Follow your<br><em>curiosity.</em></h2><p>Try the search engine right here.<br>No installation. No sign-up.</p><p class="fine">This is web search, not a full browser running inside this page. Result links open the original websites.</p></div><div class="search-window"><div class="window-bar"><span class="window-dots" aria-hidden="true">● ● ●</span><span>sreon://search</span><span aria-hidden="true">↗</span></div><div class="search-inner"><img src="/site/assets/mark.png" width="46" height="46" alt=""><h3>Where to?</h3><form id="search-form" role="search"><label class="sr-only" for="query">Search the web</label><div class="search-input"><input id="query" name="q" type="search" maxlength="500" placeholder="A question, a place, a new idea…" required autocomplete="off"><button type="submit" id="search-submit" aria-label="Search">↗</button></div></form><div class="suggestions" aria-label="Try a search"><button type="button" data-query="quiet places to visit">Quiet places ↗</button><button type="button" data-query="YouTube">YouTube ↗</button><button type="button" data-query="design inspiration">A little inspiration ↗</button></div><p id="search-status" class="search-status" role="status" aria-live="polite">Real results from the Sreon search API.</p><div id="results" aria-label="Search results"></div><button id="more" class="text-button" type="button" hidden>More results ↓</button></div></div></div></section>
+<section class="privacy wrap" id="privacy"><div><p class="eyebrow privacy-address">sreon<a href="/site/notes/" class="quiet-colon" aria-label="Open notes">:</a>//privacy</p><h2>How privacy<br>actually works here<span class="brand-period">.</span></h2><p>Plain language. Not a promise<br>that the internet can’t keep.</p></div><div class="privacy-list"><article><span>01</span><div><h3>Your searches go somewhere.</h3><p>This demo sends your query to the Sreon API. The engine asks external search providers for results. The website host and those providers may process connection details.</p></div></article><article><span>02</span><div><h3>Your preferences stay here.</h3><p>This page stores your theme in this browser. It has no analytics script or advertising tracker. The hosting service may keep its own request logs.</p></div></article><article><span>03</span><div><h3>A website is still a website.</h3><p>Following a result takes you to that site, with its own cookies and privacy practices. Sreon is not a VPN or an anonymity service.</p></div></article></div></section>
+<section class="closing wrap"><p class="eyebrow">TAKE YOUR TIME.</p><h2>There’s a whole web<br>out there.</h2><a class="text-button" href="#try">Start with something you’re curious about ↗</a></section>
+</main><footer class="wrap footer"><a class="brand" href="#top"><img src="/site/assets/mark.png" alt="" width="25" height="25">Sreon.</a><span>A quieter way to explore.</span><a href="#privacy">Privacy, in plain language ↗</a></footer>
+</body>
+</html>

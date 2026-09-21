@@ -1,8 +1,4 @@
-/* ============================================================
-   Sreon Arcade — Geometry Rush (Geometry Dash-style)
-   Auto-runner: cube (jump), ship (fly), wave (zigzag).
-   10 procedurally-built levels, seeded for determinism.
-   ============================================================ */
+
 
 function mulberry32(seed) {
   return function() {
@@ -13,21 +9,21 @@ function mulberry32(seed) {
   };
 }
 
-/* ---- level generation ---- */
+
 function buildLevel(idx) {
   const rnd = mulberry32(1000 + idx*97);
   const r = (a,b) => a + rnd()*(b-a);
   const ri = (a,b) => Math.floor(r(a,b+1));
-  const speed = 170 + idx*9;
-  const length = 70 + idx*8; // world units
-  const obs = []; // {x, type, w, h, y}  x in units, y in units from ground (0)
-  let x = 6; // safe start
+  const speed = 128 + idx*5;
+  const length = 65 + idx*5;
+  const obs = [];
+  let x = 6;
   let mode = 'cube';
-  const zones = []; // {from, to, mode}
+  const zones = [];
   zones.push({ from: 0, to: length, mode: 'cube' });
 
   function setZone(from, mode) {
-    // close previous zone, open new
+
     zones[zones.length-1].to = from;
     zones.push({ from, to: length, mode });
   }
@@ -45,19 +41,19 @@ function buildLevel(idx) {
       x += 1.5;
       const zoneLen = ri(10, 16);
       if (mode === 'ship') {
-        // alternating top/bottom obstacle pairs forming a corridor
+
         let cx = x;
         const end = x + zoneLen;
         while (cx < end) {
           const gapY = r(1.6, 3.2);
-          const gapH = r(1.9, 2.4) - complexity*0.2;
-          obs.push({ x: cx, type: 'shipBlockTop', y: gapY+gapH, h: 5-gapY-gapH, w: 1.4 });
+          const gapH = r(2.7, 3.1);
+          obs.push({ x: cx, type: 'shipBlockTop', y: gapY+gapH, h: Math.max(0.3, 6-gapY-gapH), w: 1.4 });
           obs.push({ x: cx, type: 'shipBlockBot', y: 0, h: gapY, w: 1.4 });
-          cx += r(3.2, 4.4);
+          cx += r(4.2, 5.4);
         }
         x = end + 1;
       } else {
-        // wave corridor: zigzag walls
+
         let cx = x;
         const end = x + zoneLen;
         let lane = 1;
@@ -77,21 +73,21 @@ function buildLevel(idx) {
       continue;
     }
 
-    if (mode !== 'cube') { x += 3; continue; } // safety (shouldn't hit, zones consume x already)
+    if (mode !== 'cube') { x += 3; continue; }
 
     if (roll < 0.24) {
       const n = ri(1, 1+Math.floor(complexity*1.0));
       for (let i=0;i<n;i++) obs.push({ x: x+i*1.0, type:'spike' });
-      x += n*1.0 + r(4.0, 5.4);
+      x += n*1.0 + r(5.0, 6.5);
     } else if (roll < 0.46) {
       const w = r(1.3, 1.8 + complexity*0.5);
       obs.push({ x, type:'gap', w });
-      x += w + r(3.4, 4.6);
+      x += w + r(4.6, 5.8);
     } else if (roll < 0.76) {
       obs.push({ x, type:'block', h:1, w:1.3 });
-      x += 1.3 + r(3.2, 4.4);
+      x += 1.3 + r(4.2, 5.4);
     } else {
-      // a low block followed by a spike, spaced generously for reaction time
+
       obs.push({ x, type:'block', h:1, w:1.1 });
       obs.push({ x: x+2.3, type:'spike' });
       x += 3.4 + r(3.2,4.2);
@@ -110,23 +106,23 @@ const GD_THEMES = [
 
 const GAME_GD = {
   id: 'geodash', name: 'Geometry Rush', emoji: '🔺',
-  desc: '10 levels. Cube, ship, and wave modes. One hit and you restart.',
-  controls: 'Space / click / tap: jump (cube) · hold to fly (ship) · hold to rise (wave)',
+  desc: 'Ten gentler levels. Safe square platforms. Press 4 to watch a full auto-run.',
+  controls: 'Space / tap: jump · Hold: repeat jumps or fly · 4: autoplay on/off · Escape: levels. Square platforms are safe.',
   w: 760, h: 460,
 
   init(g) {
-    g.PPU = 34; // pixels per world unit
+    g.PPU = 34;
     g.groundY = g.h - 70;
     g.selMode = true;
-    g.selIdx = Number(localStorage.getItem('sreon_gd_lastlevel')||0);
+    g.selIdx = clamp(Number(localStorage.getItem('sreon_gd_lastlevel'))||0, 0, 9);
     g.best = {};
     for (let i=0;i<10;i++) g.best[i] = Number(localStorage.getItem('sreon_gd_best_'+i)||0);
     g.playerColors = ['#4ade80','#22d3ee','#f43f5e','#fbbf24','#a855f7','#ffffff'];
-    g.playerColorIdx = Number(localStorage.getItem('sreon_gd_color')||0);
+    g.playerColorIdx = clamp(Number(localStorage.getItem('sreon_gd_color'))||0, 0, 5);
   },
 
   update(g, dt) {
-    if (g.selMode) { g.updateSelect(g, dt); return; }
+    if (g.selMode) { g.updateSelect(g, dt); if (!g.selMode && Input.pressed('4')) g.toggleAuto(g); return; }
     g.updatePlay(g, dt);
   },
 
@@ -141,7 +137,7 @@ const GAME_GD = {
   GAME_GD.init = function(g) {
     origInit(g);
 
-    /* ---------------- LEVEL SELECT ---------------- */
+
     g.updateSelect = function(g, dt) {
       const p = Input.pointer;
       if (!p.justDown) return;
@@ -157,7 +153,7 @@ const GAME_GD = {
           return;
         }
       }
-      // color swatches
+
       const swY = g.h - 60, sw=24, gap=8, startX = g.w/2 - (g.playerColors.length*(sw+gap))/2;
       g.playerColors.forEach((c,i) => {
         const bx = startX+i*(sw+gap);
@@ -171,12 +167,12 @@ const GAME_GD = {
       FX.sky(ctx, g.w, g.h, '#150f2e', '#05040c');
       FX.stars(ctx, g.w, g.h, g.time*10, 70, 'gdsel');
 
-      // title with soft glow
+
       ctx.save();
       ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 22;
       text(ctx, 'GEOMETRY RUSH', g.w/2, 52, 30, '#f3e8ff', 'center', 700);
       ctx.restore();
-      text(ctx, 'pick a level to play', g.w/2, 76, 12.5, 'rgba(255,255,255,0.4)', 'center');
+      text(ctx, g.completed || 'Pick a level · Safe platforms · Press 4 for autoplay', g.w/2, 76, 12.5, 'rgba(255,255,255,0.4)', 'center');
 
       const cols = 5, cw = 132, ch = 104, gapx=14, gapy=14;
       const totalW = cols*cw + (cols-1)*gapx;
@@ -199,7 +195,7 @@ const GAME_GD = {
         FX.roundRect(ctx, cx, cy, cw, ch, 12); ctx.stroke();
         ctx.restore();
 
-        // level number badge
+
         ctx.save();
         ctx.fillStyle = theme[1];
         ctx.shadowColor = theme[1]; ctx.shadowBlur = 8;
@@ -208,13 +204,13 @@ const GAME_GD = {
         text(ctx, String(i+1), cx+22, cy+29, 14, '#0a0814', 'center', 800);
 
         text(ctx, 'LEVEL ' + (i+1), cx+cw-12, cy+22, 10.5, 'rgba(255,255,255,0.4)', 'right', 700);
-        // difficulty dots (1-5 scale based on level index)
+
         const diff = Math.min(5, 1 + Math.floor(i/2));
         let dotsStr = '';
         for (let d=0; d<5; d++) dotsStr += d<diff ? '\u25CF' : '\u25CB';
         text(ctx, dotsStr, cx+cw-12, cy+36, 9, theme[1], 'right');
 
-        // progress bar
+
         const barY = cy+56, barW = cw-24;
         ctx.fillStyle = 'rgba(255,255,255,0.08)';
         FX.roundRect(ctx, cx+12, barY, barW, 8, 4); ctx.fill();
@@ -242,6 +238,11 @@ const GAME_GD = {
 
     g.startLevel = function(g, idx) {
       g.selMode = false;
+      g.autoPlay = false;
+      g.usedAuto = false;
+      g._heldPrev = false;
+      g.jumpBuffer = 0;
+      g.coyote = 0.12;
       g.lvl = buildLevel(idx);
       g.theme = GD_THEMES[idx];
       g.px = 2.2; g.py = 0; g.pvy = 0;
@@ -270,10 +271,11 @@ const GAME_GD = {
       g.gravityDir = 1;
     };
 
-    /* ---------------- PLAY ---------------- */
+
     g.updatePlay = function(g, dt) {
       const p = Input.pointer;
-      const wantAction = Input.held(' ') || p.down;
+      const wantAction = Input.held(' ') || Input.held('ArrowUp') || p.down;
+      if (Input.pressed('4')) g.toggleAuto(g);
 
       if (g.dead) {
         g.deadT -= dt;
@@ -286,7 +288,7 @@ const GAME_GD = {
         g.selMode = true; Sound.blip(); return;
       }
 
-      const speed = g.lvl.speed / g.PPU; // units/sec
+      const speed = g.lvl.speed / g.PPU;
       g.scrollX += speed*dt;
       const worldX = g.px + g.scrollX;
       g.progress = clamp(worldX/g.lvl.length, 0, 1);
@@ -294,42 +296,92 @@ const GAME_GD = {
       const zoneMode = g.currentZoneMode(g, worldX);
       if (zoneMode !== g.mode) { g.mode = zoneMode; FX.shockwave(g.px*g.PPU, g.h-140, '#fff', 40, 0.3); Sound.pop(); }
 
-      if (g.mode === 'cube') {
-        g.pvy -= 34*dt * g.gravityDir;
-        if (wantAction && !g._heldPrev && g.grounded) { g.pvy = 12.2*g.gravityDir; Sound.blip(); FX.burst(g.px*g.PPU, g.groundY, g.theme[1], 8, {speed:80}); }
+      if (g.autoPlay) {
+        g.usedAuto = true;
+        if (g.mode === 'cube') {
+          let height = 0;
+          for (const o of g.lvl.obs) {
+            if (!['spike', 'gap'].includes(o.type)) continue;
+            const width = o.w || 1;
+            const start = o.x - 1.9;
+            const end = o.x + width + 1;
+            if (worldX >= start && worldX <= end)
+              height = Math.max(height, Math.sin((worldX-start)/(end-start)*Math.PI)*2.8);
+          }
+          g.py = height;
+          g.pvy = 0;
+          g.grounded = height === 0;
+          g.angle += height > 0 ? dt*7 : 0;
+        } else {
+          const wall = g.lvl.obs.find(o => ['shipBlockBot', 'waveWallBot'].includes(o.type) && o.x + o.w >= worldX && o.x < worldX + 5);
+          const top = wall && g.lvl.obs.find(o => o.x === wall.x && ['shipBlockTop', 'waveWallTop'].includes(o.type));
+          const target = top ? (wall.y+wall.h+top.y-0.84)/2 : 2.3;
+          g.py += clamp(target-g.py, -4*dt, 4*dt);
+          g.pvy = 0;
+          g.angle = 0;
+        }
+      } else if (g.mode === 'cube') {
+        g.coyote = g.grounded ? 0.12 : Math.max(0, g.coyote-dt);
+        g.jumpBuffer = wantAction && !g._heldPrev ? 0.14 : Math.max(0, g.jumpBuffer-dt);
+        g.pvy -= 30*dt;
+        if ((wantAction && g.grounded) || (g.jumpBuffer > 0 && g.coyote > 0)) {
+          g.pvy = 12.8;
+          g.grounded = false;
+          g.coyote = 0;
+          g.jumpBuffer = 0;
+          Sound.blip();
+        }
         g.py += g.pvy*dt;
-        g.angle += (g.grounded?0:9)*dt*g.gravityDir;
-        // ground collision
-        const floorHere = g.groundSolidAt(g, worldX);
-        if (floorHere && g.py <= 0 && g.pvy <= 0 && g.gravityDir>0) { g.py = 0; g.pvy = 0; g.grounded = true; g.angle = Math.round(g.angle/ (Math.PI/2)) * (Math.PI/2); }
-        else if (floorHere && g.gravityDir<0 && g.py>=0 && g.pvy>=0) { g.py=0; g.pvy=0; g.grounded=true; }
-        else g.grounded = false;
-        if (g.py < -6 || g.py > 6) g.kill(g);
+        g.angle += (g.grounded ? 0 : 8)*dt;
+        if (g.groundSolidAt(g, worldX) && g.py <= 0 && g.pvy <= 0) {
+          g.py = 0; g.pvy = 0; g.grounded = true;
+          g.angle = Math.round(g.angle/(Math.PI/2))*(Math.PI/2);
+        } else g.grounded = false;
+        if (g.py < -3) g.kill(g);
       } else if (g.mode === 'ship') {
-        const thrust = wantAction ? -22 : 14;
-        g.pvy += thrust*dt;
-        g.pvy = clamp(g.pvy, -9, 9);
+        g.pvy = clamp(g.pvy + (wantAction ? 17 : -11)*dt, -6, 6);
         g.py += g.pvy*dt;
-        g.angle = clamp(g.pvy*0.06, -0.5, 0.5);
-        if (g.py < -3.4 || g.py > 3.8) g.kill(g);
+        g.angle = clamp(-g.pvy*0.06, -0.5, 0.5);
       } else if (g.mode === 'wave') {
         const dir = wantAction ? 1 : -1;
-        g.py += dir * 9 * dt;
-        g.angle = dir>0 ? -0.5 : 0.5;
-        if (g.py < -3.2 || g.py > 3.6) g.kill(g);
+        g.py += dir*6*dt;
+        g.angle = dir > 0 ? -0.5 : 0.5;
       }
+      if (g.mode !== 'cube') g.py = clamp(g.py, 0, 5.5);
+      g.resolvePlatforms(g, worldX);
 
       g._heldPrev = wantAction;
 
       g.trail.push({ x: worldX, y: g.py, life: 0.35 });
       g.trail = g.trail.filter(t => (t.life -= dt) > 0);
 
-      // collisions with obstacles
+
       for (const o of g.lvl.obs) {
         if (g.checkHit(g, o, worldX)) { g.kill(g); break; }
       }
 
-      if (worldX >= g.lvl.length) g.finishLevel(g);
+      if (!g.dead && worldX >= g.lvl.length) g.finishLevel(g);
+    };
+
+    g.toggleAuto = function(g) {
+      g.autoPlay = !g.autoPlay;
+      if (g.autoPlay) {
+        g.usedAuto = true;
+        if (g.dead) g.resetToStart(g);
+      }
+    };
+
+    g.resolvePlatforms = function(g, worldX) {
+      for (const o of g.lvl.obs) {
+        if (!(worldX+0.76 > o.x && worldX+0.08 < o.x+(o.w || 0))) continue;
+        if (o.type === 'block' && g.py <= o.h) {
+          g.py = o.h; g.pvy = Math.max(0, g.pvy); g.grounded = true;
+        } else if (['shipBlockBot', 'waveWallBot'].includes(o.type) && g.py < o.y+o.h) {
+          g.py = o.y+o.h; g.pvy = Math.max(0, g.pvy);
+        } else if (['shipBlockTop', 'waveWallTop'].includes(o.type) && g.py+0.84 > o.y) {
+          g.py = o.y-0.84; g.pvy = Math.min(0, g.pvy);
+        }
+      }
     };
 
     g.groundSolidAt = function(g, worldX) {
@@ -343,26 +395,15 @@ const GAME_GD = {
       const px = worldX, py = g.py;
       const pr = 0.36;
       if (o.type === 'spike') {
-        if (Math.abs(px - (o.x+0.5)) < 0.30 && py < 0.55) return true;
-      } else if (o.type === 'block') {
-        if (px+pr > o.x && px-pr < o.x+o.w) {
-          if (py < o.h - 0.08) {
-            // side/underside hit is deadly unless standing exactly on top
-            if (!(g.grounded && Math.abs(py-o.h) < 0.12)) return true;
-          }
-        }
+        if (px+0.7 > o.x+0.25 && px+0.12 < o.x+0.75 && py < 0.65) return true;
       } else if (o.type === 'gap') {
         if (worldX >= o.x+0.15 && worldX <= o.x+o.w-0.15 && py <= 0.05 && g.mode==='cube') return true;
-      } else if (o.type === 'shipBlockTop' || o.type==='waveWallTop') {
-        if (px+pr > o.x && px-pr < o.x+o.w && py+pr > o.y) return true;
-      } else if (o.type === 'shipBlockBot' || o.type==='waveWallBot') {
-        if (px+pr > o.x && px-pr < o.x+o.w && py-pr < o.y+o.h) return true;
       }
       return false;
     };
 
     g.kill = function(g) {
-      if (g.dead) return;
+      if (g.dead || g.autoPlay) return;
       g.dead = true; g.deadT = 0.28;
       Sound.bad(); FX.kick(16, 0.35); FX.blink('#f43f5e', 0.45);
       FX.burst(g.px*g.PPU, g.h-140-g.py*g.PPU, g.theme[1], 30, {speed:240});
@@ -374,18 +415,20 @@ const GAME_GD = {
     };
 
     g.finishLevel = function(g) {
+      g.completed = 'Level ' + (g.lvl.seedIdx+1) + ' complete' + (g.usedAuto ? ' · Assisted run' : ' · Nicely done');
       g.best[g.lvl.seedIdx] = 100;
       localStorage.setItem('sreon_gd_best_'+g.lvl.seedIdx, 100);
-      g.score += 500 + g.lvl.seedIdx*100;
+      if (!g.usedAuto) g.score += 500 + g.lvl.seedIdx*100;
+      localStorage.setItem('sreon_gd_assisted_'+g.lvl.seedIdx, String(g.usedAuto));
       Sound.good(); FX.blink('#4ade80', 0.5); FX.kick(10,0.3);
       g.selMode = true;
     };
 
-    /* ---------------- DRAW ---------------- */
+
     g.drawPlay = function(g, ctx) {
       const th = g.theme;
       FX.sky(ctx, g.w, g.h, th[0]+'33', '#050510');
-      // parallax bg triangles
+
       ctx.save();
       ctx.globalAlpha = 0.15;
       for (let i=0;i<8;i++) {
@@ -397,7 +440,7 @@ const GAME_GD = {
       }
       ctx.restore();
 
-      // ground
+
       ctx.save();
       ctx.fillStyle = 'rgba(10,8,20,0.9)';
       ctx.fillRect(0, g.groundY, g.w, g.h-g.groundY);
@@ -409,7 +452,7 @@ const GAME_GD = {
       const toScreenX = (worldX) => (worldX - g.scrollX)*g.PPU;
       const toScreenY = (worldY) => g.groundY - worldY*g.PPU;
 
-      // obstacles
+
       for (const o of g.lvl.obs) {
         const sx = toScreenX(o.x);
         if (sx < -100 || sx > g.w+100) continue;
@@ -418,22 +461,22 @@ const GAME_GD = {
           const sy = g.groundY;
           const w = g.PPU, h2 = g.PPU*0.92;
           ctx.save();
-          // dark base silhouette (gives the classic GD outlined look)
+
           ctx.fillStyle = 'rgba(0,0,0,0.55)';
           ctx.beginPath();
           ctx.moveTo(sx-2, sy); ctx.lineTo(sx+w/2, sy-h2-2); ctx.lineTo(sx+w+2, sy);
           ctx.closePath(); ctx.fill();
-          // main faceted body — split into a lit half and shaded half
+
           ctx.shadowColor = th[1]; ctx.shadowBlur = 14;
           const grad = ctx.createLinearGradient(sx, sy-h2, sx+w, sy);
           grad.addColorStop(0, '#ffffff');
-          grad.addColorStop(0.5, th[1]);
-          grad.addColorStop(1, th[0]);
+          grad.addColorStop(0.5, '#fb7185');
+          grad.addColorStop(1, '#be123c');
           ctx.fillStyle = grad;
           ctx.beginPath();
           ctx.moveTo(sx, sy); ctx.lineTo(sx+w/2, sy-h2); ctx.lineTo(sx+w, sy);
           ctx.closePath(); ctx.fill();
-          // center ridge line
+
           ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.5;
           ctx.shadowBlur = 0;
           ctx.beginPath(); ctx.moveTo(sx+w/2, sy-h2); ctx.lineTo(sx+w/2, sy); ctx.stroke();
@@ -450,12 +493,12 @@ const GAME_GD = {
           ctx.fillStyle = grad;
           ctx.fillRect(sx, by, w, h);
           ctx.shadowBlur = 0;
-          // inset panel (classic GD plate look)
+
           ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2;
           ctx.strokeRect(sx+3, by+3, w-6, h-6);
           ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1;
           ctx.strokeRect(sx+0.5, by+0.5, w-1, h-1);
-          // top highlight edge
+
           ctx.fillStyle = 'rgba(255,255,255,0.5)';
           ctx.fillRect(sx, by, w, 3);
           ctx.restore();
@@ -491,14 +534,14 @@ const GAME_GD = {
         }
       }
 
-      // trail
+
       g.trail.forEach(t => {
         ctx.globalAlpha = clamp(t.life/0.35,0,1)*0.5;
         FX.glowRect(ctx, toScreenX(t.x)-4, toScreenY(t.y)-4, 8, 8, g.playerColors[g.playerColorIdx], 6);
       });
       ctx.globalAlpha = 1;
 
-      // player
+
       if (!g.dead) {
         const sx = g.px*g.PPU, sy = toScreenY(g.py);
         ctx.save();
@@ -521,7 +564,7 @@ const GAME_GD = {
 
       FX.vignette(ctx, g.w, g.h, 0.4);
 
-      // HUD
+
       ctx.save();
       const hudGrad = ctx.createLinearGradient(0,0,0,38);
       hudGrad.addColorStop(0,'rgba(6,10,18,0.75)'); hudGrad.addColorStop(1,'rgba(6,10,18,0.15)');
@@ -529,7 +572,7 @@ const GAME_GD = {
       ctx.fillRect(0,0,g.w,38);
       ctx.restore();
 
-      // quit/back button, top-left
+
       ctx.save();
       ctx.fillStyle = 'rgba(255,255,255,0.08)';
       FX.roundRect(ctx, 10, 7, 24, 22, 6); ctx.fill();
@@ -543,9 +586,9 @@ const GAME_GD = {
       ctx.shadowColor = '#4ade80'; ctx.shadowBlur = 8;
       text(ctx, Math.floor(g.progress*100)+'%', g.w/2, 22, 14, '#4ade80', 'center', 700);
       ctx.restore();
-      text(ctx, g.mode.toUpperCase(), g.w-16, 22, 11.5, th[1], 'right', 700);
+      text(ctx, g.autoPlay ? 'AUTO · 4 TO TAKE OVER' : g.mode.toUpperCase(), g.w-16, 22, 11.5, th[1], 'right', 700);
 
-      // progress bar with glow
+
       ctx.fillStyle = 'rgba(255,255,255,0.08)';
       ctx.fillRect(0, 36, g.w, 3);
       ctx.save();
@@ -554,6 +597,7 @@ const GAME_GD = {
       ctx.fillRect(0, 36, g.w*g.progress, 3);
       ctx.restore();
 
+      text(ctx, g.autoPlay ? 'Autoplay is on. Enjoy the ride.' : 'Squares are safe. Hold to jump. Press 4 to autoplay.', g.w/2, g.h-25, 12, '#c8bfdc', 'center');
       if (g.dead) {
         ctx.save();
         ctx.fillStyle = 'rgba(244,63,94,0.18)';

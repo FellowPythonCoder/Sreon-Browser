@@ -1,0 +1,15 @@
+FROM rust:1-bookworm AS engine
+WORKDIR /work
+COPY Extra/Source/src-tauri ./src-tauri
+RUN cargo build --manifest-path src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api
+FROM node:22-bookworm-slim
+WORKDIR /app
+COPY --from=engine /work/src-tauri/target/release/sreon-api /usr/local/bin/sreon-api
+COPY Extra/Source/integrations/sreon.mjs ./Extra/Source/integrations/sreon.mjs
+COPY index.html ./index.html
+COPY site ./site
+ENV SREON_API=/usr/local/bin/sreon-api
+ENV PORT=3000
+USER node
+EXPOSE 3000
+CMD ["node", "site/server.mjs"]

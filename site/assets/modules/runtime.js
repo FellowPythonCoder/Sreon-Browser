@@ -1,37 +1,44 @@
-/* ============================================================
-   Sreon Arcade — shared engine
-   Every game plugs into this: canvas setup, fixed-timestep loop,
-   keyboard/touch input, score persistence, and simple WebAudio SFX.
-   ============================================================ */
+
 
 const Arcade = (() => {
 
-  /* ---------- Input ---------- */
+
   const keys = Object.create(null);
   const justPressed = Object.create(null);
   let pointer = { x: 0, y: 0, down: false, justDown: false };
 
   window.addEventListener('keydown', e => {
+    if (!current || e.target.isContentEditable || ['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
     if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
     if (!keys[e.key]) justPressed[e.key] = true;
     keys[e.key] = true;
   });
   window.addEventListener('keyup', e => { keys[e.key] = false; });
 
+  let bindings = null;
   function bindPointer(canvas) {
+    bindings?.abort();
+    bindings = new AbortController();
+    const options = { signal: bindings.signal };
     const pos = e => {
       const r = canvas.getBoundingClientRect();
       const p = e.touches ? e.touches[0] : e;
       pointer.x = (p.clientX - r.left) * (canvas.width / r.width);
       pointer.y = (p.clientY - r.top) * (canvas.height / r.height);
     };
-    canvas.addEventListener('mousemove', pos);
-    canvas.addEventListener('mousedown', e => { pos(e); pointer.down = true; pointer.justDown = true; });
-    window.addEventListener('mouseup', () => { pointer.down = false; });
-    canvas.addEventListener('touchstart', e => { e.preventDefault(); pos(e); pointer.down = true; pointer.justDown = true; }, {passive:false});
-    canvas.addEventListener('touchmove', e => { e.preventDefault(); pos(e); }, {passive:false});
-    canvas.addEventListener('touchend', e => { e.preventDefault(); pointer.down = false; }, {passive:false});
+    canvas.addEventListener('mousemove', pos, options);
+    canvas.addEventListener('mousedown', e => { pos(e); pointer.down = true; pointer.justDown = true; }, options);
+    window.addEventListener('mouseup', () => { pointer.down = false; }, options);
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); pos(e); pointer.down = true; pointer.justDown = true; }, {passive:false, signal: bindings.signal});
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); pos(e); }, {passive:false, signal: bindings.signal});
+    canvas.addEventListener('touchend', e => { e.preventDefault(); pointer.down = false; }, {passive:false, signal: bindings.signal});
   }
+
+  window.addEventListener('blur', () => {
+    for (const key in keys) delete keys[key];
+    for (const key in justPressed) delete justPressed[key];
+    pointer.down = false; pointer.justDown = false;
+  });
 
   const Input = {
     held: k => !!keys[k],
@@ -44,7 +51,7 @@ const Arcade = (() => {
     }
   };
 
-  /* ---------- Audio (tiny synth, no asset files) ---------- */
+
   let actx = null;
   function ac() {
     if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
@@ -68,7 +75,7 @@ const Arcade = (() => {
     pop()   { Sound.tone(420, 0.06, 'triangle'); }
   };
 
-  /* ---------- High scores (localStorage) ---------- */
+
   const Scores = {
     key: id => 'sreon_arcade_hs_' + id,
     get(id) { return Number(localStorage.getItem(Scores.key(id)) || 0); },
@@ -79,7 +86,7 @@ const Arcade = (() => {
     }
   };
 
-  /* ---------- Helpers ---------- */
+
   const rand  = (a, b) => a + Math.random() * (b - a);
   const randi = (a, b) => Math.floor(rand(a, b));
   const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -88,13 +95,8 @@ const Arcade = (() => {
   const dist = (x1,y1,x2,y2) => Math.hypot(x2-x1, y2-y1);
   const choice = arr => arr[randi(0, arr.length)];
 
-  /* ---------- Game runner ---------- */
-  /*
-    Each game is: { id, name, desc, controls, w, h, init(g), update(g, dt), draw(g, ctx) }
-    `g` is a per-run state bag the game owns. Engine provides:
-      g.score, g.over, g.won, g.time, g.w, g.h
-    Call g.gameOver() to end a run.
-  */
+
+
   let current = null, rafId = null, lastT = 0, acc = 0;
   const STEP = 1 / 60;
 
@@ -141,9 +143,10 @@ const Arcade = (() => {
       drawOverlay(ctx, g);
       const isNew = Scores.set(def.id, Math.floor(g.score));
       if (hud) hud(g, isNew);
-      // allow restart
+
       if (Input.held('Enter') || Input.held(' ') || pointer.down) {
-        setTimeout(() => start(def, current.canvas, hud), 120);
+        const finished = current;
+        setTimeout(() => { if (current === finished) start(def, finished.canvas, hud); }, 120);
         return;
       }
     }
@@ -185,6 +188,10 @@ const Arcade = (() => {
   function stop() {
     if (rafId) cancelAnimationFrame(rafId);
     rafId = null; current = null;
+    bindings?.abort();
+    for (const key in keys) delete keys[key];
+    Input.clearFrame();
+    pointer.down = false;
   }
 
   return { start, stop, Input, Sound, Scores, rand, randi, clamp, aabb, dist, choice };
