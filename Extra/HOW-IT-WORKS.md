@@ -6,7 +6,7 @@ The start page keeps the original Sreon mark and the line **Search privately. Br
 
 ## Install
 
-Open [Sreon Browser](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/browser.yml), pick a successful run, and download the **Sreon** artifact. GitHub may require sign-in. Artifacts expire. One folder contains Windows, macOS, Linux, source, this guide, the website code, and `unable.txt`.
+Download the one folder: [Sreon.zip](https://github.com/FellowPythonCoder/Sreon-Browser/releases/download/sreon-preview/Sreon.zip). It contains Windows, macOS, Linux double-click apps, this guide, `unable.txt`, website code, and source. GitHub may require sign-in. Builds are also on [Sreon Browser](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/browser.yml).
 
 | System | In the folder | Run |
 | --- | --- | --- |
