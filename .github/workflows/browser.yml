@@ -35,6 +35,9 @@ jobs:
           - os: ubuntu-22.04
             pack: linux
     runs-on: ${{ matrix.os }}
+    env:
+      CARGO_TERM_COLOR: always
+      QT_QPA_PLATFORM: offscreen
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.85.0
@@ -45,9 +48,12 @@ jobs:
         if: matrix.pack == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libnss3 libasound2 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libgbm1 libcups2
+          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libnss3 libasound2 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libgbm1 libcups2 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 libfontconfig1
+      - name: Compile search engine
+        run: cargo build --release --manifest-path Browser/search/Cargo.toml --bin sreon-api
       - run: python -m pip install -r Browser/requirements.txt
-      - run: python Browser/tools/build.py
+      - name: Freeze Sreon
+        run: python Browser/tools/build.py --skip-engine
       - name: Windows folder
         if: matrix.pack == 'windows'
         shell: pwsh
@@ -66,18 +72,21 @@ jobs:
           cp Browser/dist/Sreon-linux.tar.gz out/Linux/
           curl -L -o appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
           chmod +x appimagetool
-          mkdir -p AppDir/usr/bin AppDir/usr/lib AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/256x256/apps
+          mkdir -p AppDir/usr/bin
           cp -a Browser/dist/Sreon/. AppDir/usr/bin/
           printf '%s\n' '[Desktop Entry]' 'Type=Application' 'Name=Sreon' 'Exec=Sreon' 'Icon=sreon' 'Categories=Network;WebBrowser;' > AppDir/sreon.desktop
           cp Browser/assets/mark.png AppDir/sreon.png
           ARCH=x86_64 ./appimagetool -n AppDir out/Linux/Sreon.AppImage || true
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: sreon-${{ matrix.pack }}
           path: out
+          if-no-files-found: warn
 
   assemble:
     needs: build
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -87,9 +96,9 @@ jobs:
       - name: One folder
         run: |
           mkdir -p Sreon/Windows Sreon/macOS Sreon/Linux Sreon/Source Sreon/Website
-          cp -a artifacts/sreon-windows/Windows/. Sreon/Windows/ || true
-          cp -a artifacts/sreon-macos/macOS/. Sreon/macOS/ || true
-          cp -a artifacts/sreon-linux/Linux/. Sreon/Linux/ || true
+          cp -a artifacts/sreon-windows/Windows/. Sreon/Windows/ 2>/dev/null || true
+          cp -a artifacts/sreon-macos/macOS/. Sreon/macOS/ 2>/dev/null || true
+          cp -a artifacts/sreon-linux/Linux/. Sreon/Linux/ 2>/dev/null || true
           cp Extra/HOW-IT-WORKS.md Sreon/HOW-IT-WORKS.md
           cp unable.txt Sreon/unable.txt
           cp unable.txt Sreon/unable

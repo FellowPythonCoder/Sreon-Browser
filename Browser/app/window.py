@@ -199,6 +199,7 @@ class BrowserWindow(QMainWindow):
         history.addAction("Reopen closed tab", "Ctrl+Shift+T", self.reopen)
         marks = self.menuBar().addMenu("Bookmarks")
         marks.addAction("Bookmark this page", "Ctrl+D", self.bookmark_page)
+        marks.addAction("Add to reading list", self.reading_list)
         marks.addAction("Show bookmarks", lambda: self.open_internal("bookmarks"))
         win = self.menuBar().addMenu("Window")
         win.addAction("Downloads", "Ctrl+J", lambda: self.open_internal("downloads"))
@@ -217,6 +218,7 @@ class BrowserWindow(QMainWindow):
         self.setStyleSheet(stylesheet(self.session.settings))
         self._place_chrome()
         self.omnibox.setMinimumHeight(28 if self.session.settings["density"] == "Compact" else 34)
+        self.session.apply_cookies()
 
     def current(self):
         index = self.tabbar.currentIndex()
@@ -471,6 +473,31 @@ class BrowserWindow(QMainWindow):
             return
         self.session.store.add_bookmark(self.workspace, tab.title, tab.url)
         self.statusBar().showMessage("Bookmarked", 2000)
+
+    def reading_list(self):
+        tab = self.current()
+        if not tab or not tab.url.startswith(("https://", "http://")):
+            return
+        self.session.store.read_add(tab.title, tab.url)
+        self.statusBar().showMessage("Saved to reading list", 2000)
+
+    def download_action(self, identity, action):
+        for record in self.session.downloads:
+            item = record.get("item")
+            if item is None or id(item) != identity:
+                continue
+            if action == "pause" and not item.isPaused():
+                item.pause()
+            elif action == "resume" and item.isPaused():
+                item.resume()
+            elif action == "cancel":
+                item.cancel()
+            elif action == "open" and record.get("path"):
+                open_path(record["path"])
+            elif action == "show" and record.get("path"):
+                open_path(Path(record["path"]).parent)
+            self._progress(record, item)
+            return
 
     def toggle_sidebar(self):
         self.session.settings["sidebar_visible"] = not self.session.settings["sidebar_visible"]

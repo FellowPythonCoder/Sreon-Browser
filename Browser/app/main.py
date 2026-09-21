@@ -1,17 +1,14 @@
 import sys
-from pathlib import Path
 from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
-from .engine import SearchManager
-from .paths import ASSETS, data_dir
-from .store import Store
-from .vault import Vault
-from .web import make_profile
-from .window import BrowserWindow
 
 class Session:
     def __init__(self):
+        from .engine import SearchManager
+        from .paths import data_dir
+        from .store import Store
+        from .vault import Vault
         self.dir = data_dir()
         self.store = Store(self.dir / "sreon.sqlite")
         self.settings = self.store.settings()
@@ -23,13 +20,22 @@ class Session:
         self.private_profile = None
 
     def start(self, app):
+        from .web import make_profile
         self.profile = make_profile(app, self.dir, False)
         self.private_profile = make_profile(app, self.dir / "private", True)
         self.profile.downloadRequested.connect(self._download)
         self.private_profile.downloadRequested.connect(self._download)
-        if not self.settings["third_party_cookies"]:
-            self.profile.cookieStore().setCookieFilter(lambda request: not request.thirdParty)
+        self.apply_cookies()
         self.open_window(False)
+
+    def apply_cookies(self):
+        if not self.profile:
+            return
+        store = self.profile.cookieStore()
+        if self.settings["third_party_cookies"]:
+            store.setCookieFilter(lambda request: True)
+        else:
+            store.setCookieFilter(lambda request: not request.thirdParty)
 
     def _download(self, item):
         window = self.windows[-1] if self.windows else None
@@ -37,6 +43,7 @@ class Session:
             window._download(item)
 
     def open_window(self, private, url=None):
+        from .window import BrowserWindow
         window = BrowserWindow(self, private=private, url=url)
         window.show()
         self.windows.append(window)
@@ -53,6 +60,7 @@ class Session:
         self.store.close()
 
 def main():
+    from .paths import ASSETS
     QCoreApplication.setOrganizationName("Sreon")
     QCoreApplication.setApplicationName("Sreon")
     QCoreApplication.setApplicationVersion("0.5.0")

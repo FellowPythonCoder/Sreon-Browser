@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QFileDialog, QFormLayout, QFrame, QHBoxLayout, QLabel,
-    QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QScrollArea,
+    QLineEdit, QListWidget, QListWidgetItem, QMenu, QMessageBox, QPushButton, QScrollArea,
     QSpinBox, QVBoxLayout, QWidget,
 )
 from .model import PRESETS, clean_settings, export_theme, generate_password, import_theme, origin_of
@@ -214,9 +214,13 @@ class ListPage(QWidget):
                 item.setData(Qt.ItemDataRole.UserRole, ("open", row["url"]))
                 self.list.addItem(item)
         elif self.kind == "Downloads":
+            if self.list.contextMenuPolicy() != Qt.ContextMenuPolicy.CustomContextMenu:
+                self.list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+                self.list.customContextMenuRequested.connect(self._download_menu)
             for row in self.window.session.downloads:
                 item = QListWidgetItem(row["label"])
-                item.setData(Qt.ItemDataRole.UserRole, ("file", row.get("path", "")))
+                req = row.get("item")
+                item.setData(Qt.ItemDataRole.UserRole, ("download", id(req) if req is not None else 0, row.get("path", "")))
                 self.list.addItem(item)
         elif self.kind == "Passwords":
             if not self.window.session.vault.unlocked:
@@ -230,16 +234,37 @@ class ListPage(QWidget):
                 self.list.addItem(item)
 
     def _open(self, item):
-        action, value = item.data(Qt.ItemDataRole.UserRole)
+        data = item.data(Qt.ItemDataRole.UserRole)
+        action = data[0]
         if action == "open":
-            self.window.open_url(value)
-        elif action == "file" and value:
+            self.window.open_url(data[1])
+        elif action == "file" and data[1]:
             from .web import open_path
-            open_path(value)
+            open_path(data[1])
+        elif action == "download" and data[2]:
+            from .web import open_path
+            open_path(data[2])
         elif action == "lock":
             self.window.lock_window()
         elif action == "fill":
-            self.window.fill_password(value)
+            self.window.fill_password(data[1])
+
+    def _download_menu(self, pos):
+        item = self.list.itemAt(pos)
+        if not item:
+            return
+        data = item.data(Qt.ItemDataRole.UserRole)
+        if not data or data[0] != "download":
+            return
+        identity = data[1]
+        menu = QMenu(self)
+        menu.addAction("Pause", lambda: self.window.download_action(identity, "pause"))
+        menu.addAction("Resume", lambda: self.window.download_action(identity, "resume"))
+        menu.addAction("Cancel", lambda: self.window.download_action(identity, "cancel"))
+        menu.addAction("Open", lambda: self.window.download_action(identity, "open"))
+        menu.addAction("Show in folder", lambda: self.window.download_action(identity, "show"))
+        menu.exec(self.list.mapToGlobal(pos))
+        self.refresh()
 
     def _clear(self):
         if QMessageBox.question(self, "Clear history", "Remove saved history from this computer?") == QMessageBox.StandardButton.Yes:

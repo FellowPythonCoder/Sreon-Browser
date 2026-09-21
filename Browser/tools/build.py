@@ -8,13 +8,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 def run(command, **kwargs):
+    print("+", *command, flush=True)
     subprocess.check_call(command, **kwargs)
+
+def cargo():
+    found = shutil.which("cargo")
+    if not found:
+        found = str(Path.home() / ".cargo" / "bin" / ("cargo.exe" if sys.platform == "win32" else "cargo"))
+    if not Path(found).is_file() and not shutil.which("cargo"):
+        raise SystemExit("cargo not found")
+    return found if Path(found).is_file() else "cargo"
 
 def engine():
     name = "sreon-api.exe" if sys.platform == "win32" else "sreon-api"
     dest = ROOT / "engine"
     dest.mkdir(exist_ok=True)
-    run(["cargo", "build", "--release", "--manifest-path", str(ROOT / "search" / "Cargo.toml")])
+    run([cargo(), "build", "--release", "--manifest-path", str(ROOT / "search" / "Cargo.toml"), "--bin", "sreon-api"])
     built = ROOT / "search" / "target" / "release" / name
     if not built.is_file():
         raise SystemExit("search engine failed to build")
@@ -24,33 +33,51 @@ def engine():
 
 def pyinstaller():
     os.chdir(ROOT)
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     sep = ";" if sys.platform == "win32" else ":"
-    icon = ROOT / "assets" / ("icon.icns" if sys.platform == "darwin" else "icon.ico")
     command = [
-        sys.executable, "-m", "PyInstaller", "--noconfirm", "--windowed", "--name", "Sreon",
-        "--collect-all", "PySide6",
+        sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--windowed", "--name", "Sreon",
+        "--hidden-import", "PySide6.QtCore",
+        "--hidden-import", "PySide6.QtGui",
+        "--hidden-import", "PySide6.QtWidgets",
+        "--hidden-import", "PySide6.QtNetwork",
+        "--hidden-import", "PySide6.QtWebEngineCore",
+        "--hidden-import", "PySide6.QtWebEngineWidgets",
+        "--hidden-import", "PySide6.QtWebChannel",
+        "--hidden-import", "PySide6.QtPrintSupport",
+        "--hidden-import", "PySide6.QtTextToSpeech",
+        "--hidden-import", "shiboken6",
+        "--hidden-import", "cryptography",
+        "--collect-binaries", "PySide6",
+        "--collect-data", "PySide6",
         "--add-data", f"assets{sep}assets",
         "--add-data", f"engine{sep}engine",
-        "--hidden-import", "cryptography",
         "--exclude-module", "tkinter",
         "--exclude-module", "matplotlib",
         "--exclude-module", "numpy",
+        "--exclude-module", "PySide6.Qt3DCore",
+        "--exclude-module", "PySide6.QtCharts",
+        "--exclude-module", "PySide6.QtDesigner",
+        "--exclude-module", "PySide6.QtBluetooth",
         "app/main.py",
     ]
-    if icon.is_file():
-        command.extend(["--icon", str(icon)])
     if sys.platform == "darwin":
-        command.extend(["--osx-bundle-identifier", "com.sreon.browser"])
+        icns = ROOT / "assets" / "icon.icns"
+        if icns.is_file():
+            command.extend(["--icon", str(icns), "--osx-bundle-identifier", "com.sreon.browser"])
+    elif sys.platform == "win32":
+        ico = ROOT / "assets" / "icon.ico"
+        if ico.is_file():
+            command.extend(["--icon", str(ico)])
     run(command)
 
 def dmg():
     app = ROOT / "dist" / "Sreon.app"
     if not app.exists():
         nested = ROOT / "dist" / "Sreon" / "Sreon.app"
-        if nested.exists():
-            app = nested
-        else:
-            raise SystemExit("Sreon.app was not built")
+        app = nested if nested.exists() else None
+    if app is None or not Path(app).exists():
+        raise SystemExit("Sreon.app was not built")
     stage = ROOT / "dist" / "dmg"
     if stage.exists():
         shutil.rmtree(stage)
@@ -63,12 +90,24 @@ def dmg():
 
 def linux_tar():
     source = ROOT / "dist" / "Sreon"
+    if not source.exists():
+        raise SystemExit("Linux app folder was not built")
     archive = ROOT / "dist" / "Sreon-linux.tar.gz"
     with tarfile.open(archive, "w:gz") as tar:
         tar.add(source, arcname="Sreon")
 
 def main():
-    engine()
+    skip = "--skip-engine" in sys.argv
+    if not skip:
+        engine()
+    else:
+        name = "sreon-api.exe" if sys.platform == "win32" else "sreon-api"
+        dest = ROOT / "engine"
+        dest.mkdir(exist_ok=True)
+        built = ROOT / "search" / "target" / "release" / name
+        if not built.is_file():
+            raise SystemExit("search engine binary missing")
+        shutil.copy2(built, dest / name)
     pyinstaller()
     if sys.platform == "darwin":
         dmg()
