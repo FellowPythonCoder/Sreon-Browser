@@ -21,7 +21,12 @@ test("Node client serializes concurrent requests and preserves Unicode, category
 test("valid API errors do not disconnect the Node client", async (t) => {
   const engine = client();
   t.after(() => engine.close());
-  await assert.rejects(engine.search("error"), /Source unavailable/);
+  await assert.rejects(engine.search("error"), (error) => {
+    assert.equal(error.message, "Source unavailable");
+    assert.equal(error.code, "SEARCH_UNAVAILABLE");
+    assert.equal(error.status, 502);
+    return true;
+  });
   assert.equal((await engine.search("next")).results[0].title, "next");
 });
 

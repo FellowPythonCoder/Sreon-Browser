@@ -6,6 +6,8 @@ on:
     paths:
       - index.html
       - site/**
+      - Extra/Source/integrations/sreon.mjs
+      - Extra/Source/src-tauri/**
       - .github/workflows/website.yml
 permissions:
   contents: read
@@ -31,7 +33,7 @@ jobs:
         with:
           workspaces: Extra/Source/src-tauri -> target
       - run: cargo build --manifest-path Extra/Source/src-tauri/Cargo.toml --no-default-features --features api --bin sreon-api
-      - name: Check actual engine through website API
+      - name: Check automatic startup and actual engine through website API
         run: node site/tests/live-api.mjs
         env:
           SREON_API: Extra/Source/src-tauri/target/debug/sreon-api

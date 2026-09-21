@@ -30,7 +30,7 @@ test('try area uses API data, safely renders results, and paginates', async ({pa
 });
 test('search errors do not create fake results and retry works', async ({page}) => {
   let fail=true;
-  await page.route('**/api/search',route=>route.fulfill(fail?{status:503,json:{error:'Unavailable'}}:{json:{results:[{title:'Example',url:'https://example.org/'}]}}));
+  await page.route('**/api/search',route=>route.fulfill(fail?{status:503,json:{code:'BACKEND_NOT_READY',error:'Unavailable'}}:{json:{results:[{title:'Example',url:'https://example.org/'}]}}));
   await page.goto('/#try'); await page.locator('#query').fill('example'); await page.locator('#search-submit').click();
   await expect(page.locator('#search-status')).toContainText('not connected'); await expect(page.locator('.result')).toHaveCount(0);
   fail=false; await page.locator('#search-submit').click(); await expect(page.locator('.result')).toHaveCount(1);
@@ -113,4 +113,14 @@ test('all three photographs load and the discovery cards submit a real API reque
   await page.getByRole('button',{name:/Take the scenic route/}).click();
   await expect(page.locator('#query')).toHaveValue('quiet coastal walking trails');
   await expect.poll(()=>query).toBe('quiet coastal walking trails');
+});
+
+test('the try panel confirms engine readiness and distinguishes provider outages',async({page})=>{
+  await page.route('**/api/health',route=>route.fulfill({json:{ready:true,engine:'rust'}}));
+  await page.route('**/api/search',route=>route.fulfill({status:502,json:{code:'SOURCE_UNAVAILABLE'}}));
+  await page.goto('/#try');
+  await expect(page.locator('#search-status')).toContainText('Connected to the Rust');
+  await page.locator('#query').fill('YouTube'); await page.locator('#search-submit').click();
+  await expect(page.locator('#search-status')).toContainText('engine is running');
+  await expect(page.locator('.result')).toHaveCount(0);
 });

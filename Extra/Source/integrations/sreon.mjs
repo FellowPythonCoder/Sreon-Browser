@@ -54,7 +54,13 @@ export class Sreon {
     const active = this.active;
     clearTimeout(active.timer);
     this.active = null;
-    if (hasError) active.reject(new Error(message.error.message));
+    if (hasError) {
+      const error = new Error(message.error.message);
+      error.name = "SreonApiError";
+      error.code = typeof message.error.code === "string" ? message.error.code : undefined;
+      error.status = Number.isInteger(message.error.status) ? message.error.status : undefined;
+      active.reject(error);
+    }
     else active.resolve(message.result);
     this.sendNext();
   }

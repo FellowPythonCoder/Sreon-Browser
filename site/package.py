@@ -21,7 +21,7 @@ def package(root=ROOT):
             if path.is_file() and not path.is_symlink() and not name.startswith(".") and not app_source.PRIVATE_NAMES.match(name) and (path.suffix.lower() in app_source.EXTENSIONS or name == "Dockerfile"):
                 paths.append(path)
     paths.extend(app_source.source_files(root / "Extra/Source"))
-    required = {"site/server.mjs", "site/notes/index.html", "site/assets/modules/module-07.js", "Extra/Source/src-tauri/src/api.rs"}
+    required = {"site/server.mjs", "site/start.mjs", "site/backend.mjs", "site/notes/index.html", "site/assets/modules/module-07.js", "Extra/Source/src-tauri/src/api.rs"}
     required.update("Extra/Source/" + name for name in app_source.REQUIRED)
     missing = required - {path.relative_to(root).as_posix() for path in paths}
     if missing:

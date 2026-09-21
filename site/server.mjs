@@ -3,6 +3,7 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Sreon } from '../Extra/Source/integrations/sreon.mjs';
+import { inspectEngine } from './backend.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const mime = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.woff2':'font/woff2' };
@@ -35,6 +36,12 @@ function body(request) {
 export function createWebsite({ executable = process.env.SREON_API || resolve(root, 'Extra/Source/src-tauri/target/release/sreon-api' + (process.platform === 'win32' ? '.exe' : '')), clientFactory = () => new Sreon(executable), allowedOrigins = (process.env.SREON_ALLOWED_ORIGINS || 'https://opensreon.com,https://www.opensreon.com').split(','), limit = 15 } = {}) {
   let client = null;
   let pending = 0;
+  let health = null;
+  let healthUntil = 0;
+  function engine() {
+    if (!client || client.failure) { client?.close(); client = clientFactory(); }
+    return client;
+  }
   const clients = new Map();
   const server = createServer(async (request, response) => {
     response.setHeader('X-Content-Type-Options', 'nosniff');
@@ -43,15 +50,28 @@ export function createWebsite({ executable = process.env.SREON_API || resolve(ro
     let pathname;
     try { pathname = decodeURIComponent(new URL(request.url, 'http://sreon.invalid').pathname); }
     catch { json(response, 400, { error: 'Invalid path' }); return; }
-    if (pathname === '/api/search') {
+    if (pathname === '/api/search' || pathname === '/api/health') {
       response.setHeader('Vary', 'Origin');
       const origin = request.headers.origin;
       let sameOrigin = false;
       try { const parsed = new URL(origin); sameOrigin = ['https:', 'http:'].includes(parsed.protocol) && parsed.host === request.headers.host; } catch {}
       if (origin && !sameOrigin && !allowedOrigins.includes(origin)) { json(response, 403, { error:'Origin not allowed' }); return; }
       if (origin) response.setHeader('Access-Control-Allow-Origin', origin);
+      const methods = pathname === '/api/health' ? 'GET, OPTIONS' : 'POST, OPTIONS';
       if (request.method === 'OPTIONS') {
-        response.writeHead(204, { 'Access-Control-Allow-Methods':'POST, OPTIONS', 'Access-Control-Allow-Headers':'Content-Type', 'Access-Control-Max-Age':'600' }); response.end(); return;
+        response.writeHead(204, { 'Access-Control-Allow-Methods':methods, 'Access-Control-Allow-Headers':'Content-Type', 'Access-Control-Max-Age':'600' }); response.end(); return;
+      }
+      if (pathname === '/api/health') {
+        if (request.method !== 'GET') { response.setHeader('Allow', methods); json(response, 405, { error:'Use GET' }); return; }
+        if (!health || Date.now() > healthUntil) {
+          healthUntil = Infinity;
+          health = Promise.resolve().then(() => inspectEngine(engine())).catch(() => false).then(ready => { healthUntil = Date.now()+5000; return ready; });
+        }
+        const ready = await health;
+        json(response, ready ? 200 : 503, ready
+          ? { ready:true, engine:'rust', sources:'checked when searching' }
+          : { ready:false, code:'BACKEND_NOT_READY', error:'The Rust search backend is not running.' });
+        return;
       }
       if (request.method !== 'POST') { response.setHeader('Allow', 'POST, OPTIONS'); json(response, 405, { error:'Use POST' }); return; }
       if (request.headers['content-type']?.split(';')[0].trim() !== 'application/json') { json(response, 415, { error:'Use application/json' }); return; }
@@ -68,11 +88,16 @@ export function createWebsite({ executable = process.env.SREON_API || resolve(ro
       if (pending >= 8) { json(response, 429, { error:'The search service is busy' }); return; }
       pending++;
       try {
-        if (!client || client.failure) { client?.close(); client = clientFactory(); }
-        const result = await client.search(data.q.trim(), 'web', data.cursor ?? null);
+        const result = await engine().search(data.q.trim(), 'web', data.cursor ?? null);
         if (!response.destroyed) json(response, 200, result);
-      } catch {
-        if (!response.destroyed) json(response, 503, { error:'Search is temporarily unavailable' });
+      } catch (error) {
+        if (!response.destroyed) {
+          if (['SOURCE_UNAVAILABLE','SEARCH_UNAVAILABLE'].includes(error.code))
+            json(response, 502, { code:'SOURCE_UNAVAILABLE', error:'The Rust engine could not reach its search sources. Please retry shortly.' });
+          else if (['ENOENT','EACCES','ENOEXEC'].includes(error.code))
+            json(response, 503, { code:'BACKEND_NOT_READY', error:'The Rust search backend is not running.' });
+          else json(response, 503, { error:'Search is temporarily unavailable' });
+        }
       } finally { pending--; }
       return;
     }

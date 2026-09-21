@@ -55,3 +55,25 @@ test('only public files are served; old game paths and source files are unavaila
   assert.match(response.headers.get('x-robots-tag'),/noindex/);
   assert.match(await response.text(),/module-07.js/);
 });
+
+test('health endpoint verifies the engine and does not assert provider reachability', async t => {
+  let calls=0;
+  const base=await setup(t,{clientFactory:()=>({close(){},search:async q=>{calls++;assert.equal(q,'');throw Object.assign(new Error('Invalid query'),{status:400,code:'INVALID_QUERY'});}})});
+  const response=await fetch(base+'/api/health');
+  assert.equal(response.status,200);
+  assert.deepEqual(await response.json(),{ready:true,engine:'rust',sources:'checked when searching'});
+  await fetch(base+'/api/health'); assert.equal(calls,1);
+});
+test('health distinguishes unavailable transport from an operational backend', async t => {
+  const base=await setup(t,{clientFactory:()=>({close(){},search:async()=>{throw Object.assign(new Error('internal path'),{code:'ENOENT'});}})});
+  assert.equal((await fetch(base+'/api/health')).status,503);
+  const response=await post(base,{q:'YouTube'});
+  assert.equal(response.status,503);
+  assert.equal((await response.json()).code,'BACKEND_NOT_READY');
+});
+test('an upstream failure is not mislabeled as an uninstalled backend', async t => {
+  const base=await setup(t,{clientFactory:()=>({close(){},search:async()=>{throw Object.assign(new Error('private provider detail'),{status:502,code:'SOURCE_UNAVAILABLE'});}})});
+  const response=await post(base,{q:'YouTube'});
+  assert.equal(response.status,502);
+  assert.equal((await response.json()).code,'SOURCE_UNAVAILABLE');
+});

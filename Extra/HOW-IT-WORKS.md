@@ -173,11 +173,10 @@ The website does not fake results or replace the engine. Browser requests go to 
 From the repository root, with Node 22 and Rust installed:
 
 ```sh
-cargo build --manifest-path Extra/Source/src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api
-node site/server.mjs
+node site/start.mjs
 ```
 
-The website listens on all interfaces on port 3000. Set `PORT` to change it. `SREON_API` can point to another compiled helper; otherwise the server uses the release binary at the path above, adding `.exe` on Windows. It does not need an upstream search API key. If the helper or provider is unavailable, search returns an explicit error rather than invented results.
+The launcher automatically builds the Rust API when its default executable is missing or older than the Rust sources, checks its actual JSON-lines response, and only then starts the website. Use `node site/start.mjs --rebuild` to force a rebuild. A working precompiled helper selected with `SREON_API` does not require a local Rust compiler. `node site/server.mjs` alone is now only the low-level interface/test server; it does not build the engine. The website listens on all interfaces on port 3000. Set `PORT` to change it. `SREON_API` can point to another compiled helper; otherwise the server uses the release binary at the path above, adding `.exe` on Windows. It does not need an upstream search API key. `GET /api/health` verifies the compiled backend’s local input-validation response without contacting search providers; a healthy process does not guarantee upstream internet access. The Try panel displays connection status and distinguishes a missing backend from an unreachable search source. If the helper or provider is unavailable, search returns an explicit error rather than invented results. The full container starts through the same verified launcher and includes a readiness healthcheck.
 
 Alternatively, build and run the complete website plus Rust engine as a container from the full repository or website archive:
 

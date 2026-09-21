@@ -34,7 +34,13 @@ async function search(append = false) {
   try {
     const endpoint = document.querySelector('meta[name="sreon-search-endpoint"]').content;
     const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q, category: 'web', cursor: append ? cursor : null }), credentials: 'omit', signal: controller.signal, referrerPolicy: 'no-referrer' });
-    if (!response.ok) throw new Error(response.status === 429 ? 'A few too many searches. Please wait a minute and try again.' : response.status === 404 || response.status === 503 ? 'The website search service is not connected yet. Please try again later.' : 'Search is temporarily unavailable. Please try again.');
+    if (!response.ok) {
+      const failure = await response.json().catch(() => ({}));
+      if (response.status === 429) throw new Error('A few too many searches. Please wait a minute and try again.');
+      if (failure.code === 'SOURCE_UNAVAILABLE') throw new Error('The Rust engine is running, but its search sources could not be reached. Please retry shortly.');
+      if (failure.code === 'BACKEND_NOT_READY' || response.status === 404) throw new Error('The website search backend is not connected yet.');
+      throw new Error('Search is temporarily unavailable. Please try again.');
+    }
     const data = await response.json();
     if (!Array.isArray(data.results)) throw new Error('The search service returned an unexpected response.');
     if (id !== sequence) return;
@@ -65,3 +71,19 @@ async function search(append = false) {
 form.addEventListener('submit', (event) => { event.preventDefault(); search(); });
 document.querySelectorAll('[data-query]').forEach((button) => button.addEventListener('click', () => { query.value = button.dataset.query; document.querySelector('#try').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'}); search(); }));
 more.addEventListener('click', () => search(true));
+
+async function checkBackend() {
+  try {
+    const endpoint = new URL(document.querySelector('meta[name="sreon-search-endpoint"]').content, location.href);
+    endpoint.pathname = endpoint.pathname.replace(/\/search\/?$/, '/health');
+    endpoint.search = '';
+    const response = await fetch(endpoint, { credentials:'omit', referrerPolicy:'no-referrer', signal:AbortSignal.timeout(12000) });
+    const data = await response.json();
+    if (sequence) return;
+    if (!response.ok || !data.ready || data.engine !== 'rust') throw new Error('Backend unavailable');
+    status.textContent = 'Connected to the Rust search engine. What are you curious about?';
+  } catch {
+    if (!sequence) { status.dataset.error = 'true'; status.textContent = 'The website search backend is not connected yet.'; }
+  }
+}
+checkBackend();
