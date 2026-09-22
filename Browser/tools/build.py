@@ -3,7 +3,6 @@ import shutil
 import subprocess
 import sys
 import tarfile
-import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,6 +82,12 @@ def pyinstaller():
             command.extend(["--icon", str(ico)])
     run(command)
 
+def _detach_sreon_volume():
+    subprocess.run(["hdiutil", "detach", "/Volumes/Sreon", "-force"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def _dmg_ok(path):
+    return path.is_file() and path.stat().st_size > 1_000_000
+
 def dmg():
     app = ROOT / "dist" / "Sreon.app"
     if not app.exists():
@@ -90,74 +95,58 @@ def dmg():
         app = nested if nested.exists() else None
     if app is None or not Path(app).exists():
         raise SystemExit("Sreon.app was not built")
+    app = Path(app)
     background = ROOT / "assets" / "dmg-background.png"
-    icns = ROOT / "assets" / "icon.icns"
     stage = ROOT / "dist" / "dmg-stage"
     if stage.exists():
         shutil.rmtree(stage)
     stage.mkdir(parents=True)
     shutil.copytree(app, stage / "Sreon.app", symlinks=True)
-    Path(stage / "Applications").symlink_to("/Applications")
-    hidden = stage / ".background"
-    hidden.mkdir()
-    shutil.copy2(background, hidden / "background.png")
-    dmg_rw = ROOT / "dist" / "sreon-rw.dmg"
     dmg_path = ROOT / "dist" / "Sreon.dmg"
-    for path in (dmg_rw, dmg_path):
-        if path.exists():
-            path.unlink()
-    run(["hdiutil", "create", "-srcfolder", str(stage), "-volname", "Sreon", "-fs", "HFS+", "-format", "UDRW", "-ov", str(dmg_rw)])
-    attached = subprocess.check_output(["hdiutil", "attach", "-readwrite", "-noverify", "-noautoopen", str(dmg_rw)], text=True)
-    print(attached, flush=True)
-    device = next(line.split()[0] for line in attached.splitlines() if "/Volumes/Sreon" in line)
-    mount = Path("/Volumes/Sreon")
-    for _ in range(40):
-        if (mount / "Sreon.app").exists():
-            break
-        time.sleep(0.25)
-    else:
-        raise SystemExit("Sreon volume did not mount")
-    script = (
-        'tell application "Finder"\n'
-        '  tell disk "Sreon"\n'
-        '    open\n'
-        '    set current view of container window to icon view\n'
-        '    set toolbar visible of container window to false\n'
-        '    set statusbar visible of container window to false\n'
-        '    set bounds of container window to {280, 140, 940, 540}\n'
-        '    set viewOptions to icon view options of container window\n'
-        '    set arrangement of viewOptions to not arranged\n'
-        '    set icon size of viewOptions to 128\n'
-        '    set background picture of viewOptions to file ".background:background.png"\n'
-        '    set position of item "Sreon.app" of container window to {165, 185}\n'
-        '    set position of item "Applications" of container window to {495, 185}\n'
-        '    close\n'
-        '    open\n'
-        '    update without registering applications\n'
-        '    delay 2\n'
-        '    close\n'
-        '  end tell\n'
-        'end tell\n'
-    )
-    run(["osascript", "-e", script])
-    subprocess.call(["chflags", "hidden", str(mount / ".background")])
-    if icns.is_file():
-        shutil.copy2(icns, mount / ".VolumeIcon.icns")
-        subprocess.call(["SetFile", "-c", "icnC", str(mount / ".VolumeIcon.icns")])
-        subprocess.call(["SetFile", "-a", "C", str(mount)])
-    subprocess.call(["bless", "--folder", str(mount), "--openfolder", str(mount)])
-    run(["hdiutil", "detach", device, "-quiet"])
-    for _ in range(20):
-        if not mount.exists():
-            break
-        time.sleep(0.25)
-    run(["hdiutil", "convert", str(dmg_rw), "-format", "UDZO", "-imagekey", "zlib-level=9", "-ov", "-o", str(dmg_path)])
-    dmg_rw.unlink(missing_ok=True)
+    _detach_sreon_volume()
+    if dmg_path.exists():
+        dmg_path.unlink()
+    maker = shutil.which("create-dmg")
+    if maker and background.is_file():
+        command = [
+            maker, "--volname", "Sreon", "--background", str(background),
+            "--window-pos", "200", "120", "--window-size", "660", "400",
+            "--icon-size", "128", "--icon", "Sreon.app", "150", "220",
+            "--app-drop-link", "510", "220", "--no-internet-enable",
+        ]
+        icns = ROOT / "assets" / "icon.icns"
+        if icns.is_file():
+            command.extend(["--volicon", str(icns)])
+        command.extend([str(dmg_path), str(stage)])
+        print("+", *command, flush=True)
+        log = ROOT / "freeze.log"
+        with log.open("a", encoding="utf-8") as handle:
+            handle.write(" ".join(map(str, command)) + "\n")
+            try:
+                process = subprocess.run(command, stdout=handle, stderr=subprocess.STDOUT, text=True, timeout=240)
+            except subprocess.TimeoutExpired:
+                handle.write("create-dmg timed out\n")
+                process = None
+        _detach_sreon_volume()
+        if process is not None:
+            print(log.read_text(encoding="utf-8", errors="replace")[-4000:], flush=True)
+        if _dmg_ok(dmg_path):
+            return
+        print("create-dmg failed, writing a plain disk image that still opens", flush=True)
+        if dmg_path.exists():
+            dmg_path.unlink()
+    Path(stage / "Applications").symlink_to("/Applications")
+    run(["hdiutil", "create", "-volname", "Sreon", "-srcfolder", str(stage), "-ov", "-format", "UDZO", "-imagekey", "zlib-level=9", str(dmg_path)])
+    if not _dmg_ok(dmg_path):
+        raise SystemExit("Sreon.dmg was not written")
 
 def linux_tar():
     source = ROOT / "dist" / "Sreon"
     if not source.exists():
         raise SystemExit("Linux app folder was not built")
+    note = ROOT.parent / "If-it-says-unverified.txt"
+    if note.is_file():
+        shutil.copy2(note, source / "If-it-says-unverified.txt")
     archive = ROOT / "dist" / "Sreon-linux.tar.gz"
     with tarfile.open(archive, "w:gz") as tar:
         tar.add(source, arcname="Sreon")

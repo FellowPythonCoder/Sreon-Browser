@@ -10,9 +10,21 @@ Download the one folder: [Sreon.zip](https://github.com/FellowPythonCoder/Sreon-
 
 | System | In the folder | Run |
 | --- | --- | --- |
-| Windows 10/11, x64 | `Windows/Sreon.exe` | Unzip and open `Sreon.exe`. SmartScreen may warn because the build is not publisher-signed. |
-| macOS 11+ | `macOS/Sreon.dmg` | Open the DMG and drag Sreon to Applications. Gatekeeper may warn because the build is not notarized. |
+| Windows 10/11, x64 | `Windows/Sreon.exe` | Unzip and open `Sreon.exe`. |
+| macOS 11+ | `macOS/Sreon.dmg` | Open the DMG and drag Sreon onto Applications. |
 | Linux x86-64 | `Linux/Sreon.AppImage` and `Sreon-linux.tar.gz` | `chmod +x Sreon.AppImage && ./Sreon.AppImage`. If FUSE is missing: `./Sreon.AppImage --appimage-extract-and-run`, or unpack the tar.gz and run `./Sreon`. |
+
+### If it says unverified
+
+Sreon is open source and is not Apple-notarized or Microsoft-signed. That warning is expected. Do this:
+
+**Mac.** If `Sreon.dmg` will not open, Control-click it and choose Open. Drag Sreon onto Applications. Then Control-click Sreon in Applications, choose Open, and click Open. Once only. If it still refuses: System Settings → Privacy & Security → Open Anyway.
+
+**Windows.** If SmartScreen says “Windows protected your PC”, click More info, then Run anyway. If the file is blocked: right-click `Sreon.exe` → Properties → Unblock → OK.
+
+**Linux.** `chmod +x Sreon.AppImage && ./Sreon.AppImage`. If it still will not run: `./Sreon.AppImage --appimage-extract-and-run`.
+
+The same steps are in `If-it-says-unverified.txt`.
 
 Internet is required for websites and live search. The app does not phone home to Sreon. Search queries go to the public sources used by the Rust engine only when you search. Website visits are ordinary HTTPS to that site.
 
@@ -74,13 +86,14 @@ Sreon/
   Website/          website and hidden workspace
   HOW-IT-WORKS.md
   unable.txt
+  If-it-says-unverified.txt
 ```
 
 Generated installers are not committed to Git. The website still has no in-page download buttons.
 
 The desktop app lives under `Browser/`. It is a Qt WebEngine shell plus the Rust search crate in `Browser/search/`. It does not wrap `index.html`. The older Tauri project under `Extra/Source` remains the website’s search helper source; do not treat that old single-webview app as this browser.
 
-New application code has no explanatory comments. Instructions and omitted-feature notes are this file and `unable.txt`.
+New application code has no explanatory comments. Instructions and omitted-feature notes are this file, `unable.txt`, and `If-it-says-unverified.txt`.
 
 ## Build the browser
 
@@ -157,7 +170,7 @@ AI chat calls the configured Gemini model directly only after Send. It requires 
 
 ### Run the actual website search engine
 
-The website does not fake results or replace the engine. Browser requests go to `POST /api/search`; `site/server.mjs` uses the existing Node integration client to communicate with the compiled Rust `sreon-api` process. Queries are forwarded to the same search core used by the app. The server is required only for the website demo, never for installed desktop apps.
+The public website does not include a Try-it search box. Live search is in the desktop app. The optional `POST /api/search` adapter in `site/server.mjs` still exists for local checks and containers; it is not shown as a demo on the homepage because GitHub Pages cannot run the Rust engine.
 
 From the repository root, with Node 22 and Rust installed:
 
@@ -165,7 +178,7 @@ From the repository root, with Node 22 and Rust installed:
 node site/start.mjs
 ```
 
-The launcher automatically builds the Rust API when its default executable is missing or older than the Rust sources, checks its actual JSON-lines response, and only then starts the website. Use `node site/start.mjs --rebuild` to force a rebuild. A working precompiled helper selected with `SREON_API` does not require a local Rust compiler. `node site/server.mjs` alone is now only the low-level interface/test server; it does not build the engine. The website listens on all interfaces on port 3000. Set `PORT` to change it. `SREON_API` can point to another compiled helper; otherwise the server uses the release binary at the path above, adding `.exe` on Windows. It does not need an upstream search API key. `GET /api/health` verifies the compiled backend’s local input-validation response without contacting search providers; a healthy process does not guarantee upstream internet access. The Try panel displays connection status and distinguishes a missing backend from an unreachable search source. If the helper or provider is unavailable, search returns an explicit error rather than invented results. The full container starts through the same verified launcher and includes a readiness healthcheck.
+The launcher automatically builds the Rust API when its default executable is missing or older than the Rust sources, checks its actual JSON-lines response, and only then starts the website. Use `node site/start.mjs --rebuild` to force a rebuild. A working precompiled helper selected with `SREON_API` does not require a local Rust compiler. `node site/server.mjs` alone is now only the low-level interface/test server; it does not build the engine. The website listens on all interfaces on port 3000. Set `PORT` to change it. `SREON_API` can point to another compiled helper; otherwise the server uses the release binary at the path above, adding `.exe` on Windows. It does not need an upstream search API key. `GET /api/health` verifies the compiled backend’s local input-validation response without contacting search providers; a healthy process does not guarantee upstream internet access. If the helper or provider is unavailable, search returns an explicit error rather than invented results. The full container starts through the same verified launcher and includes a readiness healthcheck.
 
 Alternatively, build and run the complete website plus Rust engine as a container from the full repository or website archive:
 

@@ -1,4 +1,5 @@
 import json
+import sys
 import time
 from pathlib import Path
 from PySide6.QtCore import QEvent, QStandardPaths, Qt, QTimer, QUrl
@@ -205,6 +206,8 @@ class BrowserWindow(QMainWindow):
         win.addAction("Downloads", "Ctrl+J", lambda: self.open_internal("downloads"))
         win.addAction("Settings", lambda: self.open_internal("settings"))
         win.addAction("Passwords", lambda: self.open_internal("passwords"))
+        help_menu = self.menuBar().addMenu("Help")
+        help_menu.addAction("If Sreon is unverified", self._unverified_help)
 
     def _keys(self):
         for index in range(8):
@@ -582,6 +585,15 @@ class BrowserWindow(QMainWindow):
             event.accept()
             return True
         return super().eventFilter(obj, event)
+
+    def _unverified_help(self):
+        if sys.platform == "darwin":
+            text = "Sreon is not Apple-signed. If macOS says it is unverified, Control-click Sreon, choose Open, then click Open. You only do this once. If it still refuses: System Settings → Privacy & Security → Open Anyway."
+        elif sys.platform == "win32":
+            text = "Sreon is not publisher-signed. If SmartScreen says Windows protected your PC, click More info, then Run anyway. Or right-click Sreon.exe → Properties → Unblock."
+        else:
+            text = "chmod +x Sreon.AppImage && ./Sreon.AppImage. If it will not run: ./Sreon.AppImage --appimage-extract-and-run, or unpack Sreon-linux.tar.gz and run ./Sreon."
+        QMessageBox.information(self, "If Sreon is unverified", text)
 
     def _welcome(self):
         self.welcome = WelcomePage(self)

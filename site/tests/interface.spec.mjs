@@ -15,25 +15,15 @@ test('minimal homepage has a single colon entrance and no download links', async
   await expect(page.locator('.game-card')).toHaveCount(24);
   expect(errors).toEqual([]);
 });
-test('try area uses API data, safely renders results, and paginates', async ({page}) => {
+test('homepage has no try-it search demo', async ({page}) => {
   const requests=[];
-  await page.route('**/api/search',route=>{
-    requests.push(route.request().postDataJSON());
-    return route.fulfill({json:{results:[{title:'<b>YouTube</b>',url:'https://www.youtube.com/',content:'Watch and discover.'},{title:'Unsafe',url:'javascript:alert(1)'}],nextCursor:requests.length===1?'next':null}});
-  });
-  await page.goto('/#try'); await page.locator('#query').fill('YouTube'); await page.locator('#search-submit').click();
-  await expect(page.locator('.result')).toHaveCount(1);
-  await expect(page.locator('.result a')).toHaveText('<b>YouTube</b>');
-  await expect(page.locator('.result b')).toHaveCount(0);
-  await page.locator('#more').click(); await expect(page.locator('.result')).toHaveCount(2);
-  expect(requests[1]).toEqual({q:'YouTube',category:'web',cursor:'next'});
-});
-test('search errors do not create fake results and retry works', async ({page}) => {
-  let fail=true;
-  await page.route('**/api/search',route=>route.fulfill(fail?{status:503,json:{code:'BACKEND_NOT_READY',error:'Unavailable'}}:{json:{results:[{title:'Example',url:'https://example.org/'}]}}));
-  await page.goto('/#try'); await page.locator('#query').fill('example'); await page.locator('#search-submit').click();
-  await expect(page.locator('#search-status')).toContainText('not connected'); await expect(page.locator('.result')).toHaveCount(0);
-  fail=false; await page.locator('#search-submit').click(); await expect(page.locator('.result')).toHaveCount(1);
+  await page.route('**/api/search',route=>{requests.push(true);return route.fulfill({json:{results:[]}});});
+  await page.goto('/');
+  await expect(page.getByRole('link',{name:/try it/i})).toHaveCount(0);
+  await expect(page.locator('#search-form')).toHaveCount(0);
+  await expect(page.locator('#query')).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'Real search. Not a website demo.'})).toBeVisible();
+  expect(requests).toEqual([]);
 });
 test('Geometry Rush starts, 4 enables autoplay, and the button returns control', async ({page}) => {
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
@@ -104,23 +94,12 @@ test('endless mode starts from an accessible button and retains all three forms'
   expect(modes).toEqual({modes:['cube','ship','wave'],endless:true,stage:1,dead:false});
 });
 
-test('all three photographs load and the discovery cards submit a real API request', async ({page}) => {
-  let query;
-  await page.route('**/api/search',route=>{query=route.request().postDataJSON().q;return route.fulfill({json:{results:[]}});});
+test('all three photographs load and discovery cards do not search', async ({page}) => {
+  const requests=[];
+  await page.route('**/api/search',route=>{requests.push(true);return route.fulfill({json:{results:[]}});});
   await page.goto('/');
   await page.locator('.discovery-grid').scrollIntoViewIfNeeded();
   for(const image of await page.locator('.discovery-image img').all()) await expect.poll(()=>image.evaluate(img=>img.complete && img.naturalWidth>0)).toBe(true);
-  await page.getByRole('button',{name:/Take the scenic route/}).click();
-  await expect(page.locator('#query')).toHaveValue('quiet coastal walking trails');
-  await expect.poll(()=>query).toBe('quiet coastal walking trails');
-});
-
-test('the try panel confirms engine readiness and distinguishes provider outages',async({page})=>{
-  await page.route('**/api/health',route=>route.fulfill({json:{ready:true,engine:'rust'}}));
-  await page.route('**/api/search',route=>route.fulfill({status:502,json:{code:'SOURCE_UNAVAILABLE'}}));
-  await page.goto('/#try');
-  await expect(page.locator('#search-status')).toContainText('Connected to the Rust');
-  await page.locator('#query').fill('YouTube'); await page.locator('#search-submit').click();
-  await expect(page.locator('#search-status')).toContainText('engine is running');
-  await expect(page.locator('.result')).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'Take the scenic route.'})).toBeVisible();
+  expect(requests).toEqual([]);
 });

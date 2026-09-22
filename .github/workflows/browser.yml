@@ -6,6 +6,7 @@ on:
       - "Browser/**"
       - "Extra/Source/src-tauri/**"
       - "unable.txt"
+      - "If-it-says-unverified.txt"
       - "Extra/HOW-IT-WORKS.md"
       - ".github/workflows/browser.yml"
       - "index.html"
@@ -66,6 +67,9 @@ jobs:
           if [ -f Extra/Source/src-tauri/target/release/sreon-api ]; then cp Extra/Source/src-tauri/target/release/sreon-api Browser/engine/; fi
           ls -la Browser/engine Extra/Source/src-tauri/target/release
       - run: python -m pip install -r Browser/requirements.txt
+      - name: Disk image tool
+        if: matrix.pack == 'macos'
+        run: brew install create-dmg || true
       - name: Freeze Sreon
         run: python -u Browser/tools/build.py --skip-engine
       - name: Freeze log
@@ -81,16 +85,19 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path out/Windows | Out-Null
           Copy-Item -Recurse Browser/dist/Sreon/* out/Windows/
+          Copy-Item If-it-says-unverified.txt out/Windows/
       - name: macOS folder
         if: matrix.pack == 'macos'
         run: |
           mkdir -p out/macOS
           cp Browser/dist/Sreon.dmg out/macOS/
+          cp If-it-says-unverified.txt out/macOS/
       - name: Linux folder
         if: matrix.pack == 'linux'
         run: |
           mkdir -p out/Linux
           cp Browser/dist/Sreon-linux.tar.gz out/Linux/
+          cp If-it-says-unverified.txt out/Linux/
           curl -L -o appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
           chmod +x appimagetool
           mkdir -p AppDir/usr/bin
@@ -118,6 +125,7 @@ jobs:
           mkdir -p Sreon
           cp Extra/HOW-IT-WORKS.md Sreon/HOW-IT-WORKS.md
           cp unable.txt Sreon/unable.txt
+          cp If-it-says-unverified.txt Sreon/If-it-says-unverified.txt
           if [ -d artifacts/sreon-windows/Windows ]; then cp -a artifacts/sreon-windows/Windows Sreon/Windows; fi
           if [ -d artifacts/sreon-macos/macOS ]; then cp -a artifacts/sreon-macos/macOS Sreon/macOS; fi
           if [ -d artifacts/sreon-linux/Linux ]; then cp -a artifacts/sreon-linux/Linux Sreon/Linux; fi
@@ -146,4 +154,4 @@ jobs:
           gh release delete sreon-preview --yes || true
           extras=""
           if [ -f Sreon/macOS/Sreon.dmg ]; then cp Sreon/macOS/Sreon.dmg Sreon.dmg; extras="Sreon.dmg"; fi
-          gh release create sreon-preview Sreon.zip $extras --title "Sreon" --notes "Double-click Sreon.dmg on a Mac and drag Sreon into Applications. The zip is the full folder for Windows, Mac, and Linux, plus HOW-IT-WORKS.md, unable.txt, website code, and source." --target "${GITHUB_SHA}"
+          gh release create sreon-preview Sreon.zip $extras --title "Sreon" --notes "Mac: open Sreon.dmg and drag Sreon to Applications. If macOS says unverified, Control-click Sreon then Open. Windows: More info, then Run anyway. Linux: chmod +x Sreon.AppImage. See If-it-says-unverified.txt." --target "${GITHUB_SHA}"

@@ -1,0 +1,20 @@
+If your computer says Sreon is unverified or can’t be opened
+
+This is expected. Sreon is open source and is not signed with an Apple or Microsoft certificate. The warning is the operating system, not a virus scan of the code.
+
+Mac
+1. If Sreon.dmg will not open, Control-click the file and choose Open.
+2. Drag Sreon onto the Applications icon.
+3. Open the Applications folder, Control-click Sreon, and choose Open.
+4. Click Open. You only do this once.
+If it still refuses: System Settings → Privacy & Security → scroll down → Open Anyway.
+
+Windows
+1. If SmartScreen says “Windows protected your PC”, click More info, then Run anyway.
+2. If the file is blocked: right-click Sreon.exe → Properties → Unblock → OK, then open it.
+
+Linux
+1. chmod +x Sreon.AppImage
+2. ./Sreon.AppImage
+If it will not run: ./Sreon.AppImage --appimage-extract-and-run
+Or unpack Sreon-linux.tar.gz and run ./Sreon
