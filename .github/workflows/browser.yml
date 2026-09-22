@@ -228,12 +228,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
+          ls -lh Sreon.zip Sreon/macOS/ Sreon/Windows/ Sreon/Linux/ 2>&1 | head -100 || true
           gh release delete sreon-preview --yes || true
-          extras=""
-          if [ -f Sreon/macOS/Sreon.dmg ]; then cp Sreon/macOS/Sreon.dmg Sreon.dmg; extras="Sreon.dmg"; fi
-          if [ -f Sreon/macOS/Sreon.pkg ]; then cp Sreon/macOS/Sreon.pkg Sreon.pkg; extras="$extras Sreon.pkg"; fi
-          if [ -f Sreon/Windows/SreonSetup.exe ]; then cp Sreon/Windows/SreonSetup.exe SreonSetup.exe; extras="$extras SreonSetup.exe"; fi
-          if [ -f Sreon/Linux/sreon_0.5.0_amd64.deb ]; then cp Sreon/Linux/sreon_0.5.0_amd64.deb sreon.deb; extras="$extras sreon.deb"; fi
-          if [ -f Sreon/macOS/Sreon-plain.dmg ]; then cp Sreon/macOS/Sreon-plain.dmg Sreon-plain.dmg; extras="$extras Sreon-plain.dmg"; fi
-          if [ -f Sreon/macOS/Sreon.app.zip ]; then cp Sreon/macOS/Sreon.app.zip Sreon.app.zip; extras="$extras Sreon.app.zip"; fi
-          gh release create sreon-preview Sreon.zip $extras --title "Sreon" --notes "Installers: Mac Sreon.dmg contains Sreon.app + Sreon Installer.app with beautiful UI and loading. Drag to Applications or run Installer. If DMG won't open: Control-click -> Open, or xattr -dr com.apple.quarantine Sreon.dmg, or hdiutil attach Sreon.dmg -noverify. PKG alternative: Sreon.pkg installs to Applications. Windows: SreonSetup.exe installs to Program Files and appears in Start Menu. If SmartScreen: More info -> Run anyway. Linux: sreon.deb installs to /opt and appears in Applications, or AppImage. See If-it-says-unverified.txt." --target "${GITHUB_SHA}"
+          sleep 2
+          gh release create sreon-preview Sreon.zip --title "Sreon" --notes "Installers: Mac Sreon.dmg contains Sreon.app + Sreon Installer.app with beautiful UI and loading. Drag to Applications or run Installer. If DMG won't open: Control-click -> Open, or xattr -dr com.apple.quarantine Sreon.dmg, or hdiutil attach Sreon.dmg -noverify. PKG alternative: Sreon.pkg installs to Applications. Windows: SreonSetup.exe installs to Program Files and appears in Start Menu. If SmartScreen: More info -> Run anyway. Linux: sreon.deb installs to /opt and appears in Applications, or AppImage. See If-it-says-unverified.txt." --target "${GITHUB_SHA}" || true
+          for f in Sreon.dmg Sreon.pkg SreonSetup.exe sreon.deb Sreon-plain.dmg Sreon.app.zip; do
+            if [ -f "$f" ]; then
+              echo "Uploading $f"
+              gh release upload sreon-preview "$f" --clobber || echo "upload $f failed"
+            fi
+          done
+          if [ -f Sreon/macOS/Sreon.dmg ]; then cp Sreon/macOS/Sreon.dmg Sreon.dmg; gh release upload sreon-preview Sreon.dmg --clobber || true; fi
+          if [ -f Sreon/macOS/Sreon.pkg ]; then cp Sreon/macOS/Sreon.pkg Sreon.pkg; gh release upload sreon-preview Sreon.pkg --clobber || true; fi
+          if [ -f Sreon/Windows/SreonSetup.exe ]; then cp Sreon/Windows/SreonSetup.exe SreonSetup.exe; gh release upload sreon-preview SreonSetup.exe --clobber || true; fi
+          if [ -f Sreon/Linux/sreon_0.5.0_amd64.deb ]; then cp Sreon/Linux/sreon_0.5.0_amd64.deb sreon.deb; gh release upload sreon-preview sreon.deb --clobber || true; fi
+          if [ -f Sreon/macOS/Sreon-plain.dmg ]; then cp Sreon/macOS/Sreon-plain.dmg Sreon-plain.dmg; gh release upload sreon-preview Sreon-plain.dmg --clobber || true; fi
+          if [ -f Sreon/macOS/Sreon.app.zip ]; then cp Sreon/macOS/Sreon.app.zip Sreon.app.zip; gh release upload sreon-preview Sreon.app.zip --clobber || true; fi
+          gh release view sreon-preview --json assets --jq '.assets[] | "\(.name) \(.size)"' || true
