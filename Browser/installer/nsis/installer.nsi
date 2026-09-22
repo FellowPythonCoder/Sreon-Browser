@@ -14,7 +14,6 @@ SetCompressor /SOLID lzma
 !define MUI_ABORTWARNING
 !define MUI_ICON "..\..\assets\icon.ico"
 !define MUI_HEADERIMAGE
-!define MUI_HEADERIMAGE_BITMAP "..\..\assets\icon.png"
 !define MUI_WELCOMEPAGE_TITLE "Welcome to Sreon Installer"
 !define MUI_WELCOMEPAGE_TEXT "This will install Sreon, a fast private browser, to your system.$\r$\n$\r$\nSreon will appear in Start Menu and Applications.$\r$\n$\r$\nIf Windows says unverified: Click More info, then Run anyway."
 !define MUI_FINISHPAGE_RUN

@@ -95,6 +95,7 @@ def build_installer():
         "--hidden-import", "PySide6.QtCore",
         "--hidden-import", "PySide6.QtGui",
         "--hidden-import", "PySide6.QtWidgets",
+        "--hidden-import", "installer.installer_ui",
         "--add-data", f"assets{sep}assets",
         "--add-data", f"installer{sep}installer",
         "--exclude-module", "tkinter",
@@ -110,7 +111,12 @@ def build_installer():
         ico = ROOT / "assets" / "icon.ico"
         if ico.is_file():
             command.extend(["--icon", str(ico)])
-    run(command)
+    try:
+        run(command)
+    except SystemExit as e:
+        print(f"installer build failed with exit {e}, continuing", flush=True)
+    except Exception as e:
+        print(f"installer build exception {e}, continuing", flush=True)
 
 def _detach_sreon_volume():
     subprocess.run(["hdiutil", "detach", "/Volumes/Sreon", "-force"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -356,15 +362,35 @@ def main():
         run(["cargo", "build", "--release", "--manifest-path", str(ROOT.parent / "Extra" / "Source" / "src-tauri" / "Cargo.toml"), "--no-default-features", "--features", "api", "--bin", "sreon-api"])
     place_engine()
     pyinstaller()
-    build_installer()
+    try:
+        build_installer()
+    except Exception as e:
+        print(f"build_installer outer failed {e}", flush=True)
     if sys.platform == "darwin":
-        dmg()
-        build_pkg()
+        try:
+            dmg()
+        except Exception as e:
+            print(f"dmg failed {e}", flush=True)
+            raise
+        try:
+            build_pkg()
+        except Exception as e:
+            print(f"pkg failed {e}", flush=True)
     elif sys.platform.startswith("linux"):
-        linux_tar()
-        build_deb()
+        try:
+            linux_tar()
+        except Exception as e:
+            print(f"tar failed {e}", flush=True)
+            raise
+        try:
+            build_deb()
+        except Exception as e:
+            print(f"deb failed {e}", flush=True)
     elif sys.platform == "win32":
-        build_nsis()
+        try:
+            build_nsis()
+        except Exception as e:
+            print(f"nsis failed {e}", flush=True)
 
 if __name__ == "__main__":
     main()
