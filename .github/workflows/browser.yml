@@ -59,9 +59,10 @@ jobs:
           sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libnss3 libasound2 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libgbm1 libcups2 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 libfontconfig1 dpkg-dev
       - name: Windows NSIS
         if: matrix.pack == 'windows'
+        shell: pwsh
         run: |
           choco install nsis -y
-          echo "C:\Program Files (x86)\NSIS" >> $GITHUB_PATH
+          Add-Content $env:GITHUB_PATH "C:\Program Files (x86)\NSIS"
       - name: Compile search engine
         run: cargo build --manifest-path Extra/Source/src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api
       - name: Place engine
@@ -128,6 +129,14 @@ jobs:
           name: freeze-log-${{ matrix.pack }}
           path: Browser/freeze.log
           if-no-files-found: warn
+      - name: Show freeze log on failure
+        if: failure()
+        shell: bash
+        run: |
+          echo "=== freeze.log tail ==="
+          tail -n 200 Browser/freeze.log || true
+          echo "=== freeze.log full ===" >> $GITHUB_STEP_SUMMARY
+          cat Browser/freeze.log >> $GITHUB_STEP_SUMMARY 2>&1 || echo "no log" >> $GITHUB_STEP_SUMMARY
       - name: Windows folder
         if: matrix.pack == 'windows'
         shell: pwsh
