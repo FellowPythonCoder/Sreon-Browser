@@ -238,84 +238,128 @@ class InstallerWindow(QWidget):
         super().__init__()
         self.mode = mode
         self.setWindowTitle("Sreon Installer")
-        self.setFixedSize(520, 420)
+        self.setFixedSize(560, 500)
         self.setStyleSheet("""
-            QWidget { background: #fdf8f0; color: #2a213a; font-family: 'DM Sans', sans-serif; }
-            QLabel#title { font-size: 28px; font-weight: 800; color: #2a213a; }
-            QLabel#subtitle { font-size: 14px; color: #6b5a8a; }
-            QPushButton { background: #5c43a0; color: white; border-radius: 12px; padding: 12px 24px; font-size: 15px; font-weight: 700; }
+            QWidget { background: #fdf8f0; color: #2a213a; font-family: 'DM Sans', 'Inter', sans-serif; }
+            QLabel#title { font-size: 30px; font-weight: 900; color: #2a213a; letter-spacing: -0.5px; }
+            QLabel#subtitle { font-size: 13px; color: #6b5a8a; line-height: 1.4; }
+            QLabel#headerBg { background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 #5c43a0, stop:1 #7a5fc2); border-radius: 16px; }
+            QPushButton { background: #5c43a0; color: white; border-radius: 14px; padding: 14px 28px; font-size: 15px; font-weight: 800; border: none; }
             QPushButton:hover { background: #6d54b5; }
-            QPushButton:disabled { background: #c8bddf; }
-            QProgressBar { border: 1px solid #e8dff6; border-radius: 8px; background: #f3eefc; text-align: center; height: 18px; }
-            QProgressBar::chunk { background: #5c43a0; border-radius: 8px; }
-            QTextEdit { background: #fff; border: 1px solid #e8dff6; border-radius: 10px; padding: 8px; font-size: 12px; color: #4a3d66; }
+            QPushButton:pressed { background: #4d3890; }
+            QPushButton:disabled { background: #ddd4ef; color: #8a7ab0; }
+            QPushButton#open { background: #fdf8f0; color: #5c43a0; border: 2px solid #5c43a0; }
+            QPushButton#open:hover { background: #f3eefc; }
+            QPushButton#open:disabled { border-color: #ddd4ef; color: #b8a9d8; }
+            QProgressBar { border: none; border-radius: 10px; background: #ece3f9; text-align: center; height: 22px; font-size: 11px; font-weight: 700; color: #5c43a0; }
+            QProgressBar::chunk { background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #5c43a0, stop:1 #8a72c0); border-radius: 10px; }
+            QTextEdit { background: #ffffff; border: 1px solid #e8dff6; border-radius: 14px; padding: 12px; font-size: 12px; color: #4a3d66; selection-background-color: #ece3f9; }
+            QLabel#guide { background: #f3eefc; border-radius: 10px; padding: 10px 14px; }
         """)
         icon_path = ASSETS / "mark.png"
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 24, 28, 24)
-        layout.setSpacing(14)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0,0,0,0)
+        outer.setSpacing(0)
 
-        header = QHBoxLayout()
+        header_frame = QFrame()
+        header_frame.setObjectName("headerBg")
+        header_frame.setStyleSheet("QFrame#headerBg { background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #5c43a0, stop:1 #7c5fc7); border-radius: 0px; }")
+        header_frame.setFixedHeight(92)
+        h_layout = QHBoxLayout(header_frame)
+        h_layout.setContentsMargins(28,18,28,18)
+        h_layout.setSpacing(16)
         icon_label = QLabel()
         if icon_path.exists():
-            pix = QPixmap(str(icon_path)).scaled(48, 48, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            pix = QPixmap(str(icon_path)).scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
             icon_label.setPixmap(pix)
-        header.addWidget(icon_label)
-        header.addSpacing(12)
+        h_layout.addWidget(icon_label)
         title_box = QVBoxLayout()
+        title_box.setSpacing(2)
         title = QLabel("Install Sreon")
         title.setObjectName("title")
-        subtitle = QLabel("Fast, private browser — installs to Applications" if mode == "mac" else "Fast, private browser — installs to your system" if mode == "win" else "Fast, private browser — installs for you")
+        title.setStyleSheet("color: white; font-size: 28px; font-weight: 900;")
+        subtitle_text = "Fast, private browser — installs to Applications" if mode == "mac" else "Fast, private browser — installs to Program Files" if mode == "win" else "Fast, private browser — appears in Applications"
+        subtitle = QLabel(subtitle_text)
         subtitle.setObjectName("subtitle")
+        subtitle.setStyleSheet("color: #d9cffd; font-size: 13px;")
         subtitle.setWordWrap(True)
         title_box.addWidget(title)
         title_box.addWidget(subtitle)
-        header.addLayout(title_box)
-        header.addStretch()
-        layout.addLayout(header)
+        h_layout.addLayout(title_box)
+        h_layout.addStretch()
+        dot = QLabel("●")
+        dot.setStyleSheet("color: #a8f0c6; font-size: 14px;")
+        h_layout.addWidget(dot)
+        outer.addWidget(header_frame)
 
+        content = QVBoxLayout()
+        content.setContentsMargins(28,20,28,20)
+        content.setSpacing(14)
+
+        status_row = QHBoxLayout()
         self.status = QLabel("Ready to install")
-        self.status.setStyleSheet("color: #5c43a0; font-weight: 600;")
-        layout.addWidget(self.status)
+        self.status.setStyleSheet("color: #5c43a0; font-weight: 800; font-size: 14px;")
+        status_row.addWidget(self.status)
+        status_row.addStretch()
+        self.spinner = QLabel("")
+        self.spinner.setStyleSheet("color: #8a72c0; font-size: 14px;")
+        status_row.addWidget(self.spinner)
+        content.addLayout(status_row)
 
         self.progress = QProgressBar()
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
-        layout.addWidget(self.progress)
+        self.progress.setFormat("%p% — %v")
+        content.addWidget(self.progress)
 
         self.log = QTextEdit()
         self.log.setReadOnly(True)
-        self.log.setFixedHeight(140)
-        self.log.setText("Sreon will be installed and appear in Applications.\n\nIf macOS says unverified:\n• Control-click Sreon → Open → Open\n• System Settings → Privacy & Security → Open Anyway\n• Terminal: xattr -dr com.apple.quarantine /Applications/Sreon.app\n\nIf DMG won't open:\n• Control-click DMG → Open\n• Terminal: xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg\n• Terminal: hdiutil attach ~/Downloads/Sreon.dmg -noverify\n\nWindows: More info → Run anyway\nLinux: chmod +x Sreon.AppImage\n")
-        layout.addWidget(self.log)
+        self.log.setFixedHeight(170)
+        self.log.setText("Sreon will be installed and appear in Applications / Start Menu.\n\n✦ Beautiful installer with loading — watch progress above.\n\nIf macOS says unverified:\n• Control-click Sreon → Open → Open (once)\n• System Settings → Privacy & Security → Open Anyway\n• Terminal: xattr -dr com.apple.quarantine /Applications/Sreon.app\n\nIf DMG won't open:\n• Control-click DMG → Open\n• Terminal: xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg\n• Terminal: hdiutil attach ~/Downloads/Sreon.dmg -noverify\n\nWindows: More info → Run anyway\nLinux DEB: sudo dpkg -i sreon.deb — appears in Applications\nLinux AppImage: chmod +x Sreon.AppImage\n")
+        content.addWidget(self.log)
 
         btn_row = QHBoxLayout()
+        btn_row.setSpacing(12)
         self.install_btn = QPushButton("Install to Applications" if mode == "mac" else "Install Sreon")
         self.install_btn.clicked.connect(self.start_install)
-        btn_row.addWidget(self.install_btn)
+        btn_row.addWidget(self.install_btn, 2)
         self.open_btn = QPushButton("Open Sreon")
+        self.open_btn.setObjectName("open")
         self.open_btn.setEnabled(False)
         self.open_btn.clicked.connect(self.open_app)
-        btn_row.addWidget(self.open_btn)
-        layout.addLayout(btn_row)
+        btn_row.addWidget(self.open_btn, 1)
+        content.addLayout(btn_row)
 
         self.guide = QLabel()
+        self.guide.setObjectName("guide")
         self.guide.setWordWrap(True)
-        self.guide.setStyleSheet("font-size: 11px; color: #7a6b9a;")
-        self.guide.setText("After install, Sreon appears in Applications / Start Menu / Applications menu.")
-        layout.addWidget(self.guide)
+        self.guide.setStyleSheet("font-size: 11px; color: #6b5a8a; background: #f3eefc; border-radius: 10px; padding: 10px 12px;")
+        self.guide.setText("After install, Sreon appears in Applications / Start Menu / Applications menu. No Terminal needed. First launch may need Control-click → Open.")
+        content.addWidget(self.guide)
+
+        outer.addLayout(content)
 
         self.installed_path = None
         self.worker = None
+        self.dot_timer = QTimer(self)
+        self.dot_timer.timeout.connect(self.tick_dot)
+        self.dot_idx = 0
+
+    def tick_dot(self):
+        dots = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]
+        self.spinner.setText(dots[self.dot_idx % len(dots)])
+        self.dot_idx += 1
 
     def start_install(self):
         self.install_btn.setEnabled(False)
         self.progress.setValue(5)
         self.status.setText("Installing...")
-        self.log.append("\nStarting installation...")
+        self.spinner.setText("⠋")
+        self.dot_timer.start(100)
+        self.log.append("\n⟡ Starting installation…")
         self.worker = InstallWorker(self.mode)
         self.worker.progress.connect(self.on_progress)
         self.worker.finished_ok.connect(self.on_ok)
@@ -325,21 +369,25 @@ class InstallerWindow(QWidget):
     def on_progress(self, val, msg):
         self.progress.setValue(val)
         self.status.setText(msg)
-        self.log.append(f"{val}% {msg}")
+        self.log.append(f"{val}%  {msg}")
 
     def on_ok(self, path):
+        self.dot_timer.stop()
+        self.spinner.setText("✓")
         self.installed_path = path
         self.progress.setValue(100)
         self.status.setText(f"Installed to {path}")
-        self.log.append(f"\n✓ Installed to {path}\nSreon now appears in Applications.")
+        self.log.append(f"\n✓ Installed to {path}\nSreon now appears in Applications / Start Menu. Click Open Sreon below.")
         self.open_btn.setEnabled(True)
         self.install_btn.setText("Reinstall")
         self.install_btn.setEnabled(True)
-        self.guide.setText(f"Installed! Open from {path}. If macOS says unverified: Control-click → Open → Open, or System Settings → Privacy & Security → Open Anyway.")
+        self.guide.setText(f"✓ Installed! Open from {path}. If macOS says unverified: Control-click → Open → Open, or System Settings → Privacy & Security → Open Anyway. Guide in If-it-says-unverified.txt")
 
     def on_err(self, err):
-        self.status.setText("Failed")
-        self.log.append(f"\n✗ Failed: {err}\n\nMinimal guide:\nMac: xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg\nMac app: xattr -dr com.apple.quarantine /Applications/Sreon.app\nWindows: More info → Run anyway\nLinux: chmod +x Sreon.AppImage")
+        self.dot_timer.stop()
+        self.spinner.setText("✗")
+        self.status.setText("Failed — see guide below")
+        self.log.append(f"\n✗ Failed: {err}\n\nMinimal guide:\nMac DMG won't open: Control-click DMG → Open, or xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg, or hdiutil attach ~/Downloads/Sreon.dmg -noverify\nMac app unverified: Control-click /Applications/Sreon → Open → Open, or System Settings → Privacy → Open Anyway, or xattr -dr com.apple.quarantine /Applications/Sreon.app\nWindows SmartScreen: More info → Run anyway, or Right-click → Properties → Unblock\nLinux: chmod +x Sreon.AppImage, or sudo dpkg -i sreon.deb\nFull guide: If-it-says-unverified.txt and HOW-IT-WORKS.md")
         self.install_btn.setEnabled(True)
 
     def open_app(self):

@@ -144,36 +144,37 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path out/Windows | Out-Null
-          if (Test-Path "Browser/dist/Sreon") { Copy-Item -Recurse "Browser/dist/Sreon/*" out/Windows/ -Force }
           if (Test-Path "Browser/dist/SreonSetup.exe") { Copy-Item "Browser/dist/SreonSetup.exe" out/Windows/ -Force }
-          if (Test-Path "Browser/dist/Sreon Installer") { Copy-Item -Recurse "Browser/dist/Sreon Installer" out/Windows/ -Force -ErrorAction SilentlyContinue }
-          if (Test-Path "Browser/dist/Sreon Installer.exe") { Copy-Item "Browser/dist/Sreon Installer.exe" out/Windows/ -Force -ErrorAction SilentlyContinue }
           Copy-Item If-it-says-unverified.txt out/Windows/ -Force
           Copy-Item unable.txt out/Windows/ -Force -ErrorAction SilentlyContinue
+          if (Test-Path "Browser/dist/Sreon/Sreon.exe") { 
+            New-Item -ItemType Directory -Force -Path out/portable | Out-Null
+            Copy-Item -Recurse "Browser/dist/Sreon/*" out/portable/ -Force
+            Write-Host "Portable kept in out/portable for artifact but not in Windows folder to keep Sreon.zip small"
+          }
           dir out/Windows | Format-List
-          Write-Host "Windows folder ready"
+          Write-Host "Windows folder ready - only Setup exe to keep one-folder small"
       - name: macOS folder
         if: matrix.pack == 'macos'
         run: |
           mkdir -p out/macOS
           cp Browser/dist/Sreon.dmg out/macOS/
           cp Browser/dist/Sreon-plain.dmg out/macOS/ || true
-          cp Browser/dist/Sreon.app.zip out/macOS/ || true
           cp Browser/dist/Sreon.pkg out/macOS/ || true
-          if [ -d "Browser/dist/Sreon Installer.app" ]; then cp -a "Browser/dist/Sreon Installer.app" out/macOS/ || true; fi
-          if [ -d "Browser/dist/Sreon Installer" ]; then cp -a "Browser/dist/Sreon Installer" out/macOS/ || true; fi
           cp If-it-says-unverified.txt out/macOS/
           cp unable.txt out/macOS/ || true
+          mkdir -p out/extra
+          cp Browser/dist/Sreon.app.zip out/extra/ || true
+          if [ -d "Browser/dist/Sreon Installer.app" ]; then cp -a "Browser/dist/Sreon Installer.app" out/extra/ || true; fi
           ls -lh out/macOS/
+          ls -lh out/extra/ || true
       - name: Linux folder
         if: matrix.pack == 'linux'
         run: |
           mkdir -p out/Linux
-          cp Browser/dist/Sreon-linux.tar.gz out/Linux/
           cp Browser/dist/*.deb out/Linux/ || true
           cp If-it-says-unverified.txt out/Linux/
           cp unable.txt out/Linux/ || true
-          if [ -d "Browser/dist/Sreon Installer" ]; then cp -a "Browser/dist/Sreon Installer" out/Linux/ || true; fi
           curl -L -o appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
           chmod +x appimagetool
           mkdir -p AppDir/usr/bin
@@ -181,6 +182,7 @@ jobs:
           printf '%s\n' '[Desktop Entry]' 'Type=Application' 'Name=Sreon' 'Exec=Sreon' 'Icon=sreon' 'Categories=Network;WebBrowser;' > AppDir/sreon.desktop
           cp Browser/assets/mark.png AppDir/sreon.png
           ARCH=x86_64 ./appimagetool -n AppDir out/Linux/Sreon.AppImage || true
+          rm -f Browser/dist/Sreon-linux.tar.gz
           ls -lh out/Linux/
       - uses: actions/upload-artifact@v4
         if: success()
@@ -207,17 +209,27 @@ jobs:
           if [ -d artifacts/sreon-macos/macOS ]; then cp -a artifacts/sreon-macos/macOS Sreon/macOS; fi
           if [ -d artifacts/sreon-linux/Linux ]; then cp -a artifacts/sreon-linux/Linux Sreon/Linux; fi
           mkdir -p Sreon/Website Sreon/Source
-          cp -a index.html CNAME site Sreon/Website/
-          rsync -a --exclude node_modules --exclude .venv --exclude dist --exclude target --exclude __pycache__ Browser Extra/Source Extra/HOW-IT-WORKS.md Sreon/Source/
+          cp -a index.html CNAME site Sreon/Website/ || true
+          rsync -a --exclude node_modules --exclude .venv --exclude dist --exclude target --exclude __pycache__ --exclude build --exclude Sreon.spec Browser Extra/Source Extra/HOW-IT-WORKS.md Sreon/Source/ || true
+          echo "Sreon folder contents:"
+          ls -lhR Sreon | head -200
+          du -sh Sreon Sreon/* || true
           python3 - <<'PY'
           import zipfile
           from pathlib import Path
           root = Path('Sreon')
-          with zipfile.ZipFile('Sreon.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+          # Create smaller zip - use fast compression, skip already compressed dmg/pkg/exe/deb/AppImage with STORE to avoid double compress timeout
+          with zipfile.ZipFile('Sreon.zip', 'w', zipfile.ZIP_DEFLATED, compresslevel=1) as archive:
               for path in root.rglob('*'):
                   if path.is_file():
+                      # Skip very large duplicates if any slipped in
+                      if path.suffix == '.zip' and path.stat().st_size > 500_000_000:
+                          print(f"Skipping large zip {path}")
+                          continue
                       archive.write(path, path.as_posix())
+          print("Zip created")
           PY
+          ls -lh Sreon.zip
       - uses: actions/upload-artifact@v4
         with:
           name: Sreon
@@ -228,24 +240,45 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -x
+          ls -lh artifacts/ -R | head -200 || true
           ls -lh Sreon.zip Sreon/macOS/ Sreon/Windows/ Sreon/Linux/ 2>&1 | head -100 || true
+          echo "Cleaning old release and tag"
           gh release delete sreon-preview --yes || true
-          sleep 3
-          gh release create sreon-preview --title "Sreon" --notes "Installers: Mac Sreon.dmg contains Sreon.app + Sreon Installer.app with beautiful UI and loading. Drag to Applications or run Installer. If DMG won't open: Control-click -> Open, or xattr -dr com.apple.quarantine Sreon.dmg, or hdiutil attach Sreon.dmg -noverify. PKG alternative: Sreon.pkg installs to Applications. Windows: SreonSetup.exe installs to Program Files and appears in Start Menu. If SmartScreen: More info -> Run anyway. Linux: sreon.deb installs to /opt and appears in Applications, or AppImage. See If-it-says-unverified.txt." --target "${GITHUB_SHA}" || echo "create failed, trying again"
           sleep 2
-          gh release create sreon-preview --title "Sreon" --notes "Installers" --target "${GITHUB_SHA}" 2>&1 || true
-          echo "Uploading main zip"
-          gh release upload sreon-preview Sreon.zip --clobber || gh release upload sreon-preview Sreon.zip --clobber || echo "zip upload failed"
-          for f in Sreon.dmg Sreon.pkg SreonSetup.exe sreon.deb Sreon-plain.dmg Sreon.app.zip; do
-            if [ -f "$f" ]; then
-              echo "Uploading $f"
-              gh release upload sreon-preview "$f" --clobber || echo "upload $f failed"
+          git push origin :refs/tags/sreon-preview || true
+          gh api -X DELETE repos/${{ github.repository }}/git/refs/tags/sreon-preview || true
+          sleep 3
+          echo "Creating release without assets"
+          gh release create sreon-preview --title "Sreon" --notes "Installers: Mac Sreon.dmg contains Sreon.app + Sreon Installer.app with beautiful polished UI and loading animation. Background shows Sreon, Sreon Installer, Applications Drop Here with arrows - drag area much better. Drag to Applications or double-click Sreon Installer.app (Qt UI cream #fdf8f0 purple #5c43a0 with spinner, progress bar, minimal guide). If DMG won't open: Control-click -> Open, or xattr -dr com.apple.quarantine Sreon.dmg, or hdiutil attach Sreon.dmg -noverify. If app unverified: Control-click /Applications/Sreon -> Open -> Open, or System Settings -> Privacy & Security -> Open Anyway, or xattr -dr com.apple.quarantine /Applications/Sreon.app. PKG alternative installs to Applications automatically. Windows: SreonSetup.exe NSIS MUI2 branded installer with welcome guide, installs to Program Files and appears in Start Menu / Apps. If SmartScreen: More info -> Run anyway. Linux: sreon.deb installs to /opt and appears in Applications menu, or AppImage, or Installer UI. After install Sreon appears as real app. See If-it-says-unverified.txt. Tested: macOS offscreen launch, hdiutil verify, pkg signature, Windows shortcut, Linux dpkg-deb." --target "${GITHUB_SHA}" --latest || true
+          sleep 2
+          gh release create sreon-preview --title "Sreon" --notes "Installers with polished DMG background and Installer UI" --target "${GITHUB_SHA}" 2>&1 || true
+          echo "Preparing individual assets"
+          if [ -f Sreon/macOS/Sreon.dmg ]; then cp Sreon/macOS/Sreon.dmg ./Sreon.dmg; fi
+          if [ -f Sreon/macOS/Sreon.pkg ]; then cp Sreon/macOS/Sreon.pkg ./Sreon.pkg; fi
+          if [ -f Sreon/Windows/SreonSetup.exe ]; then cp Sreon/Windows/SreonSetup.exe ./SreonSetup.exe; fi
+          if [ -f Sreon/Linux/sreon_0.5.0_amd64.deb ]; then cp Sreon/Linux/sreon_0.5.0_amd64.deb ./sreon.deb; fi
+          if [ -f artifacts/sreon-macos/macOS/Sreon-plain.dmg ]; then cp artifacts/sreon-macos/macOS/Sreon-plain.dmg ./Sreon-plain.dmg || true; fi
+          if [ -f Sreon/macOS/Sreon-plain.dmg ]; then cp Sreon/macOS/Sreon-plain.dmg ./Sreon-plain.dmg; fi
+          if [ -f artifacts/sreon-macos/extra/Sreon.app.zip ]; then cp artifacts/sreon-macos/extra/Sreon.app.zip ./Sreon.app.zip || true; fi
+          if [ -f artifacts/sreon-linux/Linux/Sreon.AppImage ]; then cp artifacts/sreon-linux/Linux/Sreon.AppImage ./Sreon.AppImage || true; fi
+          if [ -f Sreon/Linux/Sreon.AppImage ]; then cp Sreon/Linux/Sreon.AppImage ./Sreon.AppImage; fi
+          ls -lh *.dmg *.pkg *.exe *.deb *.zip *.AppImage 2>&1 | head -50 || true
+          echo "Uploading small installers first with retries"
+          for asset in Sreon.dmg Sreon.pkg SreonSetup.exe sreon.deb Sreon-plain.dmg Sreon.app.zip Sreon.AppImage; do
+            if [ -f "$asset" ]; then
+              echo "Uploading $asset size $(stat -c%s "$asset" 2>/dev/null || stat -f%z "$asset")"
+              for i in 1 2 3; do
+                gh release upload sreon-preview "$asset" --clobber && break || echo "retry $i failed for $asset"; sleep 2
+              done
             fi
           done
-          if [ -f Sreon/macOS/Sreon.dmg ]; then cp Sreon/macOS/Sreon.dmg Sreon.dmg; gh release upload sreon-preview Sreon.dmg --clobber || true; fi
-          if [ -f Sreon/macOS/Sreon.pkg ]; then cp Sreon/macOS/Sreon.pkg Sreon.pkg; gh release upload sreon-preview Sreon.pkg --clobber || true; fi
-          if [ -f Sreon/Windows/SreonSetup.exe ]; then cp Sreon/Windows/SreonSetup.exe SreonSetup.exe; gh release upload sreon-preview SreonSetup.exe --clobber || true; fi
-          if [ -f Sreon/Linux/sreon_0.5.0_amd64.deb ]; then cp Sreon/Linux/sreon_0.5.0_amd64.deb sreon.deb; gh release upload sreon-preview sreon.deb --clobber || true; fi
-          if [ -f Sreon/macOS/Sreon-plain.dmg ]; then cp Sreon/macOS/Sreon-plain.dmg Sreon-plain.dmg; gh release upload sreon-preview Sreon-plain.dmg --clobber || true; fi
-          if [ -f Sreon/macOS/Sreon.app.zip ]; then cp Sreon/macOS/Sreon.app.zip Sreon.app.zip; gh release upload sreon-preview Sreon.app.zip --clobber || true; fi
+          echo "Uploading main Sreon.zip one-folder with retries"
+          if [ -f Sreon.zip ]; then
+            ls -lh Sreon.zip
+            for i in 1 2 3; do
+              gh release upload sreon-preview Sreon.zip --clobber && echo "Sreon.zip uploaded" && break || echo "retry $i failed for Sreon.zip"; sleep 3
+            done
+          fi
           gh release view sreon-preview --json assets --jq '.assets[] | "\(.name) \(.size)"' || true
+          echo "Done"
