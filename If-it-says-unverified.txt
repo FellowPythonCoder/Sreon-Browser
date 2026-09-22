@@ -1,34 +1,32 @@
 If your computer says Sreon is unverified or can't be opened
 
-This is expected. Sreon is open source and is not signed with an Apple Developer certificate or Microsoft publisher certificate. The warning comes from the operating system, not from a virus scan.
+This is expected. Sreon is open source and not signed with Apple or Microsoft certs. The OS warning is not a virus scan.
 
-Mac - Sreon.dmg won't open at all:
-1. Try Control-click Sreon.dmg -> Open -> Open.
-2. If it says damaged or no mountable file systems, open Terminal and run:
-   xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg
-   Then double-click again. Use the real path to your file.
-3. If still not opening, try in Terminal:
-   hdiutil attach ~/Downloads/Sreon.dmg -noverify
-   Then open /Volumes/Sreon and drag Sreon to Applications.
-4. If you have Sreon.app.zip in the download, unzip it and drag Sreon.app to Applications. Same unverified steps apply.
+Mac - Installer DMG:
+The DMG contains Sreon.app and Sreon Installer.app with beautiful UI.
+1. Open Sreon.dmg. You will see Sreon on left, Sreon Installer below it, Applications on right, with purple arrows.
+2. Option A - Drag: Drag Sreon to Applications. Sreon then appears in Applications and Launchpad.
+3. Option B - Installer with UI: Double-click Sreon Installer.app. It shows loading and installs to Applications with one click. After install, it shows Open Sreon button. Sreon appears in Applications.
+4. If DMG won't open: Control-click Sreon.dmg -> Open -> Open. Or Terminal: xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg  Then: hdiutil attach ~/Downloads/Sreon.dmg -noverify
+5. If app says unverified after dragging: Applications -> Control-click Sreon -> Open -> Open (once). Or System Settings -> Privacy & Security -> Open Anyway. Or Terminal: xattr -dr com.apple.quarantine /Applications/Sreon.app
+6. PKG alternative: Double-click Sreon.pkg, it installs to Applications automatically and appears in Applications.
 
-Mac - drag area:
-The DMG window has a purple header that says Drag Sreon to Applications, a cream tray, Sreon on the left, Applications on the right, and a purple arrow. Drag Sreon onto Applications. The window also shows what to do if it says unverified.
+Mac - After install:
+Sreon appears in Applications, Launchpad, Spotlight. Open from there. First launch may need Control-click -> Open.
 
-Mac - Sreon app says unverified after dragging:
-1. Open Applications, Control-click Sreon -> Open -> Open. You only do this once.
-2. If it still refuses: System Settings -> Privacy & Security -> scroll down -> Open Anyway.
-3. If it says damaged: xattr -dr com.apple.quarantine /Applications/Sreon.app
+Windows - Installer:
+1. Run SreonSetup.exe (or Sreon Installer). Beautiful installer with loading shows progress.
+2. It installs to Program Files\Sreon and creates Start Menu shortcut Sreon -> appears in Start Menu and Apps list.
+3. After install, Sreon appears in Start Menu. Open from there.
+4. If SmartScreen says Windows protected your PC: Click More info -> Run anyway.
+5. If blocked: Right-click SreonSetup.exe -> Properties -> Unblock -> OK.
+6. Portable fallback: If installer fails, use Windows/Sreon.exe directly.
 
-Windows - SmartScreen:
-1. When you see Windows protected your PC, click More info, then Run anyway.
-2. If Windows says file is blocked: right-click Sreon.exe -> Properties -> check Unblock -> OK, then open.
-3. Keep Sreon.exe and its folder together. Do not run from inside the zip.
+Linux - Installer:
+1. DEB: sudo dpkg -i sreon.deb  Then Sreon appears in Applications menu.
+2. Or run Sreon Installer (Qt UI) - it installs to ~/.local/share/sreon and creates ~/.local/share/applications/sreon.desktop, so Sreon appears in Applications.
+3. Or AppImage: chmod +x Sreon.AppImage && ./Sreon.AppImage
+4. If FUSE error: ./Sreon.AppImage --appimage-extract-and-run
+5. Or tar.gz: unpack and run ./Sreon/Sreon
 
-Linux - AppImage:
-1. chmod +x Sreon.AppImage
-2. ./Sreon.AppImage
-3. If FUSE error: ./Sreon.AppImage --appimage-extract-and-run
-4. Or unpack Sreon-linux.tar.gz and run ./Sreon/Sreon
-
-All builds include this file. Same steps are in Help -> If Sreon is unverified inside the browser and in HOW-IT-WORKS.md.
+All builds include this file. Same guide is in Help -> If Sreon is unverified inside browser and in HOW-IT-WORKS.md.

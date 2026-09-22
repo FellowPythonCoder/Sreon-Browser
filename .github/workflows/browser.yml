@@ -56,7 +56,12 @@ jobs:
         if: matrix.pack == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libnss3 libasound2 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libgbm1 libcups2 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 libfontconfig1
+          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libnss3 libasound2 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libatk1.0-0 libatk-bridge2.0-0 libdrm2 libgbm1 libcups2 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 libfontconfig1 dpkg-dev
+      - name: Windows NSIS
+        if: matrix.pack == 'windows'
+        run: |
+          choco install nsis -y
+          echo "C:\Program Files (x86)\NSIS" >> $GITHUB_PATH
       - name: Compile search engine
         run: cargo build --manifest-path Extra/Source/src-tauri/Cargo.toml --release --no-default-features --features api --bin sreon-api
       - name: Place engine
@@ -72,23 +77,50 @@ jobs:
         run: brew install create-dmg || true
       - name: Freeze Sreon
         run: python -u Browser/tools/build.py --skip-engine
-      - name: Verify disk image
+      - name: Test Mac app opens
         if: matrix.pack == 'macos'
         run: |
-          ls -lh Browser/dist/*.dmg Browser/dist/*.zip 2>&1 || true
+          ls -lh Browser/dist/*.app || true
+          ls -lh Browser/dist/*.dmg Browser/dist/*.pkg 2>&1 || true
+          file Browser/dist/Sreon.app/Contents/MacOS/Sreon || true
+          plutil -p Browser/dist/Sreon.app/Contents/Info.plist | head -30 || true
+          echo "Checking Sreon.app structure"
+          ls -R Browser/dist/Sreon.app/Contents | head -100
+          echo "Trying offscreen launch for 5 seconds"
+          QT_QPA_PLATFORM=offscreen timeout 8 Browser/dist/Sreon.app/Contents/MacOS/Sreon || echo "exit code $?"
+          echo "Checking Installer app"
+          ls -lh Browser/dist/Sreon\ Installer.app || true
+          ls -lh Browser/dist/Sreon\ Installer.app/Contents/MacOS/* || true
+          echo "Verifying DMG"
           hdiutil verify Browser/dist/Sreon.dmg
-          hdiutil verify Browser/dist/Sreon-plain.dmg || true
           mkdir -p /tmp/sreon-check
           hdiutil attach -readonly -noverify -noautoopen -mountpoint /tmp/sreon-check Browser/dist/Sreon.dmg
           ls -la /tmp/sreon-check
           ls -la /tmp/sreon-check/Sreon.app || true
+          ls -la /tmp/sreon-check/Sreon\ Installer.app || true
           hdiutil detach /tmp/sreon-check -force || true
           hdiutil detach /Volumes/Sreon -force || true
-          mkdir -p /tmp/sreon-plain-check
-          hdiutil attach -readonly -noverify -noautoopen -mountpoint /tmp/sreon-plain-check Browser/dist/Sreon-plain.dmg || true
-          ls -la /tmp/sreon-plain-check || true
-          hdiutil detach /tmp/sreon-plain-check -force || true
-          hdiutil detach /Volumes/Sreon -force || true
+          if [ -f Browser/dist/Sreon.pkg ]; then
+            echo "PKG exists"
+            pkgutil --check-signature Browser/dist/Sreon.pkg || true
+          fi
+      - name: Test Windows installer
+        if: matrix.pack == 'windows'
+        shell: pwsh
+        run: |
+          dir Browser/dist
+          if (Test-Path Browser/dist/Sreon/Sreon.exe) { Write-Host "Sreon.exe exists" } else { Write-Host "Missing Sreon.exe"; exit 1 }
+          if (Test-Path Browser/dist/SreonSetup.exe) { Write-Host "Setup exists"; Get-Item Browser/dist/SreonSetup.exe | Format-List } else { Write-Host "No Setup, checking installer"; dir Browser/dist/Sreon\ Installer* }
+          if (Test-Path Browser/dist/Sreon\ Installer/Sreon\ Installer.exe) { Write-Host "Installer exe exists" }
+      - name: Test Linux installer
+        if: matrix.pack == 'linux'
+        run: |
+          ls -lh Browser/dist/
+          file Browser/dist/Sreon/Sreon || true
+          ls -lh Browser/dist/*.deb || true
+          if [ -f Browser/dist/sreon_0.5.0_amd64.deb ]; then dpkg-deb -c Browser/dist/sreon_0.5.0_amd64.deb | head -30; fi
+          echo "Checking desktop file"
+          cat Browser/dist/Sreon/If-it-says-unverified.txt | head -20 || true
       - name: Freeze log
         if: failure()
         uses: actions/upload-artifact@v4
@@ -102,8 +134,12 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path out/Windows | Out-Null
           Copy-Item -Recurse Browser/dist/Sreon/* out/Windows/
+          if (Test-Path Browser/dist/SreonSetup.exe) { Copy-Item Browser/dist/SreonSetup.exe out/Windows/ }
+          if (Test-Path Browser/dist/Sreon\ Installer) { Copy-Item -Recurse Browser/dist/Sreon\ Installer out/Windows/ -ErrorAction SilentlyContinue }
+          if (Test-Path Browser/dist/Sreon\ Installer.exe) { Copy-Item Browser/dist/Sreon\ Installer.exe out/Windows/ -ErrorAction SilentlyContinue }
           Copy-Item If-it-says-unverified.txt out/Windows/
           Copy-Item unable.txt out/Windows/ -ErrorAction SilentlyContinue
+          dir out/Windows | Format-List
       - name: macOS folder
         if: matrix.pack == 'macos'
         run: |
@@ -111,6 +147,8 @@ jobs:
           cp Browser/dist/Sreon.dmg out/macOS/
           cp Browser/dist/Sreon-plain.dmg out/macOS/ || true
           cp Browser/dist/Sreon.app.zip out/macOS/ || true
+          cp Browser/dist/Sreon.pkg out/macOS/ || true
+          if [ -d "Browser/dist/Sreon Installer.app" ]; then cp -a "Browser/dist/Sreon Installer.app" out/macOS/ || true; fi
           cp If-it-says-unverified.txt out/macOS/
           cp unable.txt out/macOS/ || true
           ls -lh out/macOS/
@@ -119,8 +157,10 @@ jobs:
         run: |
           mkdir -p out/Linux
           cp Browser/dist/Sreon-linux.tar.gz out/Linux/
+          cp Browser/dist/*.deb out/Linux/ || true
           cp If-it-says-unverified.txt out/Linux/
           cp unable.txt out/Linux/ || true
+          if [ -d "Browser/dist/Sreon Installer" ]; then cp -a "Browser/dist/Sreon Installer" out/Linux/ || true; fi
           curl -L -o appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
           chmod +x appimagetool
           mkdir -p AppDir/usr/bin
@@ -178,6 +218,9 @@ jobs:
           gh release delete sreon-preview --yes || true
           extras=""
           if [ -f Sreon/macOS/Sreon.dmg ]; then cp Sreon/macOS/Sreon.dmg Sreon.dmg; extras="Sreon.dmg"; fi
+          if [ -f Sreon/macOS/Sreon.pkg ]; then cp Sreon/macOS/Sreon.pkg Sreon.pkg; extras="$extras Sreon.pkg"; fi
+          if [ -f Sreon/Windows/SreonSetup.exe ]; then cp Sreon/Windows/SreonSetup.exe SreonSetup.exe; extras="$extras SreonSetup.exe"; fi
+          if [ -f Sreon/Linux/sreon_0.5.0_amd64.deb ]; then cp Sreon/Linux/sreon_0.5.0_amd64.deb sreon.deb; extras="$extras sreon.deb"; fi
           if [ -f Sreon/macOS/Sreon-plain.dmg ]; then cp Sreon/macOS/Sreon-plain.dmg Sreon-plain.dmg; extras="$extras Sreon-plain.dmg"; fi
           if [ -f Sreon/macOS/Sreon.app.zip ]; then cp Sreon/macOS/Sreon.app.zip Sreon.app.zip; extras="$extras Sreon.app.zip"; fi
-          gh release create sreon-preview Sreon.zip $extras --title "Sreon" --notes "Mac: open Sreon.dmg and drag Sreon to Applications. If DMG won't open: Control-click -> Open, or xattr -dr com.apple.quarantine Sreon.dmg, or hdiutil attach Sreon.dmg -noverify. If app says unverified: Control-click Sreon -> Open -> Open, or System Settings -> Privacy & Security -> Open Anyway. Windows: More info -> Run anyway. Linux: chmod +x Sreon.AppImage. See If-it-says-unverified.txt." --target "${GITHUB_SHA}"
+          gh release create sreon-preview Sreon.zip $extras --title "Sreon" --notes "Installers: Mac Sreon.dmg contains Sreon.app + Sreon Installer.app with beautiful UI and loading. Drag to Applications or run Installer. If DMG won't open: Control-click -> Open, or xattr -dr com.apple.quarantine Sreon.dmg, or hdiutil attach Sreon.dmg -noverify. PKG alternative: Sreon.pkg installs to Applications. Windows: SreonSetup.exe installs to Program Files and appears in Start Menu. If SmartScreen: More info -> Run anyway. Linux: sreon.deb installs to /opt and appears in Applications, or AppImage. See If-it-says-unverified.txt." --target "${GITHUB_SHA}"

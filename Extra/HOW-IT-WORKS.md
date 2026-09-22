@@ -8,23 +8,25 @@ The start page keeps the original Sreon mark and the line **Search privately. Br
 
 Download the one folder: [Sreon.zip](https://github.com/FellowPythonCoder/Sreon-Browser/releases/download/sreon-preview/Sreon.zip). It contains Windows, macOS, Linux double-click apps, this guide, `unable.txt`, `If-it-says-unverified.txt`, website code, and source. GitHub may require sign-in. Builds are also on [Sreon Browser](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/browser.yml).
 
-| System | In the folder | Run |
-| --- | --- | --- |
-| Windows 10/11, x64 | `Windows/Sreon.exe` | Unzip and open `Sreon.exe`. Keep the folder together. |
-| macOS 11+ | `macOS/Sreon.dmg` (and `Sreon-plain.dmg` + `Sreon.app.zip` fallback) | Open the DMG. The window has a purple header Drag Sreon to Applications, a cream tray with Sreon on the left, Applications on the right, purple arrow, and a pill that says what to do if unverified. Drag Sreon onto Applications. |
-| Linux x86-64 | `Linux/Sreon.AppImage` and `Sreon-linux.tar.gz` | `chmod +x Sreon.AppImage && ./Sreon.AppImage`. If FUSE is missing: `./Sreon.AppImage --appimage-extract-and-run`, or unpack the tar.gz and run `./Sreon`. |
+| System | In the folder | Installer | After install |
+| --- | --- | --- | --- |
+| Windows 10/11, x64 | `Windows/Sreon.exe` + `SreonSetup.exe` | Run `SreonSetup.exe` - beautiful UI with loading, installs to Program Files, creates Start Menu shortcut. Sreon appears in Start Menu and Apps list. Portable fallback: `Sreon.exe`. |
+| macOS 11+ | `macOS/Sreon.dmg` contains `Sreon.app` + `Sreon Installer.app` + `Sreon.pkg` | Open DMG - purple header Install Sreon, cream tray with Sreon and Installer on left, Applications on right, arrows. Double-click **Sreon Installer.app** - polished UI with progress, installs to Applications, appears in Applications and Launchpad. Or drag Sreon to Applications. Or double-click `Sreon.pkg` - system installer installs to Applications. |
+| Linux x86-64 | `Linux/Sreon.AppImage`, `sreon.deb`, `Sreon-linux.tar.gz` | `sudo dpkg -i sreon.deb` - installs to /opt/sreon and creates launcher, appears in Applications menu. Or run Sreon Installer Qt UI - installs to ~/.local/share/sreon and creates desktop file. Or AppImage. |
 
 ### If it says unverified
 
-Sreon is open source and is not Apple-notarized or Microsoft-signed. The warning is expected. The DMG background itself shows what to do.
+Sreon is open source and is not Apple-notarized or Microsoft-signed. The warning is expected. Every installer shows minimal guide.
 
-**Mac - DMG won't open at all.** Control-click `Sreon.dmg` -> Open -> Open. If it says damaged or no mountable file systems, open Terminal and run `xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg` (use real path) then try again. If still not opening, run `hdiutil attach ~/Downloads/Sreon.dmg -noverify` then open /Volumes/Sreon and drag. If you have `Sreon-plain.dmg`, try that - it is a plain HFS+ UDZO image that always opens. If you have `Sreon.app.zip`, unzip and drag Sreon.app to Applications.
+**Mac DMG won't open.** Control-click DMG -> Open -> Open. Terminal: `xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg` then `hdiutil attach ~/Downloads/Sreon.dmg -noverify`. Try `Sreon-plain.dmg` fallback or `Sreon.app.zip`.
 
-**Mac - app says unverified after dragging.** Applications -> Control-click Sreon -> Open -> Open. Once only. If still refuses: System Settings -> Privacy & Security -> Open Anyway. If damaged: `xattr -dr com.apple.quarantine /Applications/Sreon.app`.
+**Mac app unverified.** Applications -> Control-click Sreon -> Open -> Open (once). System Settings -> Privacy & Security -> Open Anyway. Terminal: `xattr -dr com.apple.quarantine /Applications/Sreon.app`. The Installer UI also does this automatically.
 
-**Windows.** If SmartScreen says Windows protected your PC, click More info, then Run anyway. If blocked: right-click `Sreon.exe` -> Properties -> Unblock -> OK.
+**Mac Installer UI.** The Sreon Installer app has very good UI: cream background, purple header, Sreon mark, progress bar, loading animation, status text. It copies Sreon.app to Applications, removes quarantine, shows Installed to Applications and Open Sreon button. If it fails, it shows minimal guide with Terminal commands.
 
-**Linux.** `chmod +x Sreon.AppImage && ./Sreon.AppImage`. If FUSE error: `./Sreon.AppImage --appimage-extract-and-run` or unpack tar.gz and run `./Sreon/Sreon`.
+**Windows.** If SmartScreen blocks Setup: More info -> Run anyway. Or right-click -> Properties -> Unblock. The NSIS installer has MUI2 UI with Sreon branding, welcome page with guide, directory page, instfiles with loading, finish page with Open Sreon. After install, Sreon appears in Start Menu.
+
+**Linux.** DEB installs to /opt and appears in Applications. AppImage: `chmod +x` and run. Installer Qt UI similar to Mac.
 
 The same steps are in `If-it-says-unverified.txt` and Help -> If Sreon is unverified inside the browser.
 
