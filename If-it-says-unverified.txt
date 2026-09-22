@@ -1,20 +1,27 @@
-If your computer says Sreon is unverified or can’t be opened
+If your computer says Sreon is unverified or can't be opened
 
-This is expected. Sreon is open source and is not signed with an Apple or Microsoft certificate. The warning is the operating system, not a virus scan of the code.
+This is expected. Sreon is open source and is not signed with an Apple Developer certificate or Microsoft publisher certificate. The warning comes from the operating system, not from a virus scan of the code.
 
-Mac
-1. If Sreon.dmg will not open, Control-click the file and choose Open.
-2. Drag Sreon onto the Applications icon.
-3. Open the Applications folder, Control-click Sreon, and choose Open.
-4. Click Open. You only do this once.
-If it still refuses: System Settings → Privacy & Security → scroll down → Open Anyway.
+Mac - if Sreon.dmg won't open:
+1. Control-click Sreon.dmg and choose Open, then click Open.
+2. If macOS says it is damaged: open Terminal and run xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg (use the real path) then try again.
+3. Drag Sreon onto the Applications icon in the same window.
+4. Open Applications, Control-click Sreon, choose Open, then click Open. You only do this once.
+5. If it still refuses: System Settings -> Privacy & Security -> scroll down -> Open Anyway.
 
-Windows
-1. If SmartScreen says “Windows protected your PC”, click More info, then Run anyway.
-2. If the file is blocked: right-click Sreon.exe → Properties → Unblock → OK, then open it.
+Mac - if Sreon app says unverified after dragging:
+Control-click Sreon in Applications -> Open -> Open. Or System Settings -> Privacy & Security -> Open Anyway. The app background shows this instruction.
 
-Linux
+Windows - if SmartScreen blocks:
+1. When you see Windows protected your PC, click More info, then Run anyway.
+2. If Windows says the file is blocked: right-click Sreon.exe -> Properties -> check Unblock -> OK, then open.
+3. Keep Sreon.exe and its folder together. Do not run from inside the zip.
+
+Linux - if AppImage won't run:
 1. chmod +x Sreon.AppImage
 2. ./Sreon.AppImage
-If it will not run: ./Sreon.AppImage --appimage-extract-and-run
-Or unpack Sreon-linux.tar.gz and run ./Sreon
+3. If you see FUSE error: ./Sreon.AppImage --appimage-extract-and-run
+4. Or unpack Sreon-linux.tar.gz and run ./Sreon/Sreon
+5. If libraries are missing, use the tar.gz version.
+
+All builds include this file. The same steps are in Help -> If Sreon is unverified inside the browser and in HOW-IT-WORKS.md.

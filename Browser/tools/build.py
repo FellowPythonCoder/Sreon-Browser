@@ -84,9 +84,33 @@ def pyinstaller():
 
 def _detach_sreon_volume():
     subprocess.run(["hdiutil", "detach", "/Volumes/Sreon", "-force"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    tmp = Path("/tmp/sreon-verify")
+    if tmp.exists():
+        subprocess.run(["hdiutil", "detach", str(tmp), "-force"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def _dmg_ok(path):
     return path.is_file() and path.stat().st_size > 1_000_000
+
+def _verify_dmg(path):
+    try:
+        subprocess.run(["hdiutil", "verify", str(path)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60, check=True)
+    except Exception:
+        return False
+    mount = Path("/tmp/sreon-verify")
+    if mount.exists():
+        shutil.rmtree(mount, ignore_errors=True)
+    mount.mkdir(parents=True, exist_ok=True)
+    ok = False
+    try:
+        subprocess.run(["hdiutil", "attach", "-readonly", "-noverify", "-noautoopen", "-mountpoint", str(mount), str(path)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30, check=True)
+        ok = (mount / "Sreon.app").exists() or any(mount.iterdir())
+    except Exception:
+        ok = False
+    finally:
+        subprocess.run(["hdiutil", "detach", str(mount), "-force"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        _detach_sreon_volume()
+        shutil.rmtree(mount, ignore_errors=True)
+    return ok
 
 def dmg():
     app = ROOT / "dist" / "Sreon.app"
@@ -111,8 +135,9 @@ def dmg():
         command = [
             maker, "--volname", "Sreon", "--background", str(background),
             "--window-pos", "200", "120", "--window-size", "660", "400",
-            "--icon-size", "128", "--icon", "Sreon.app", "150", "220",
-            "--app-drop-link", "510", "220", "--no-internet-enable",
+            "--icon-size", "128", "--icon", "Sreon.app", "150", "230",
+            "--app-drop-link", "510", "230", "--format", "UDZO",
+            "--no-internet-enable",
         ]
         icns = ROOT / "assets" / "icon.icns"
         if icns.is_file():
@@ -129,16 +154,21 @@ def dmg():
                 process = None
         _detach_sreon_volume()
         if process is not None:
-            print(log.read_text(encoding="utf-8", errors="replace")[-4000:], flush=True)
-        if _dmg_ok(dmg_path):
+            print(log.read_text(encoding="utf-8", errors="replace")[-6000:], flush=True)
+        else:
+            print(log.read_text(encoding="utf-8", errors="replace")[-6000:], flush=True)
+        if _dmg_ok(dmg_path) and _verify_dmg(dmg_path):
+            print("disk image verified", dmg_path, flush=True)
             return
-        print("create-dmg failed, writing a plain disk image that still opens", flush=True)
+        print("create-dmg failed or verify failed, writing a plain disk image that still opens", flush=True)
         if dmg_path.exists():
             dmg_path.unlink()
     Path(stage / "Applications").symlink_to("/Applications")
     run(["hdiutil", "create", "-volname", "Sreon", "-srcfolder", str(stage), "-ov", "-format", "UDZO", "-imagekey", "zlib-level=9", str(dmg_path)])
     if not _dmg_ok(dmg_path):
         raise SystemExit("Sreon.dmg was not written")
+    if not _verify_dmg(dmg_path):
+        raise SystemExit("Sreon.dmg verify failed")
 
 def linux_tar():
     source = ROOT / "dist" / "Sreon"

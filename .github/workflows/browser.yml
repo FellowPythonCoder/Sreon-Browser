@@ -72,6 +72,17 @@ jobs:
         run: brew install create-dmg || true
       - name: Freeze Sreon
         run: python -u Browser/tools/build.py --skip-engine
+      - name: Verify disk image
+        if: matrix.pack == 'macos'
+        run: |
+          ls -lh Browser/dist/Sreon.dmg
+          hdiutil verify Browser/dist/Sreon.dmg
+          mkdir -p /tmp/sreon-check
+          hdiutil attach -readonly -noverify -noautoopen -mountpoint /tmp/sreon-check Browser/dist/Sreon.dmg
+          ls -la /tmp/sreon-check
+          ls -la /tmp/sreon-check/Sreon.app || true
+          hdiutil detach /tmp/sreon-check -force || true
+          hdiutil detach /Volumes/Sreon -force || true
       - name: Freeze log
         if: failure()
         uses: actions/upload-artifact@v4
@@ -86,18 +97,21 @@ jobs:
           New-Item -ItemType Directory -Force -Path out/Windows | Out-Null
           Copy-Item -Recurse Browser/dist/Sreon/* out/Windows/
           Copy-Item If-it-says-unverified.txt out/Windows/
+          Copy-Item unable.txt out/Windows/ -ErrorAction SilentlyContinue
       - name: macOS folder
         if: matrix.pack == 'macos'
         run: |
           mkdir -p out/macOS
           cp Browser/dist/Sreon.dmg out/macOS/
           cp If-it-says-unverified.txt out/macOS/
+          cp unable.txt out/macOS/ || true
       - name: Linux folder
         if: matrix.pack == 'linux'
         run: |
           mkdir -p out/Linux
           cp Browser/dist/Sreon-linux.tar.gz out/Linux/
           cp If-it-says-unverified.txt out/Linux/
+          cp unable.txt out/Linux/ || true
           curl -L -o appimagetool "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
           chmod +x appimagetool
           mkdir -p AppDir/usr/bin
@@ -105,6 +119,7 @@ jobs:
           printf '%s\n' '[Desktop Entry]' 'Type=Application' 'Name=Sreon' 'Exec=Sreon' 'Icon=sreon' 'Categories=Network;WebBrowser;' > AppDir/sreon.desktop
           cp Browser/assets/mark.png AppDir/sreon.png
           ARCH=x86_64 ./appimagetool -n AppDir out/Linux/Sreon.AppImage || true
+          ls -lh out/Linux/
       - uses: actions/upload-artifact@v4
         if: success()
         with:

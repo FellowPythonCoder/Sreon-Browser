@@ -6,25 +6,27 @@ The start page keeps the original Sreon mark and the line **Search privately. Br
 
 ## Install
 
-Download the one folder: [Sreon.zip](https://github.com/FellowPythonCoder/Sreon-Browser/releases/download/sreon-preview/Sreon.zip). It contains Windows, macOS, Linux double-click apps, this guide, `unable.txt`, website code, and source. GitHub may require sign-in. Builds are also on [Sreon Browser](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/browser.yml).
+Download the one folder: [Sreon.zip](https://github.com/FellowPythonCoder/Sreon-Browser/releases/download/sreon-preview/Sreon.zip). It contains Windows, macOS, Linux double-click apps, this guide, `unable.txt`, `If-it-says-unverified.txt`, website code, and source. GitHub may require sign-in. Builds are also on [Sreon Browser](https://github.com/FellowPythonCoder/Sreon-Browser/actions/workflows/browser.yml).
 
 | System | In the folder | Run |
 | --- | --- | --- |
-| Windows 10/11, x64 | `Windows/Sreon.exe` | Unzip and open `Sreon.exe`. |
-| macOS 11+ | `macOS/Sreon.dmg` | Open the DMG and drag Sreon onto Applications. |
+| Windows 10/11, x64 | `Windows/Sreon.exe` | Unzip and open `Sreon.exe`. Keep the folder together. |
+| macOS 11+ | `macOS/Sreon.dmg` | Open the DMG. The window shows a cream tray with Sreon on the left and Applications on the right and a purple arrow. Drag Sreon onto Applications. |
 | Linux x86-64 | `Linux/Sreon.AppImage` and `Sreon-linux.tar.gz` | `chmod +x Sreon.AppImage && ./Sreon.AppImage`. If FUSE is missing: `./Sreon.AppImage --appimage-extract-and-run`, or unpack the tar.gz and run `./Sreon`. |
 
 ### If it says unverified
 
-Sreon is open source and is not Apple-notarized or Microsoft-signed. That warning is expected. Do this:
+Sreon is open source and is not Apple-notarized or Microsoft-signed. The warning is expected. The DMG background itself says what to do. Do this:
 
-**Mac.** If `Sreon.dmg` will not open, Control-click it and choose Open. Drag Sreon onto Applications. Then Control-click Sreon in Applications, choose Open, and click Open. Once only. If it still refuses: System Settings → Privacy & Security → Open Anyway.
+**Mac - DMG won't open.** Control-click `Sreon.dmg` and choose Open, then Open again. If macOS says it is damaged, open Terminal and run `xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg` (use the real path) then try again. Drag Sreon onto Applications. Then open Applications, Control-click Sreon, choose Open, and click Open. Once only. If it still refuses: System Settings → Privacy & Security → scroll down → Open Anyway.
+
+**Mac - app says unverified after dragging.** Control-click Sreon in Applications → Open → Open. Or System Settings → Privacy & Security → Open Anyway.
 
 **Windows.** If SmartScreen says “Windows protected your PC”, click More info, then Run anyway. If the file is blocked: right-click `Sreon.exe` → Properties → Unblock → OK.
 
-**Linux.** `chmod +x Sreon.AppImage && ./Sreon.AppImage`. If it still will not run: `./Sreon.AppImage --appimage-extract-and-run`.
+**Linux.** `chmod +x Sreon.AppImage && ./Sreon.AppImage`. If it still will not run: `./Sreon.AppImage --appimage-extract-and-run` or unpack `Sreon-linux.tar.gz` and run `./Sreon/Sreon`.
 
-The same steps are in `If-it-says-unverified.txt`.
+The same steps are in `If-it-says-unverified.txt` and in Help → If Sreon is unverified inside the browser.
 
 Internet is required for websites and live search. The app does not phone home to Sreon. Search queries go to the public sources used by the Rust engine only when you search. Website visits are ordinary HTTPS to that site.
 

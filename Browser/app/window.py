@@ -587,12 +587,17 @@ class BrowserWindow(QMainWindow):
         return super().eventFilter(obj, event)
 
     def _unverified_help(self):
-        if sys.platform == "darwin":
-            text = "Sreon is not Apple-signed. If macOS says it is unverified, Control-click Sreon, choose Open, then click Open. You only do this once. If it still refuses: System Settings → Privacy & Security → Open Anyway."
-        elif sys.platform == "win32":
-            text = "Sreon is not publisher-signed. If SmartScreen says Windows protected your PC, click More info, then Run anyway. Or right-click Sreon.exe → Properties → Unblock."
-        else:
-            text = "chmod +x Sreon.AppImage && ./Sreon.AppImage. If it will not run: ./Sreon.AppImage --appimage-extract-and-run, or unpack Sreon-linux.tar.gz and run ./Sreon."
+        text = (
+            "Sreon is open source and not Apple or Microsoft signed. The warning is expected.\n\n"
+            "Mac: If Sreon.dmg won't open, Control-click it -> Open. Drag Sreon to Applications. "
+            "Then in Applications Control-click Sreon -> Open -> Open. Once only. "
+            "If it still refuses: System Settings -> Privacy & Security -> Open Anyway. "
+            "If damaged: xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg\n\n"
+            "Windows: If SmartScreen says Windows protected your PC, click More info -> Run anyway. "
+            "Or right-click Sreon.exe -> Properties -> Unblock.\n\n"
+            "Linux: chmod +x Sreon.AppImage && ./Sreon.AppImage. "
+            "If FUSE error: ./Sreon.AppImage --appimage-extract-and-run, or unpack Sreon-linux.tar.gz and run ./Sreon"
+        )
         QMessageBox.information(self, "If Sreon is unverified", text)
 
     def _welcome(self):
