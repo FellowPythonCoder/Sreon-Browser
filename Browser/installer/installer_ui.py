@@ -169,19 +169,14 @@ class InstallWorker(QThread):
 
     def create_shortcut(self, target, link_path, workdir):
         try:
-            import winshell
-            from win32com.client import Dispatch
-            shell = Dispatch('WScript.Shell')
-            shortcut = shell.CreateShortCut(str(link_path))
-            shortcut.Targetpath = str(target)
-            shortcut.WorkingDirectory = str(workdir)
-            shortcut.IconLocation = str(target)
-            shortcut.save()
+            link_path.write_text(f"[InternetShortcut]\nURL=file:///{target}\n")
         except Exception:
-            try:
-                link_path.write_text(f"[InternetShortcut]\nURL=file:///{target}\n")
-            except Exception:
-                pass
+            pass
+        try:
+            bat = link_path.with_suffix(".bat")
+            bat.write_text(f'@echo off\nstart "" "{target}"\n')
+        except Exception:
+            pass
 
     def install_linux(self):
         self.progress.emit(10, "Finding Sreon")
