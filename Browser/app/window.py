@@ -589,14 +589,17 @@ class BrowserWindow(QMainWindow):
     def _unverified_help(self):
         text = (
             "Sreon is open source and not Apple or Microsoft signed. The warning is expected.\n\n"
-            "Mac: If Sreon.dmg won't open, Control-click it -> Open. Drag Sreon to Applications. "
-            "Then in Applications Control-click Sreon -> Open -> Open. Once only. "
-            "If it still refuses: System Settings -> Privacy & Security -> Open Anyway. "
-            "If damaged: xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg\n\n"
-            "Windows: If SmartScreen says Windows protected your PC, click More info -> Run anyway. "
-            "Or right-click Sreon.exe -> Properties -> Unblock.\n\n"
+            "Mac DMG won't open: Control-click Sreon.dmg -> Open. If damaged: "
+            "xattr -dr com.apple.quarantine ~/Downloads/Sreon.dmg  Then try again. "
+            "Or Terminal: hdiutil attach ~/Downloads/Sreon.dmg -noverify\n\n"
+            "Mac drag: The window shows Drag Sreon to Applications with a cream tray, "
+            "Sreon on left, Applications on right, purple arrow. Drag Sreon to Applications.\n\n"
+            "Mac app unverified: Applications -> Control-click Sreon -> Open -> Open. "
+            "If still refuses: System Settings -> Privacy & Security -> Open Anyway. "
+            "If damaged: xattr -dr com.apple.quarantine /Applications/Sreon.app\n\n"
+            "Windows: SmartScreen -> More info -> Run anyway. Or right-click Sreon.exe -> Properties -> Unblock.\n\n"
             "Linux: chmod +x Sreon.AppImage && ./Sreon.AppImage. "
-            "If FUSE error: ./Sreon.AppImage --appimage-extract-and-run, or unpack Sreon-linux.tar.gz and run ./Sreon"
+            "If FUSE error: ./Sreon.AppImage --appimage-extract-and-run, or unpack tar.gz and run ./Sreon"
         )
         QMessageBox.information(self, "If Sreon is unverified", text)
 

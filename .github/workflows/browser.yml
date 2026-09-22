@@ -75,13 +75,19 @@ jobs:
       - name: Verify disk image
         if: matrix.pack == 'macos'
         run: |
-          ls -lh Browser/dist/Sreon.dmg
+          ls -lh Browser/dist/*.dmg Browser/dist/*.zip 2>&1 || true
           hdiutil verify Browser/dist/Sreon.dmg
+          hdiutil verify Browser/dist/Sreon-plain.dmg || true
           mkdir -p /tmp/sreon-check
           hdiutil attach -readonly -noverify -noautoopen -mountpoint /tmp/sreon-check Browser/dist/Sreon.dmg
           ls -la /tmp/sreon-check
           ls -la /tmp/sreon-check/Sreon.app || true
           hdiutil detach /tmp/sreon-check -force || true
+          hdiutil detach /Volumes/Sreon -force || true
+          mkdir -p /tmp/sreon-plain-check
+          hdiutil attach -readonly -noverify -noautoopen -mountpoint /tmp/sreon-plain-check Browser/dist/Sreon-plain.dmg || true
+          ls -la /tmp/sreon-plain-check || true
+          hdiutil detach /tmp/sreon-plain-check -force || true
           hdiutil detach /Volumes/Sreon -force || true
       - name: Freeze log
         if: failure()
@@ -103,8 +109,11 @@ jobs:
         run: |
           mkdir -p out/macOS
           cp Browser/dist/Sreon.dmg out/macOS/
+          cp Browser/dist/Sreon-plain.dmg out/macOS/ || true
+          cp Browser/dist/Sreon.app.zip out/macOS/ || true
           cp If-it-says-unverified.txt out/macOS/
           cp unable.txt out/macOS/ || true
+          ls -lh out/macOS/
       - name: Linux folder
         if: matrix.pack == 'linux'
         run: |
@@ -169,4 +178,6 @@ jobs:
           gh release delete sreon-preview --yes || true
           extras=""
           if [ -f Sreon/macOS/Sreon.dmg ]; then cp Sreon/macOS/Sreon.dmg Sreon.dmg; extras="Sreon.dmg"; fi
-          gh release create sreon-preview Sreon.zip $extras --title "Sreon" --notes "Mac: open Sreon.dmg and drag Sreon to Applications. If macOS says unverified, Control-click Sreon then Open. Windows: More info, then Run anyway. Linux: chmod +x Sreon.AppImage. See If-it-says-unverified.txt." --target "${GITHUB_SHA}"
+          if [ -f Sreon/macOS/Sreon-plain.dmg ]; then cp Sreon/macOS/Sreon-plain.dmg Sreon-plain.dmg; extras="$extras Sreon-plain.dmg"; fi
+          if [ -f Sreon/macOS/Sreon.app.zip ]; then cp Sreon/macOS/Sreon.app.zip Sreon.app.zip; extras="$extras Sreon.app.zip"; fi
+          gh release create sreon-preview Sreon.zip $extras --title "Sreon" --notes "Mac: open Sreon.dmg and drag Sreon to Applications. If DMG won't open: Control-click -> Open, or xattr -dr com.apple.quarantine Sreon.dmg, or hdiutil attach Sreon.dmg -noverify. If app says unverified: Control-click Sreon -> Open -> Open, or System Settings -> Privacy & Security -> Open Anyway. Windows: More info -> Run anyway. Linux: chmod +x Sreon.AppImage. See If-it-says-unverified.txt." --target "${GITHUB_SHA}"
