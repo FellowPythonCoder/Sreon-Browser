@@ -228,11 +228,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e
           ls -lh Sreon.zip Sreon/macOS/ Sreon/Windows/ Sreon/Linux/ 2>&1 | head -100 || true
           gh release delete sreon-preview --yes || true
+          sleep 3
+          gh release create sreon-preview --title "Sreon" --notes "Installers: Mac Sreon.dmg contains Sreon.app + Sreon Installer.app with beautiful UI and loading. Drag to Applications or run Installer. If DMG won't open: Control-click -> Open, or xattr -dr com.apple.quarantine Sreon.dmg, or hdiutil attach Sreon.dmg -noverify. PKG alternative: Sreon.pkg installs to Applications. Windows: SreonSetup.exe installs to Program Files and appears in Start Menu. If SmartScreen: More info -> Run anyway. Linux: sreon.deb installs to /opt and appears in Applications, or AppImage. See If-it-says-unverified.txt." --target "${GITHUB_SHA}" || echo "create failed, trying again"
           sleep 2
-          gh release create sreon-preview Sreon.zip --title "Sreon" --notes "Installers: Mac Sreon.dmg contains Sreon.app + Sreon Installer.app with beautiful UI and loading. Drag to Applications or run Installer. If DMG won't open: Control-click -> Open, or xattr -dr com.apple.quarantine Sreon.dmg, or hdiutil attach Sreon.dmg -noverify. PKG alternative: Sreon.pkg installs to Applications. Windows: SreonSetup.exe installs to Program Files and appears in Start Menu. If SmartScreen: More info -> Run anyway. Linux: sreon.deb installs to /opt and appears in Applications, or AppImage. See If-it-says-unverified.txt." --target "${GITHUB_SHA}" || true
+          gh release create sreon-preview --title "Sreon" --notes "Installers" --target "${GITHUB_SHA}" 2>&1 || true
+          echo "Uploading main zip"
+          gh release upload sreon-preview Sreon.zip --clobber || gh release upload sreon-preview Sreon.zip --clobber || echo "zip upload failed"
           for f in Sreon.dmg Sreon.pkg SreonSetup.exe sreon.deb Sreon-plain.dmg Sreon.app.zip; do
             if [ -f "$f" ]; then
               echo "Uploading $f"
