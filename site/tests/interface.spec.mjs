@@ -28,17 +28,15 @@ test('try area uses API data, safely renders results, and paginates', async ({pa
   await page.locator('#more').click(); await expect(page.locator('.result')).toHaveCount(2);
   expect(requests[1]).toEqual({q:'YouTube',category:'web',cursor:'next'});
 });
-test('result links open inside the small preview instead of a new tab', async ({page}) => {
-  const popups=[]; page.on('popup',popup=>popups.push(popup));
+test('result links open directly in a compact popup window', async ({page}) => {
   await page.route('**/api/search',route=>route.fulfill({json:{results:[{title:'Example site',url:'https://example.org/'}]}}));
-  await page.route('https://example.org/**',route=>route.fulfill({contentType:'text/html',body:'<title>Example</title><h1>Preview loaded</h1>'}));
+  await page.route('https://example.org/**',route=>route.fulfill({contentType:'text/html',body:'<title>Example</title><h1>Destination loaded</h1>'}));
   await page.goto('/#try'); await page.locator('#query').fill('example'); await page.locator('#search-submit').click();
-  await page.locator('.result a').click();
-  await expect(page.locator('#site-preview')).toBeVisible();
-  await expect(page.frameLocator('#preview-frame').locator('h1')).toHaveText('Preview loaded');
-  await expect(page.locator('#preview-open')).toHaveAttribute('href','https://example.org/');
-  expect(popups).toHaveLength(0);
-  await page.locator('#preview-back').click(); await expect(page.locator('#site-preview')).toBeHidden();
+  const [popup] = await Promise.all([page.waitForEvent('popup'),page.locator('.result a').click()]);
+  await expect(popup).toHaveURL('https://example.org/');
+  await expect(popup.locator('h1')).toHaveText('Destination loaded');
+  await expect(page.locator('#open-status')).toHaveText('Opened example.org in a small window.');
+  await expect(page.locator('#open-original')).toBeHidden();
 });
 test('search errors do not create fake results and retry works', async ({page}) => {
   let fail=true;
