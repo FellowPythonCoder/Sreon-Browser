@@ -13,6 +13,15 @@ const results = document.querySelector('#results');
 const status = document.querySelector('#search-status');
 const submit = document.querySelector('#search-submit');
 const more = document.querySelector('#more');
+const preview = document.querySelector('#site-preview');
+const previewFrame = document.querySelector('#preview-frame');
+const previewAddress = document.querySelector('#preview-address');
+const previewOpen = document.querySelector('#preview-open');
+document.querySelector('#preview-back').addEventListener('click', () => {
+  preview.hidden = true;
+  previewFrame.src = 'about:blank';
+  results.scrollIntoView({ block: 'nearest' });
+});
 let cursor = null;
 let lastQuery = '';
 let request = null;
@@ -25,7 +34,10 @@ async function search(append = false) {
   request = controller;
   const id = ++sequence;
   const timer = setTimeout(() => controller.abort(), 25000);
-  if (!append) { results.replaceChildren(); cursor = null; lastQuery = q; }
+  if (!append) {
+    results.replaceChildren(); cursor = null; lastQuery = q;
+    preview.hidden = true; previewFrame.src = 'about:blank'; previewOpen.removeAttribute('href');
+  }
   more.hidden = true;
   submit.disabled = true;
   results.setAttribute('aria-busy', 'true');
@@ -51,7 +63,13 @@ async function search(append = false) {
       if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) continue;
       const article = document.createElement('article'); article.className = 'result';
       const source = document.createElement('small'); source.textContent = url.hostname;
-      const link = document.createElement('a'); link.href = url.href; link.textContent = item.title || url.hostname; link.rel = 'noreferrer';
+      const link = document.createElement('a'); link.href = url.href; link.target = 'sreon-site-preview'; link.textContent = item.title || url.hostname; link.rel = 'noreferrer';
+      link.addEventListener('click', () => {
+        preview.hidden = false;
+        previewAddress.textContent = url.hostname;
+        previewOpen.href = url.href;
+        requestAnimationFrame(() => preview.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }));
+      });
       const excerpt = document.createElement('p'); excerpt.textContent = item.content || '';
       article.append(source, link, excerpt); results.append(article); added++;
     }
