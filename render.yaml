@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: sreon-website
+    runtime: docker
+    region: ohio
+    plan: free
+    dockerfilePath: ./site/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    domains:
+      - opensreon.com
