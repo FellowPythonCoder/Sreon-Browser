@@ -1,6 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
 const games = Array.from({ length: 7 }, (_, index) => window[`GAME_PACK_${index+1}`] || []).flat();
-games.push({ id:'spacewaves-html', name:'Space Waves', librarySymbol:'✦', libraryDescription:'33 levels + endless · Open the supplied web game.', page:'/site/notes/space-waves/' });
+games.push({ id:'spacewaves-html', name:'Space Waves', librarySymbol:'✦', libraryDescription:'33 levels + endless · Open the supplied web game.', page:'/site/notes/space-waves.html' });
 games.sort((a, b) => Number(b.id === 'geodash')-Number(a.id === 'geodash'));
 let running = null;
 let htmlGameActive = false;

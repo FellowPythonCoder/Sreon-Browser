@@ -64,7 +64,7 @@ test('Space Waves card opens the supplied HTML in an isolated game frame', async
   await page.getByRole('button',{name:/Space Waves/}).click();
   const frame=page.locator('#html-game-frame');
   await expect(frame).toBeVisible();
-  await expect(frame).toHaveAttribute('src','/site/notes/space-waves/');
+  await expect(frame).toHaveAttribute('src','/site/notes/space-waves.html');
   expect(await frame.getAttribute('sandbox')).not.toContain('allow-same-origin');
   await expect(page.locator('#game-canvas')).toBeHidden();
   await page.locator('#exit-game').click();

@@ -103,8 +103,8 @@ export function createWebsite({ clientFactory = () => new SearchEngine(), allowe
     }
     if (!['GET','HEAD'].includes(request.method)) { json(response, 405, { error:'Method not allowed' }); return; }
     if (pathname === '/site/notes') { response.writeHead(308, { Location:'/site/notes/' }); response.end(); return; }
-    if (pathname === '/site/notes/space-waves') { response.writeHead(308, { Location:'/site/notes/space-waves/' }); response.end(); return; }
-    const relative = pathname === '/' || pathname === '/index.html' ? 'index.html' : pathname === '/site/notes/' ? 'site/notes/index.html' : pathname === '/site/notes/space-waves/' ? 'site/notes/space-waves.html' : pathname.startsWith('/site/assets/') ? pathname.slice(1) : null;
+    if (pathname === '/site/notes/space-waves' || pathname === '/site/notes/space-waves/') { response.writeHead(308, { Location:'/site/notes/space-waves.html' }); response.end(); return; }
+    const relative = pathname === '/' || pathname === '/index.html' ? 'index.html' : pathname === '/site/notes/' ? 'site/notes/index.html' : pathname === '/site/notes/space-waves.html' ? 'site/notes/space-waves.html' : pathname.startsWith('/site/assets/') ? pathname.slice(1) : null;
     if (!relative || relative.includes('\\') || relative.split('/').some(part => part === '..' || part.startsWith('.')) || !mime[extname(relative)]) { json(response, 404, { error:'Not found' }); return; }
     try {
       const file = await realpath(resolve(root, relative));
