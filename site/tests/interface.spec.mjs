@@ -12,7 +12,8 @@ test('minimal homepage has a single colon entrance and no download links', async
   await page.reload(); await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   await page.locator('.quiet-colon').click();
   await expect(page.getByRole('heading',{name:'Off the clock.'})).toBeVisible();
-  await expect(page.locator('.game-card')).toHaveCount(24);
+  await expect(page.locator('.game-card')).toHaveCount(25);
+  await expect(page.getByRole('button',{name:/Space Waves/})).toBeVisible();
   expect(errors).toEqual([]);
 });
 test('try area uses API data, safely renders results, and paginates', async ({page}) => {
@@ -58,6 +59,22 @@ test('Geometry Rush starts, 4 enables autoplay, and the button returns control',
   await page.locator('#auto-play').click(); await expect(page.locator('#auto-play')).toHaveAttribute('aria-pressed','false');
   await page.locator('#exit-game').click(); await expect(page.locator('#library')).toBeVisible(); expect(errors).toEqual([]);
 });
+test('Space Waves is playable locally with 33 levels and an endless mode', async ({page}) => {
+  const errors=[]; page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('/site/notes/');
+  await page.getByRole('button',{name:/Space Waves/}).click();
+  await expect(page.locator('#player')).toBeVisible();
+  await expect(page.locator('#endless-play')).toBeVisible();
+  const setup=await page.evaluate(()=>({count:GAME_PACK_8[0].levelCount,selected:running.selMode,game:running.endless}));
+  expect(setup).toEqual({count:33,selected:true,game:false});
+  await page.locator('#endless-play').click();
+  const flight=await page.evaluate(()=>({selected:running.selMode,endless:running.endless,gates:running.gates.length,controls:GAME_PACK_8[0].controls}));
+  expect(flight.selected).toBe(false); expect(flight.endless).toBe(true); expect(flight.gates.length).toBeGreaterThan(0);
+  expect(flight.controls).toContain('release to fall');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#endless-play')).toBeVisible();
+  expect(errors).toEqual([]);
+});
 test('AI key stays out of persistent storage and request URLs; replies render safely', async ({page}) => {
   let request;
   await page.route('https://generativelanguage.googleapis.com/**',route=>{request=route.request();return route.fulfill({json:{candidates:[{content:{parts:[{text:'<img src=x onerror=alert(1)>\n```js\nconst x = 1;\n```'}]}}]}});});
@@ -90,10 +107,10 @@ test('phone layout stays within the screen on the homepage and both hidden tabs'
   await page.getByRole('tab',{name:/Think/}).click(); expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
-test('all 24 relocated modules can start without script or canvas errors', async ({page}) => {
+test('all 25 arcade games can start without script or canvas errors', async ({page}) => {
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto('/site/notes/');
-  for(let index=0;index<24;index++) {
+  for(let index=0;index<25;index++) {
     await page.locator('.game-card').nth(index).click();
     await expect(page.locator('#game-canvas')).toBeVisible();
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
