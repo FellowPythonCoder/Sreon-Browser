@@ -67,7 +67,7 @@ const GD_THEMES = [
 ];
 
 const GAME_GD = {
-  id: 'geodash', name: 'Geometry Rush', emoji: '🔺', hasEndless: true,
+  id: 'geodash', name: 'Geometry Rush', emoji: '🔺',
   desc: 'Cube, spaceship, wave. Ten patterned levels and an endless ascent.',
   controls: 'Space / tap: jump · Hold: repeat jumps or fly · 4: autoplay on/off · Escape: levels. Square platforms are safe.',
   w: 760, h: 460,

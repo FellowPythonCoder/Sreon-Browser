@@ -53,12 +53,7 @@ test('only public files are served; old game paths and source files are unavaila
   const response = await fetch(base+'/site/notes/');
   assert.equal(response.status,200);
   assert.match(response.headers.get('x-robots-tag'),/noindex/);
-  const html = await response.text();
-  assert.match(html,/module-07.js/);
-  assert.match(html,/module-08.js/);
-  const game = await fetch(base+'/site/assets/modules/module-08.js');
-  assert.equal(game.status,200);
-  assert.match(await game.text(),/GAME_PACK_8/);
+  assert.match(await response.text(),/module-07.js/);
 });
 
 test('health endpoint verifies the engine and does not assert provider reachability', async t => {

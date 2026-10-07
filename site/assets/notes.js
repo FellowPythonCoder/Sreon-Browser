@@ -1,9 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
-const games = Array.from({ length: 8 }, (_, index) => window[`GAME_PACK_${index+1}`] || []).flat();
-games.sort((a, b) => {
-  const priority = (game) => game.id === 'geodash' ? 0 : game.id === 'spacewaves' ? 1 : 2;
-  return priority(a) - priority(b);
-});
+const games = Array.from({ length: 7 }, (_, index) => window[`GAME_PACK_${index+1}`] || []).flat();
+games.sort((a, b) => Number(b.id === 'geodash')-Number(a.id === 'geodash'));
 let running = null;
 let announcement = '';
 function renderGames() {
@@ -13,11 +10,11 @@ function renderGames() {
   $('#game-grid').replaceChildren();
   $('#no-games').hidden = visible.length > 0;
   for (const game of visible) {
-    const card = document.createElement('button'); card.type = 'button'; card.className = `game-card${['geodash', 'spacewaves'].includes(game.id) ? ' featured' : ''}`;
-    const symbol = document.createElement('span'); symbol.className = 'game-symbol'; symbol.textContent = game.librarySymbol || (game.id === 'geodash' ? '◇' : game.name.slice(0, 1)); symbol.setAttribute('aria-hidden', 'true');
+    const card = document.createElement('button'); card.type = 'button'; card.className = `game-card${game.id === 'geodash' ? ' featured' : ''}`;
+    const symbol = document.createElement('span'); symbol.className = 'game-symbol'; symbol.textContent = game.id === 'geodash' ? '◇' : game.name.slice(0, 1); symbol.setAttribute('aria-hidden', 'true');
     const arrow = document.createElement('span'); arrow.className = 'card-arrow'; arrow.textContent = '↗'; arrow.setAttribute('aria-hidden', 'true');
     const title = document.createElement('h3'); title.textContent = game.name;
-    const description = document.createElement('p'); description.textContent = game.id === 'geodash' ? 'Cube → spaceship → wave. Ten levels + endless. Press 4 for autoplay.' : game.libraryDescription || `Best score ${Arcade.Scores.get(game.id)} · Pick up and play`;
+    const description = document.createElement('p'); description.textContent = game.id === 'geodash' ? 'Cube → spaceship → wave. Ten levels + endless. Press 4 for autoplay.' : `Best score ${Arcade.Scores.get(game.id)} · Pick up and play`;
     card.append(symbol, arrow, title, description);
     card.addEventListener('click', () => startGame(game, card));
     $('#game-grid').append(card);
@@ -29,14 +26,14 @@ function startGame(game, card) {
   $('#play-name').textContent = game.name;
   $('#play-controls').textContent = game.controls || 'Follow the on-screen instructions.';
   $('#auto-play').hidden = game.id !== 'geodash';
-  $('#endless-play').hidden = !game.hasEndless;
+  $('#endless-play').hidden = game.id !== 'geodash';
   announcement = '';
   running = Arcade.start(game, $('#game-canvas'), (state) => {
     $('#play-score').textContent = `SCORE ${Math.floor(state.score)}${state.autoPlay ? ' · AUTOPLAY' : ''}`;
     $('#auto-play').setAttribute('aria-pressed', String(Boolean(state.autoPlay)));
     $('#auto-play').textContent = state.autoPlay ? 'Take over · 4' : 'Autoplay · 4';
     $('#auto-play').disabled = Boolean(state.selMode);
-    $('#endless-play').hidden = !game.hasEndless || !state.selMode;
+    $('#endless-play').hidden = game.id !== 'geodash' || !state.selMode;
     if (state.completed && state.completed !== announcement) {
       announcement = state.completed;
       $('#play-announcement').textContent = announcement;
