@@ -7,6 +7,8 @@ import { inspectEngine } from './backend.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const mime = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.png':'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.woff2':'font/woff2' };
+const siteCsp = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com https://cdn.jsdelivr.net https://storage.googleapis.com data:; worker-src 'self' blob:; media-src 'self' blob:; frame-src https: http:; object-src 'none'; base-uri 'none'; form-action 'self'";
+const spaceWavesCsp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://spacewaves.io https://slope3.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://assets.msn.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://spacewaves.io https://slope3.com; img-src 'self' https: data: blob:; font-src 'self' https: data:; connect-src 'self' https://spacewaves.io https://slope3.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://assets.msn.com https://static.cloudflareinsights.com data: blob:; worker-src 'self' blob: https://spacewaves.io https://slope3.com; media-src 'self' https: blob: data:; frame-src https:; object-src 'none'; base-uri https://spacewaves.io; form-action https://spacewaves.io; frame-ancestors 'self'";
 function json(response, status, data) {
   response.writeHead(status, { 'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store' });
   response.end(JSON.stringify(data));
@@ -101,13 +103,14 @@ export function createWebsite({ clientFactory = () => new SearchEngine(), allowe
     }
     if (!['GET','HEAD'].includes(request.method)) { json(response, 405, { error:'Method not allowed' }); return; }
     if (pathname === '/site/notes') { response.writeHead(308, { Location:'/site/notes/' }); response.end(); return; }
-    const relative = pathname === '/' || pathname === '/index.html' ? 'index.html' : pathname === '/site/notes/' ? 'site/notes/index.html' : pathname.startsWith('/site/assets/') ? pathname.slice(1) : null;
+    if (pathname === '/site/notes/space-waves') { response.writeHead(308, { Location:'/site/notes/space-waves/' }); response.end(); return; }
+    const relative = pathname === '/' || pathname === '/index.html' ? 'index.html' : pathname === '/site/notes/' ? 'site/notes/index.html' : pathname === '/site/notes/space-waves/' ? 'site/notes/space-waves.html' : pathname.startsWith('/site/assets/') ? pathname.slice(1) : null;
     if (!relative || relative.includes('\\') || relative.split('/').some(part => part === '..' || part.startsWith('.')) || !mime[extname(relative)]) { json(response, 404, { error:'Not found' }); return; }
     try {
       const file = await realpath(resolve(root, relative));
       if (file !== resolve(root, relative) || !file.startsWith(root.endsWith(sep) ? root : root+sep) || !(await stat(file)).isFile()) throw new Error('Not found');
       const content = await readFile(file);
-      response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com https://cdn.jsdelivr.net https://storage.googleapis.com data:; worker-src 'self' blob:; media-src 'self' blob:; frame-src https: http:; object-src 'none'; base-uri 'none'; form-action 'self'");
+      response.setHeader('Content-Security-Policy', relative === 'site/notes/space-waves.html' ? spaceWavesCsp : siteCsp);
       response.setHeader('Cache-Control', 'no-cache');
       if (relative.startsWith('site/notes/') || relative.startsWith('site/assets/modules/')) response.setHeader('X-Robots-Tag','noindex, nofollow, noarchive');
       response.writeHead(200, { 'Content-Type':mime[extname(file)], 'Content-Length':content.length });

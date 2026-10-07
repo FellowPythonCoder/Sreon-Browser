@@ -54,6 +54,11 @@ test('only public files are served; old game paths and source files are unavaila
   assert.equal(response.status,200);
   assert.match(response.headers.get('x-robots-tag'),/noindex/);
   assert.match(await response.text(),/module-07.js/);
+  const spaceWaves = await fetch(base+'/site/notes/space-waves/');
+  assert.equal(spaceWaves.status,200);
+  assert.match(spaceWaves.headers.get('content-security-policy'),/slope3\.com/);
+  assert.match(spaceWaves.headers.get('x-robots-tag'),/noindex/);
+  assert.match(await spaceWaves.text(),/Space Waves/);
 });
 
 test('health endpoint verifies the engine and does not assert provider reachability', async t => {

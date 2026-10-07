@@ -12,7 +12,8 @@ test('minimal homepage has a single colon entrance and no download links', async
   await page.reload(); await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   await page.locator('.quiet-colon').click();
   await expect(page.getByRole('heading',{name:'Off the clock.'})).toBeVisible();
-  await expect(page.locator('.game-card')).toHaveCount(24);
+  await expect(page.locator('.game-card')).toHaveCount(25);
+  await expect(page.getByRole('button',{name:/Space Waves/})).toBeVisible();
   expect(errors).toEqual([]);
 });
 test('try area uses API data, safely renders results, and paginates', async ({page}) => {
@@ -57,6 +58,18 @@ test('Geometry Rush starts, 4 enables autoplay, and the button returns control',
   await page.keyboard.press('4'); await expect(page.locator('#auto-play')).toHaveAttribute('aria-pressed','true');
   await page.locator('#auto-play').click(); await expect(page.locator('#auto-play')).toHaveAttribute('aria-pressed','false');
   await page.locator('#exit-game').click(); await expect(page.locator('#library')).toBeVisible(); expect(errors).toEqual([]);
+});
+test('Space Waves card opens the supplied HTML in an isolated game frame', async ({page}) => {
+  await page.goto('/site/notes/');
+  await page.getByRole('button',{name:/Space Waves/}).click();
+  const frame=page.locator('#html-game-frame');
+  await expect(frame).toBeVisible();
+  await expect(frame).toHaveAttribute('src','/site/notes/space-waves/');
+  expect(await frame.getAttribute('sandbox')).not.toContain('allow-same-origin');
+  await expect(page.locator('#game-canvas')).toBeHidden();
+  await page.locator('#exit-game').click();
+  await expect(page.locator('#library')).toBeVisible();
+  await expect(frame).toBeHidden();
 });
 test('AI key stays out of persistent storage and request URLs; replies render safely', async ({page}) => {
   let request;

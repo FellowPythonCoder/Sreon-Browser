@@ -1,7 +1,9 @@
 const $ = (selector) => document.querySelector(selector);
 const games = Array.from({ length: 7 }, (_, index) => window[`GAME_PACK_${index+1}`] || []).flat();
+games.push({ id:'spacewaves-html', name:'Space Waves', librarySymbol:'✦', libraryDescription:'33 levels + endless · Open the supplied web game.', page:'/site/notes/space-waves/' });
 games.sort((a, b) => Number(b.id === 'geodash')-Number(a.id === 'geodash'));
 let running = null;
+let htmlGameActive = false;
 let announcement = '';
 function renderGames() {
   const filter = $('#game-filter').value.trim().toLowerCase();
@@ -11,16 +13,35 @@ function renderGames() {
   $('#no-games').hidden = visible.length > 0;
   for (const game of visible) {
     const card = document.createElement('button'); card.type = 'button'; card.className = `game-card${game.id === 'geodash' ? ' featured' : ''}`;
-    const symbol = document.createElement('span'); symbol.className = 'game-symbol'; symbol.textContent = game.id === 'geodash' ? '◇' : game.name.slice(0, 1); symbol.setAttribute('aria-hidden', 'true');
+    const symbol = document.createElement('span'); symbol.className = 'game-symbol'; symbol.textContent = game.librarySymbol || (game.id === 'geodash' ? '◇' : game.name.slice(0, 1)); symbol.setAttribute('aria-hidden', 'true');
     const arrow = document.createElement('span'); arrow.className = 'card-arrow'; arrow.textContent = '↗'; arrow.setAttribute('aria-hidden', 'true');
     const title = document.createElement('h3'); title.textContent = game.name;
-    const description = document.createElement('p'); description.textContent = game.id === 'geodash' ? 'Cube → spaceship → wave. Ten levels + endless. Press 4 for autoplay.' : `Best score ${Arcade.Scores.get(game.id)} · Pick up and play`;
+    const description = document.createElement('p'); description.textContent = game.id === 'geodash' ? 'Cube → spaceship → wave. Ten levels + endless. Press 4 for autoplay.' : game.libraryDescription || `Best score ${Arcade.Scores.get(game.id)} · Pick up and play`;
     card.append(symbol, arrow, title, description);
-    card.addEventListener('click', () => startGame(game, card));
+    card.addEventListener('click', () => game.page ? startHTMLGame(game) : startGame(game, card));
     $('#game-grid').append(card);
   }
 }
+function startHTMLGame(game) {
+  Arcade.stop(); running = null; htmlGameActive = true;
+  $('#library').hidden = true;
+  $('#player').hidden = false;
+  $('#play-name').textContent = game.name;
+  $('#play-score').textContent = '';
+  $('#play-controls').textContent = 'The supplied game HTML runs in a sandboxed frame. Select “All games” to return.';
+  $('#auto-play').hidden = true;
+  $('#endless-play').hidden = true;
+  $('#game-canvas').hidden = true;
+  const frame = $('#html-game-frame');
+  frame.title = `${game.name} game`;
+  frame.src = game.page;
+  frame.hidden = false;
+}
 function startGame(game, card) {
+  htmlGameActive = false;
+  const frame = $('#html-game-frame');
+  frame.src = 'about:blank'; frame.hidden = true;
+  $('#game-canvas').hidden = false;
   $('#library').hidden = true;
   $('#player').hidden = false;
   $('#play-name').textContent = game.name;
@@ -42,7 +63,10 @@ function startGame(game, card) {
   $('#game-canvas').focus();
 }
 function exitGame() {
-  Arcade.stop(); running = null;
+  Arcade.stop(); running = null; htmlGameActive = false;
+  const frame = $('#html-game-frame');
+  frame.src = 'about:blank'; frame.hidden = true;
+  $('#game-canvas').hidden = false;
   $('#player').hidden = true; $('#library').hidden = false;
   renderGames();
   $('#game-filter').focus();
@@ -54,7 +78,7 @@ $('#game-filter').addEventListener('input', renderGames);
 for (const name of ['play', 'chat']) {
   const tab = $(`#${name}-tab`);
   tab.addEventListener('click', () => {
-    if (running) exitGame();
+    if (running || htmlGameActive) exitGame();
     for (const other of ['play', 'chat']) {
       $(`#${other}-tab`).setAttribute('aria-selected', String(name === other));
       $(`#${other}-tab`).tabIndex = name === other ? 0 : -1;
