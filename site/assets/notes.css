@@ -30,3 +30,8 @@
 .lab-canvas:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
 @media(max-width:900px){.lab-grid{grid-template-columns:1fr}.lab-results{max-height:none}.lab-canvas{height:52vh}}
 @media(max-width:600px){.lab-canvas{height:46vh}.lab-chip-text{max-width:200px}}
+.lab-table-wrap{overflow-x:auto;margin:6px 0 2px;border:1px solid var(--line);border-radius:8px}
+.lab-table{border-collapse:collapse;width:100%;font-size:12px;line-height:1.5}
+.lab-table th,.lab-table td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.lab-table th{color:var(--purple);font-weight:500;background:var(--wash)}
+.lab-table tr:last-child td{border-bottom:0}

@@ -1505,16 +1505,441 @@ function analyzeExpression(raw, ctx, result) {
   describeExplicit(ast, result);
 }
 
+/* ---------------- tables ---------------- */
+const TABLE_LETTERS = 'ABCDFGHIJKLMNOPQRSTUVWXYZ'; // E is skipped so the letter e stays the constant
+const NUMBER_CELL = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i;
+const SEPARATOR_CELL = /^:?-{2,}:?$/;
+
+function cellValue(raw) {
+  const t = String(raw).trim().replace(/^\$/, '').replace(/,/g, '').replace(/%$/, '');
+  return NUMBER_CELL.test(t) ? Number(t) : String(raw).trim();
+}
+
+function tableKind(line) {
+  if (line.includes('=')) return null;
+  const pipes = (line.match(/\|/g) || []).length;
+  if (pipes >= 2 && (pipes >= 3 || (line.startsWith('|') && line.endsWith('|')))) return 'pipe';
+  if (line.includes('\t') && line.split('\t').length >= 2) return 'tab';
+  if (!/[()<>;]/.test(line) && line.includes(',') && line.split(',').every((c) => c.trim().split(/\s+/).length <= 4)) return 'csv';
+  return null;
+}
+
+function splitRow(line, kind) {
+  if (kind === 'pipe') {
+    let cells = line.split('|');
+    if (cells[0].trim() === '') cells = cells.slice(1);
+    if (cells.length && cells[cells.length - 1].trim() === '') cells = cells.slice(0, -1);
+    return cells.map((c) => c.trim());
+  }
+  return (kind === 'tab' ? line.split('\t') : line.split(',')).map((c) => c.trim());
+}
+
+function buildTable(rawRows, kind) {
+  const rows = rawRows.filter((r) => r.length && !r.every((c) => c === '' || SEPARATOR_CELL.test(c)));
+  if (!rows.length) return null;
+  const hasHeader = rows.length >= 2 && rows[0].some((c) => c !== '' && typeof cellValue(c) === 'string');
+  if (kind === 'csv' && !hasHeader) return null;
+  const width = Math.max(...rows.map((r) => r.length));
+  if (width < 2) return null;
+  const data = hasHeader ? rows.slice(1) : rows;
+  const cols = [];
+  for (let j = 0; j < width; j++) {
+    const letter = TABLE_LETTERS[j];
+    if (!letter) fail('Tables can have up to 22 columns.');
+    const header = hasHeader ? (rows[0][j] || '') : '';
+    const name = header || `Column ${letter}`;
+    const values = data.map((r) => cellValue(r[j] ?? ''));
+    const numeric = values.some((v) => typeof v === 'number') && values.every((v) => typeof v === 'number' || v === '');
+    cols.push({ letter, name, label: `${letter} · ${name}`, numeric, values });
+  }
+  return { cols, nrows: data.length, result: null };
+}
+
+const dec = (v) => {
+  const r = Math.round(v * 1e9) / 1e9;
+  return (Number.isInteger(r) ? String(r) : String(Number(r.toPrecision(6)))).replace('-', MINUS);
+};
+const showCell = (v) => (typeof v === 'number' ? (Number.isFinite(v) ? dec(v) : '—') : v);
+const displayTable = (table) => ({
+  headers: table.cols.map((c) => c.label),
+  rows: Array.from({ length: table.nrows }, (_, i) => table.cols.map((c) => showCell(c.values[i]))),
+});
+
+function resolveColumn(table, raw) {
+  const key = String(raw).trim().toLowerCase().replace(/^(?:the\s+|column\s+)/, '').replace(/\s+/g, ' ');
+  if (!key) return null;
+  if (key.length === 1) {
+    const byLetter = table.cols.find((c) => c.letter.toLowerCase() === key);
+    if (byLetter) return byLetter;
+  }
+  const stem = (s) => s.toLowerCase().trim().replace(/s$/, '');
+  return table.cols.find((c) => stem(c.name) === stem(key)) || null;
+}
+
+const STAT_NAMES = { sum: 'sum', total: 'sum', mean: 'mean', average: 'mean', avg: 'mean', max: 'max', maximum: 'max', min: 'min', minimum: 'min', median: 'median', count: 'count', range: 'range' };
+function statValue(kind, values) {
+  const nums = values.filter((v) => typeof v === 'number' && Number.isFinite(v)).sort((a, b) => a - b);
+  if (!nums.length) fail('There are no numbers in this column yet.');
+  const sum = nums.reduce((s, v) => s + v, 0);
+  const mid = nums.length >> 1;
+  const median = nums.length % 2 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+  return { sum, mean: sum / nums.length, max: nums[nums.length - 1], min: nums[0], median, count: nums.length, range: nums[nums.length - 1] - nums[0] }[kind];
+}
+function statsText(values) {
+  return ['count', 'sum', 'mean', 'median', 'min', 'max'].map((k) => {
+    try { return `${k} ${dec(statValue(k, values))}`; } catch { return null; }
+  }).filter(Boolean).join(' · ');
+}
+
+function rowsWithBoth(xc, yc) {
+  const idx = [];
+  for (let i = 0; i < xc.values.length; i++) {
+    if (Number.isFinite(xc.values[i]) && Number.isFinite(yc.values[i])) idx.push(i);
+  }
+  return idx;
+}
+
+function fitLine(xs, ys) {
+  const n = xs.length;
+  if (n < 2) return null;
+  const mx = xs.reduce((s, v) => s + v, 0) / n, my = ys.reduce((s, v) => s + v, 0) / n;
+  let sxx = 0, sxy = 0, syy = 0;
+  for (let i = 0; i < n; i++) {
+    sxx += (xs[i] - mx) ** 2; sxy += (xs[i] - mx) * (ys[i] - my); syy += (ys[i] - my) ** 2;
+  }
+  if (sxx < 1e-12) return null;
+  const m = sxy / sxx, b = my - m * mx;
+  let maxRes = 0;
+  for (let i = 0; i < n; i++) maxRes = Math.max(maxRes, Math.abs(ys[i] - (m * xs[i] + b)));
+  const scale = Math.max(1, ...ys.map((v) => Math.abs(v)));
+  const r2 = syy < 1e-12 ? 1 : (sxy * sxy) / (sxx * syy);
+  return { m, b, r2, exact: maxRes < 1e-9 * scale };
+}
+
+function linearText(yName, xName, f) {
+  const { m, b } = f;
+  if (Math.abs(m) < 1e-12) return `${yName} = ${dec(b)}`;
+  const coef = Math.abs(m - 1) < 1e-12 ? '' : Math.abs(m + 1) < 1e-12 ? MINUS : `${dec(m)}·`;
+  const tail = Math.abs(b) < 1e-12 ? '' : ` ${b < 0 ? MINUS : '+'} ${dec(Math.abs(b))}`;
+  return `${yName} = ${coef}${xName}${tail}`;
+}
+
+function colList(table) { return table.cols.map((c) => c.label).join(', '); }
+
+function analyzeTable(table, ctx, result) {
+  ctx.table = table;
+  table.result = result;
+  result.kind = 'Table';
+  result.source = `Table · ${table.nrows} row${table.nrows === 1 ? '' : 's'} × ${table.cols.length} column${table.cols.length === 1 ? '' : 's'}`;
+  result.table = displayTable(table);
+  const numeric = table.cols.filter((c) => c.numeric);
+  result.answers.push(`${numeric.length} of ${table.cols.length} column${table.cols.length === 1 ? '' : 's'} numeric. Ask about them, for example: sum of ${numeric[0] ? numeric[0].name : 'a column'}.`);
+  for (const c of numeric) result.answers.push(`${c.name}: ${statsText(c.values)}`);
+  if (numeric.length < 2) { result.notes.push('Add a second numeric column to fit a line.'); return; }
+  const xc = numeric[0];
+  for (const yc of numeric.slice(1)) {
+    const idx = rowsWithBoth(xc, yc);
+    const xs = idx.map((i) => xc.values[i]), ys = idx.map((i) => yc.values[i]);
+    const fit = fitLine(xs, ys);
+    if (!fit) { result.notes.push(`${yc.name} vs ${xc.name}: the ${xc.name} values are all the same, so no line can be fitted.`); continue; }
+    result.answers.push(`${linearText(yc.name, xc.name, fit)} ${fit.exact ? '(exact for every row)' : `(best fit · R² = ${approx(fit.r2)})`}`);
+    result.series.push({ kind: 'points', pts: xs.map((x, k) => ({ x, y: ys[k] })), label: `${yc.name} vs ${xc.name}` });
+    result.series.push({ kind: 'line', m: fit.m, b: fit.b, label: `${yc.name} fit`, dashed: true });
+  }
+}
+
+function analyzeTableQuery(s, ctx, result) {
+  const table = ctx.table;
+  let m = /^(sum|total|mean|average|avg|max|maximum|min|minimum|median|count|range)\s+(?:of\s+)?([a-z][a-z ]*)$/.exec(s);
+  if (m) {
+    const col = resolveColumn(table, m[2]);
+    if (!col) fail(`I can't find a column called “${m[2].trim()}”. Columns: ${colList(table)}.`);
+    const stat = STAT_NAMES[m[1]];
+    if (!col.numeric) fail(`${col.name} is text, so it has no ${stat}.`);
+    result.kind = 'Table · statistic';
+    result.answers.push(`${stat} of ${col.name} = ${dec(statValue(stat, col.values))}`);
+    return true;
+  }
+  m = /^(?:(?:value|find|what is|what's)\s+(?:of\s+)?)?([a-z][a-z ]*?)\s+(?:when|at|where|if|for)\s+([a-z][a-z ]*?)\s*=\s*([+-]?\d+(?:\.\d+)?)$/.exec(s);
+  if (m) {
+    const target = resolveColumn(table, m[1]), given = resolveColumn(table, m[2]);
+    if (!target || !given) fail(`I can't find a column called “${(!target ? m[1] : m[2]).trim()}”. Columns: ${colList(table)}.`);
+    const v = Number(m[3]);
+    result.kind = 'Table · lookup';
+    const row = given.values.findIndex((x) => typeof x === 'number' && Math.abs(x - v) < 1e-9);
+    if (row >= 0) {
+      result.answers.push(`${target.name} when ${given.name} = ${dec(v)}: ${showCell(target.values[row])}`);
+      result.notes.push('Found in the table.');
+      return true;
+    }
+    const idx = rowsWithBoth(given, target);
+    const fit = fitLine(idx.map((i) => given.values[i]), idx.map((i) => target.values[i]));
+    if (!fit) fail(`There are not enough numeric rows to predict ${target.name} from ${given.name}.`);
+    const pred = fit.m * v + fit.b;
+    result.answers.push(`${target.name} when ${given.name} = ${dec(v)}: ${dec(pred)}`);
+    const line = linearText(target.name, given.name, fit);
+    result.notes.push(fit.exact ? `Not in the table. Every row follows ${line}, so this is exact.` : `Not in the table. Predicted from the best-fit line ${line} (R² = ${approx(fit.r2)}).`);
+    result.series.push({ kind: 'marks', label: `${target.name} when ${given.name}`, pts: [{ x: v, y: pred }] });
+    return true;
+  }
+  return false;
+}
+
+function analyzeDerivedColumn(s, ctx, result) {
+  const table = ctx.table;
+  const m = /^([a-z])\s*=\s*(.+)$/.exec(s);
+  if (!m) return false;
+  const ast = parseExpr(m[2]);
+  const refs = [...freeVars(ast)];
+  const colRefs = refs.filter((v) => table.cols.some((c) => c.letter.toLowerCase() === v));
+  if (!colRefs.length) return false;
+  const unknown = refs.filter((v) => !colRefs.includes(v) && !(v in CONST));
+  if (unknown.length) fail(`A column formula uses column letters (${table.cols.map((c) => c.letter).join(', ')}) and numbers. “${unknown[0]}” is not a column.`);
+  for (const v of colRefs) {
+    const col = table.cols.find((c) => c.letter.toLowerCase() === v);
+    if (!col.numeric) fail(`${col.name} is text, so it cannot be used in a formula.`);
+  }
+  const letter = m[1].toUpperCase();
+  if (letter === 'E') fail('Column E is skipped, so the letter e stays the constant e.');
+  if (table.cols.some((c) => c.letter === letter)) fail(`Column ${letter} already exists.`);
+  const values = [];
+  for (let i = 0; i < table.nrows; i++) {
+    let node = ast;
+    let ok = true;
+    for (const v of colRefs) {
+      const val = table.cols.find((c) => c.letter.toLowerCase() === v).values[i];
+      if (typeof val !== 'number' || !Number.isFinite(val)) { ok = false; break; }
+      node = subst(node, v, num(val));
+    }
+    if (!ok) { values.push(NaN); continue; }
+    const p = prep(node, ctx);
+    values.push(freeVars(p).size ? NaN : compile(p)(0, 0, 0));
+  }
+  const formula = m[2].trim();
+  table.cols.push({ letter, name: formula, label: `${letter} = ${formula.toUpperCase()}`, numeric: true, values });
+  if (table.result) table.result.table = displayTable(table);
+  result.kind = 'Table · new column';
+  result.answers.push(`Added column ${letter} = ${formula.toUpperCase()}: ${values.map(showCell).join(', ')}`);
+  result.table = displayTable(table);
+  return true;
+}
+
+/* ---------------- word problems (linear models) ---------------- */
+const MATH_WORDS = new Set(['derivative', 'differentiate', 'diff', 'integral', 'integrate', 'limit', 'lim', 'factor', 'expand', 'simplify', 'evaluate', 'eval', 'solve', 'points', 'point', 'data', 'from', 'to', 'of', 'at', 'when', 'for', 'and', 'pi', 'theta', 'inf', 'tau', 'value']);
+const OUTPUT_WORDS = [['cost', 'C'], ['price', 'P'], ['total', 'T'], ['revenue', 'R'], ['profit', 'P'], ['earnings', 'E'], ['pay', 'P'], ['charge', 'C'], ['fee', 'F'], ['amount', 'A'], ['value', 'V']];
+const OUTPUT_RE = new RegExp(`\\b(?:${OUTPUT_WORDS.map(([w]) => w).join('|')})`);
+const INPUT_RE = /\b(?:hours?|hrs?|days?|weeks?|months?|miles?|items?|units?|people|minutes?|tickets?|pieces?|visits?|jobs?|number|quantity|count)\b/;
+const QUESTION_RE = /\b(?:how much|how many|how long|find|determine|calculate|compute|what is|what's|what will|solve|evaluate)\b/i;
+const FIXED_RE = /\b(?:base|fee|fixed|flat|initial|setup|set-up|service|call|deposit|minimum|starting|start|upfront|one-time|trip)\b/i;
+const NEG_RE = /\b(?:less|minus|discount|off|subtract|reduc\w*|decreas\w*|deduct\w*|credit)\b/i;
+const RATE_RE = /^\s*(?:(less|minus|off)\s+)?(?:dollars?|usd)?\s*(?:per|each|every|for each)\s+([a-z]+)|^\s*(?:dollars?)?\s*\/\s*([a-z]+)/i;
+const RATE_A_RE = /^\s*(?:dollars?)?\s*an?\s+([a-z]+)/i;
+const UNIT_RE = /^\s*-?\s*([a-z]+)/i;
+const NOT_UNIT = new Set(['and', 'or', 'to', 'of', 'for', 'the', 'a', 'an', 'per', 'dollars', 'dollar', 'is', 'are', 'in', 'on', 'at', 'with', 'plus', 'by']);
+const PAIR_RE = /(\$\s?)?(\d[\d,]*(?:\.\d+)?)\s*(?:dollars?)?\s+(?:for|in|over|on)\s+(\d+(?:\.\d+)?)[ -]?([a-z]+)/gi;
+
+function isProse(line) {
+  const words = (line.toLowerCase().match(/[a-z]{2,}/g) || []).filter((w) => !MATH_WORDS.has(w) && !NAMES.includes(w));
+  return words.length >= 4;
+}
+
+function wordClauses(flat) {
+  const out = [];
+  for (const sm of flat.matchAll(/[^.?!;]+[.?!;]?/g)) {
+    const start = sm.index, text = sm[0];
+    let last = 0;
+    for (const cm of text.matchAll(/,\s+and\s+|,\s+(?=(?:find|determine|calculate|compute|how|what)\b)/gi)) {
+      out.push({ start: start + last, end: start + cm.index, text: text.slice(last, cm.index) });
+      last = cm.index + cm[0].length;
+    }
+    out.push({ start: start + last, end: start + text.length, text: text.slice(last) });
+  }
+  return out.filter((c) => c.text.trim()).map((c) => ({ ...c, question: QUESTION_RE.test(c.text) }));
+}
+
+const unitKey = (u) => String(u || '').toLowerCase().replace(/^hrs?$/, 'hour').replace(/s$/, '');
+const pluralize = (unit, n) => { const base = String(unit || 'unit').replace(/s$/, ''); return n === 1 ? base : `${base}s`; };
+function fmtMoney(v) {
+  const r = Math.round(v * 100) / 100;
+  const body = Math.abs(r).toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(r) ? 0 : 2, maximumFractionDigits: 2 });
+  return `${r < 0 ? MINUS : ''}$${body}`;
+}
+
+function analyzeWordProblem(text, ctx, result) {
+  const flat = text.replace(/\s+/g, ' ').trim();
+  const lower = flat.toLowerCase();
+  const clauses = wordClauses(flat);
+  const clauseAt = (i) => clauses.find((c) => i >= c.start && i < c.end) || clauses[clauses.length - 1];
+
+  const pairs = [];
+  const consumed = [];
+  for (const m of flat.matchAll(PAIR_RE)) {
+    if (clauseAt(m.index).question) continue;
+    pairs.push({ money: Number(m[2].replace(/,/g, '')), x: Number(m[3]), unit: m[4].toLowerCase() });
+    consumed.push([m.index, m.index + m[0].length]);
+  }
+
+  const rates = [], intercepts = [], targets = [], inputs = [];
+  for (const m of flat.matchAll(/(\$\s?)?(\d[\d,]*(?:\.\d+)?)/g)) {
+    const i = m.index;
+    if (consumed.some(([a, b]) => i >= a && i < b)) continue;
+    const clause = clauseAt(i);
+    const money = Boolean(m[1]);
+    const value = Number(m[2].replace(/,/g, ''));
+    const follow = flat.slice(i + m[0].length, clause.end);
+    const before = flat.slice(Math.max(clause.start, i - 30), i);
+    if (clause.question) {
+      if (money) { targets.push(value); continue; }
+      const u = UNIT_RE.exec(follow);
+      inputs.push({ value, unit: u && !NOT_UNIT.has(u[1].toLowerCase()) ? u[1].toLowerCase() : null });
+      continue;
+    }
+    const rateM = RATE_RE.exec(follow);
+    const rateA = !rateM && money ? RATE_A_RE.exec(follow) : null;
+    if (rateM) {
+      rates.push({ value, unit: (rateM[2] || rateM[3]).toLowerCase(), neg: Boolean(rateM[1]) || NEG_RE.test(before) });
+      continue;
+    }
+    if (rateA) {
+      rates.push({ value, unit: rateA[1].toLowerCase(), neg: NEG_RE.test(before) });
+      continue;
+    }
+    intercepts.push({ value, context: `${before} ${follow.slice(0, 30)}` });
+  }
+
+  let m, b, rateUnit = null;
+  if (pairs.length >= 2) {
+    const first = pairs[0];
+    const second = pairs.find((p) => p.x !== first.x);
+    if (!second) fail('The two prices use the same number of hours, so the slope cannot be found.');
+    m = (second.money - first.money) / (second.x - first.x);
+    b = first.money - m * first.x;
+    rateUnit = first.unit;
+    result.notes.push(`The rate comes from the two prices: ${fmtMoney(first.money)} for ${dec(first.x)} ${pluralize(first.unit, first.x)} and ${fmtMoney(second.money)} for ${dec(second.x)} ${pluralize(second.unit, second.x)}.`);
+  } else {
+    const moneyText = flat.includes('$') || /\b(?:cost|price|charge|fee|bill|pay)\b/i.test(flat);
+    if (!rates.length && !(moneyText && intercepts.length === 1)) fail('I could not find a rate such as “$50 per hour”, or two prices such as “$120 for 2 hours and $180 for 4 hours”.');
+    if (rates.length > 1) fail(`I found ${rates.length} rates. A linear model needs one rate, so write the problem with one input.`);
+    const keyed = intercepts.filter((c) => FIXED_RE.test(c.context));
+    const pool = keyed.length ? keyed : intercepts;
+    if (pool.length > 1) fail(`I found several amounts (${pool.map((p) => dec(p.value)).join(', ')}) and cannot tell which is the fixed charge. Label it, like “$25 base fee”.`);
+    if (rates.length) {
+      const r = rates[0];
+      m = (r.neg ? -1 : 1) * r.value;
+      rateUnit = r.unit;
+    } else {
+      m = 0;
+      rateUnit = null;
+      result.notes.push('There is no per-unit rate, so the total is the same for any amount of input.');
+    }
+    b = pool.length ? (NEG_RE.test(pool[0].context) ? -1 : 1) * pool[0].value : 0;
+  }
+
+  const outFound = OUTPUT_WORDS.find(([w]) => new RegExp(`\\b${w}`).test(lower));
+  let outPhrase = /\btotal\s+cost\b/.test(lower) ? 'total cost' : (outFound ? outFound[0] : 'value');
+  let outL = null, inL = null;
+  const unassigned = [];
+  for (const p of [...flat.matchAll(/\(\s*([A-Za-z])\s*\)/g)]) {
+    const context = lower.slice(Math.max(0, p.index - 40), p.index);
+    const letter = p[1];
+    if (!outL && OUTPUT_RE.test(context)) {
+      outL = letter;
+      const named = [...context.matchAll(/\b(cost|price|total|revenue|profit|earnings|pay|charge|fee|amount|value)\b/g)];
+      if (/\btotal\s+cost\s*$/.test(context.trimEnd())) outPhrase = 'total cost';
+      else if (named.length) outPhrase = named[named.length - 1][1];
+    }
+    else if (!inL && INPUT_RE.test(context)) inL = letter;
+    else unassigned.push(letter);
+  }
+  for (const letter of unassigned) {
+    if (!outL) outL = letter;
+    else if (!inL && letter !== outL) inL = letter;
+  }
+  if (!outL) outL = outFound ? outFound[1] : 'y';
+  if (!inL) inL = rateUnit ? rateUnit[0].toLowerCase() : 'x';
+  if (inL === outL) inL = outL.toLowerCase() === 'x' ? 'y' : 'x';
+  const moneyish = flat.includes('$') || /\b(?:cost|price|revenue|profit|earnings|pay|charge|fee|bill)\b/.test(lower);
+  const mny = (v) => (moneyish ? fmtMoney(v) : dec(v));
+
+  const constant = Math.abs(m) < 1e-12;
+  const eq = constant
+    ? `${outL} = ${dec(b)}`
+    : `${outL} = ${Math.abs(m - 1) < 1e-12 ? '' : Math.abs(m + 1) < 1e-12 ? MINUS : dec(m)}${inL}${Math.abs(b) < 1e-12 ? '' : ` ${b < 0 ? MINUS : '+'} ${dec(Math.abs(b))}`}`;
+  const chosen = inputs.find((i) => rateUnit && unitKey(i.unit) === unitKey(rateUnit)) || inputs.find((i) => i.unit) || inputs[0] || null;
+  const unitName = (chosen && chosen.unit) || rateUnit || 'unit';
+  result.kind = 'Word problem · linear model';
+  result.answers.push(`Linear equation: ${eq}`);
+  if (!constant) result.notes.push(`${mny(m)} is the rate: each extra ${pluralize(rateUnit, 1)} changes the ${outPhrase} by ${mny(Math.abs(m))}.`);
+  if (!constant && Math.abs(b) > 1e-12) result.notes.push(`${mny(b)} is the fixed starting amount, the value when ${inL} = 0.`);
+
+  let marks = null;
+  if (chosen && constant) {
+    result.answers.push(`So the ${outPhrase} is ${mny(b)} for any number of ${pluralize(unitName, 2)}.`);
+    marks = null;
+  } else if (chosen) {
+    const xv = chosen.value, yv = m * xv + b;
+    result.answers.push(`For ${inL} = ${dec(xv)}: ${outL} = ${dec(m)}(${dec(xv)})${Math.abs(b) < 1e-12 ? '' : ` ${b < 0 ? MINUS : '+'} ${dec(Math.abs(b))}`} = ${mny(yv)}`);
+    result.answers.push(`So for ${dec(xv)} ${pluralize(unitName, xv)}, the ${outPhrase} is ${mny(yv)}.`);
+    marks = { x: xv, y: yv };
+  } else if (targets.length && /\b(?:how many|how long)\b/.test(lower)) {
+    const T = targets[0];
+    const xv = (T - b) / m;
+    const numer = Math.abs(b) < 1e-12 ? mny(T) : `(${mny(T)} ${b < 0 ? '+' : MINUS} ${dec(Math.abs(b))})`;
+    result.answers.push(`${inL} = ${numer} / ${dec(m)} = ${dec(xv)}`);
+    result.answers.push(`So ${mny(T)} corresponds to ${dec(xv)} ${pluralize(unitName, xv)}.`);
+    marks = { x: xv, y: T };
+  } else {
+    result.notes.push(`Add a question with a value, like “how much for 8 ${pluralize(unitName, 8)}?”, to get a number.`);
+  }
+
+  const expr = constant ? `${b}` : `${m}*x${b < 0 ? '-' : '+'}${Math.abs(b)}`;
+  const ast = prep(parseExpr(expr), { params: new Map(), fns: new Map(), data: null });
+  result.series.push(explicitSeries(ast, eq));
+  if (marks) result.series.push({ kind: 'marks', label: eq, pts: [marks] });
+}
+
+/* ---------------- splitting a paste into units ---------------- */
+function splitUnits(text) {
+  const lines = String(text).split(/\r?\n/).map((l) => l.trim());
+  const units = [];
+  for (let i = 0; i < lines.length;) {
+    const src = lines[i];
+    if (!src || /^(#|\/\/|%)/.test(src)) { i++; continue; }
+    const kind = tableKind(src);
+    if (kind) {
+      let j = i;
+      const block = [];
+      while (j < lines.length && lines[j] && tableKind(lines[j]) === kind) block.push(lines[j++]);
+      const table = block.length >= 2 ? buildTable(block.map((l) => splitRow(l, kind)), kind) : null;
+      if (table) { units.push({ type: 'table', table, text: block.join('\n') }); i = j; continue; }
+    }
+    if (isProse(src)) {
+      let j = i;
+      const block = [];
+      while (j < lines.length && lines[j] && isProse(lines[j])) block.push(lines[j++]);
+      units.push({ type: 'prose', text: block.join(' ') });
+      i = j;
+      continue;
+    }
+    units.push({ type: 'line', text: src });
+    i++;
+  }
+  return units;
+}
+
 /* ---------------- running a whole paste ---------------- */
 function run(text) {
-  const ctx = { params: new Map(), fns: new Map(), data: null };
+  const ctx = { params: new Map(), fns: new Map(), data: null, table: null };
   const results = [];
-  for (const raw of String(text).split(/\r?\n/)) {
-    const source = raw.trim();
-    if (!source || /^(#|\/\/|%)/.test(source)) continue;
-    const result = { source, kind: '', answers: [], notes: [], series: [], error: '' };
+  for (const unit of splitUnits(text)) {
+    const result = { source: unit.type === 'table' ? '' : unit.text, kind: '', answers: [], notes: [], series: [], error: '' };
     try {
-      analyze(source, ctx, result);
+      if (unit.type === 'table') analyzeTable(unit.table, ctx, result);
+      else if (unit.type === 'prose') analyzeWordProblem(unit.text, ctx, result);
+      else {
+        const handled = ctx.table && (analyzeTableQuery(normalize(unit.text), ctx, result) || analyzeDerivedColumn(normalize(unit.text), ctx, result));
+        if (!handled) analyze(unit.text, ctx, result);
+      }
     } catch (err) {
       if (err instanceof MathError) result.error = err.message;
       else { result.error = 'That line could not be read. Check the notation, for example x^2 for x², sqrt(x), pi, or e.'; }
@@ -1548,6 +1973,15 @@ const SAMPLES = {
     'limit x->2 of (x^2 - 4)/(x - 2)',
     'f(x) = x^2 - 4',
     'f(3)',
+    'An electrician charges a $25 base service call fee plus $50 per hour of labor. Write a linear equation for the total cost (C) based on the number of hours worked (h), and find out how much an 8-hour job costs.',
+    '| hours | cost |',
+    '|---|---|',
+    '| 1 | 75 |',
+    '| 2 | 125 |',
+    '| 4 | 225 |',
+    'cost when hours = 6',
+    'sum of cost',
+    'd = 50a + 25',
   ].join('\n'),
   graph: [
     'y = sin(x)',
@@ -1560,7 +1994,7 @@ const SAMPLES = {
   ].join('\n'),
 };
 const HINTS = {
-  solve: 'One problem per line. Examples: 2x+3=11 · x^2-5x+6=0 · x^2+y^2=25 · 2x+y=7; x-y=2 · derivative of x^3 · integral from 0 to 1 of x^2 · factor … · limit x->0 of sin(x)/x. Anything you paste is graphed too.',
+  solve: 'One problem per line, or a word problem as a paragraph. Examples: 2x+3=11 · x^2-5x+6=0 · 2x+y=7; x-y=2 · integral from 0 to 1 of x^2 · limit x->0 of sin(x)/x. Add a table with | rows | or comma rows, then ask: sum of cost · cost when hours = 6.',
   graph: 'One graph per line. Examples: y = sin(x) · y > x^2 - 4 · x^2 + y^2 <= 9 · x = 2cos(t), y = 3sin(t) · r = 1 + cos(theta) · points: (0,1) (1,3). Type f(x) = … to name a function and reuse it.',
 };
 
@@ -1887,6 +2321,15 @@ function drawHover(g, geo, hover, sampled, theme) {
   g.restore();
 }
 
+const TABLE_TEMPLATE = '| hours | cost |\n|---|---|\n| 1 | 75 |\n| 2 | 125 |\n| 4 | 225 |';
+
+function renderTable(table) {
+  return h('div', { class: 'lab-table-wrap' },
+    h('table', { class: 'lab-table' },
+      h('thead', {}, h('tr', {}, table.headers.map((t) => h('th', { scope: 'col' }, t)))),
+      h('tbody', {}, table.rows.map((row) => h('tr', {}, row.map((c) => h('td', {}, String(c))))))));
+}
+
 function renderResults(root, results) {
   root.replaceChildren();
   if (!results.length) {
@@ -1898,6 +2341,7 @@ function renderResults(root, results) {
       h('p', { class: 'lab-kind' }, r.kind || (r.error ? 'Needs a fix' : 'Note')),
       h('h3', { class: 'lab-source' }, r.source),
       r.answers.map((a) => h('p', { class: 'lab-answer' }, a)),
+      r.table ? renderTable(r.table) : null,
       r.notes.map((n) => h('p', { class: 'lab-note' }, n)),
       r.error ? h('p', { class: 'lab-error' }, r.error) : null);
     root.append(card);
@@ -2066,8 +2510,20 @@ function mount(root, mode, options = {}) {
     h('h2', {}, title),
     h('span', {}, 'No AI · runs in this browser'));
   const hint = h('p', { class: 'lab-hint' }, HINTS[isSolve ? 'solve' : 'graph']);
+  const addTable = () => {
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? start;
+    const before = input.value.slice(0, start);
+    const insert = `${before && !before.endsWith('\n') ? '\n' : ''}${TABLE_TEMPLATE}\n`;
+    input.value = before + insert + input.value.slice(end);
+    const pos = (before + insert).length;
+    input.setSelectionRange(pos, pos);
+    input.focus();
+    run();
+  };
   const actions = h('div', { class: 'lab-actions' },
     h('button', { type: 'button', class: 'connect-button', onclick: run }, isSolve ? 'Solve & graph' : 'Graph it'),
+    h('button', { type: 'button', class: 'soft-button', onclick: addTable }, 'Add table'),
     h('button', { type: 'button', class: 'soft-button', onclick: () => { input.value = sample; run(); } }, 'Load examples'),
     h('button', { type: 'button', class: 'soft-button', onclick: () => { input.value = ''; run(); input.focus(); } }, 'Clear'));
   const left = h('div', { class: 'lab-side' }, hint, input, actions, status, results);
