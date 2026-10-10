@@ -12,7 +12,7 @@ test('minimal homepage has a single colon entrance and no download links', async
   await page.reload(); await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
   await page.locator('.quiet-colon').click();
   await expect(page.getByRole('heading',{name:'Off the clock.'})).toBeVisible();
-  await expect(page.locator('.game-card')).toHaveCount(25);
+  await expect(page.locator('.game-card')).toHaveCount(27);
   await expect(page.getByRole('button',{name:/Space Waves/})).toBeVisible();
   expect(errors).toEqual([]);
 });

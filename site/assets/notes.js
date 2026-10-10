@@ -1,9 +1,12 @@
 const $ = (selector) => document.querySelector(selector);
 const games = Array.from({ length: 7 }, (_, index) => window[`GAME_PACK_${index+1}`] || []).flat();
 games.push({ id:'spacewaves-html', name:'Space Waves', librarySymbol:'✦', libraryDescription:'33 levels + endless · Open the supplied web game.', page:'/site/notes/space-waves/' });
+games.push({ id:'problem-solver', name:'Problem Solver', librarySymbol:'∑', libraryDescription:'Paste problems · exact answers and graphs · No AI', lab:'solve' });
+games.push({ id:'graph-lab', name:'Graph Lab', librarySymbol:'∿', libraryDescription:'Paste equations or data · every curve plotted · No AI', lab:'graph' });
 games.sort((a, b) => Number(b.id === 'geodash')-Number(a.id === 'geodash'));
 let running = null;
 let htmlGameActive = false;
+let labActive = false;
 let announcement = '';
 function renderGames() {
   const filter = $('#game-filter').value.trim().toLowerCase();
@@ -18,9 +21,20 @@ function renderGames() {
     const title = document.createElement('h3'); title.textContent = game.name;
     const description = document.createElement('p'); description.textContent = game.id === 'geodash' ? 'Cube → spaceship → wave. Ten levels + endless. Press 4 for autoplay.' : game.libraryDescription || `Best score ${Arcade.Scores.get(game.id)} · Pick up and play`;
     card.append(symbol, arrow, title, description);
-    card.addEventListener('click', () => game.page ? startHTMLGame(game) : startGame(game, card));
+    card.addEventListener('click', () => game.lab ? startLab(game) : game.page ? startHTMLGame(game) : startGame(game, card));
     $('#game-grid').append(card);
   }
+}
+function startLab(game) {
+  Arcade.stop(); running = null; htmlGameActive = false; labActive = true;
+  const frame = $('#html-game-frame');
+  frame.src = 'about:blank'; frame.hidden = true;
+  $('#library').hidden = true;
+  $('#player').hidden = true;
+  const host = $('#lab');
+  host.hidden = false;
+  if (window.MathLab) window.MathLab.mount(host, game.lab, { onExit: exitGame });
+  host.querySelector('textarea')?.focus();
 }
 function startHTMLGame(game) {
   Arcade.stop(); running = null; htmlGameActive = true;
@@ -67,6 +81,11 @@ function exitGame() {
   const frame = $('#html-game-frame');
   frame.src = 'about:blank'; frame.hidden = true;
   $('#game-canvas').hidden = false;
+  if (labActive) {
+    labActive = false;
+    window.MathLab?.close();
+    $('#lab').replaceChildren(); $('#lab').hidden = true;
+  }
   $('#player').hidden = true; $('#library').hidden = false;
   renderGames();
   $('#game-filter').focus();
@@ -78,7 +97,7 @@ $('#game-filter').addEventListener('input', renderGames);
 for (const name of ['play', 'chat']) {
   const tab = $(`#${name}-tab`);
   tab.addEventListener('click', () => {
-    if (running || htmlGameActive) exitGame();
+    if (running || htmlGameActive || labActive) exitGame();
     for (const other of ['play', 'chat']) {
       $(`#${other}-tab`).setAttribute('aria-selected', String(name === other));
       $(`#${other}-tab`).tabIndex = name === other ? 0 : -1;
