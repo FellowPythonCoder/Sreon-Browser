@@ -1,69 +1,800 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="A quieter way to explore. Meet Sreon, a small desktop browser with built-in search and a little more room to think.">
-<meta name="sreon-search-endpoint" content="/api/search">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Sreon — A little more room to explore.</title>
-<link rel="icon" href="/site/assets/mark.png">
-<link rel="stylesheet" href="/site/assets/site.css">
-<script src="/site/assets/theme.js"></script>
-<script src="/site/assets/site.js" defer></script>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Meet Sreon. A fast, minimal Mac browser built entirely on SPRFST, with a built-in Studio and the freedom to make everything yours."
+    />
+    <meta name="theme-color" content="#08090e" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      property="og:title"
+      content="Sreon — Less browser. More possibility."
+    />
+    <meta
+      property="og:description"
+      content="A quieter, faster, entirely programmable browser. Built on SPRFST. Made to be yours."
+    />
+    <meta
+      property="og:image"
+      content="https://opensreon.com/site/assets/night-mountains.webp"
+    />
+    <meta property="og:type" content="website" />
+    <title>Sreon — Less browser. More possibility.</title>
+    <link rel="icon" href="/site/assets/mark.png" />
+    <link rel="canonical" href="https://opensreon.com/" />
+    <link
+      rel="preload"
+      href="/site/assets/fonts/dm-sans-latin-400-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/site/assets/landing.css" />
+    <script src="/site/assets/downloads.js" defer></script>
+    <script src="/site/assets/landing.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="nav-wrap">
+        <a class="logo" href="#" aria-label="Sreon home"
+          ><img
+            src="/site/assets/mark.png"
+            alt=""
+            width="32"
+            height="32"
+          /><span>sreon</span></a
+        >
+        <nav class="desktop-nav" aria-label="Main navigation">
+          <a href="#browser">The browser</a><a href="#language">SPRFST</a
+          ><a href="#studio">Studio <span class="nav-dot"></span></a
+          ><a href="#privacy">Privacy</a>
+        </nav>
+        <a class="nav-download" href="#download"
+          >Get Sreon <span aria-hidden="true">↗</span></a
+        ><button
+          class="menu-toggle"
+          aria-label="Open navigation"
+          aria-expanded="false"
+          aria-controls="mobile-nav"
+        >
+          <span></span><span></span>
+        </button>
+      </div>
+      <nav id="mobile-nav" aria-label="Mobile navigation" hidden>
+        <a href="#browser">The browser</a><a href="#language">SPRFST</a
+        ><a href="#studio">Studio</a><a href="#privacy">Privacy</a>
+      </nav>
+    </header>
+    <main id="main">
+      <section class="hero section-wrap">
+        <div class="hero-halo" aria-hidden="true"></div>
+        <div class="star-field" aria-hidden="true"></div>
+        <a class="announcement" href="#language"
+          ><span class="status-dot"></span> Independent by design. Built on
+          SPRFST. <span aria-hidden="true">↗</span></a
+        >
+        <h1>Less browser.<br /><span>More possibility.</span></h1>
+        <p class="hero-description">
+          A faster, quieter way to explore the web.<br />Built from scratch.
+          Open to your imagination.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#download"
+            ><svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3v12m-4-4 4 4 4-4M5 15v5h14v-5" />
+            </svg>
+            Get Sreon <span aria-hidden="true">↗</span></a
+          ><a class="button text-button" href="#browser"
+            >Meet your next browser <span aria-hidden="true">↓</span></a
+          >
+        </div>
+        <p class="hero-note">Designed for Mac. Made for the way you think.</p>
+        <div class="browser-stage" id="browser">
+          <div class="browser-window" id="browser-preview">
+            <div class="browser-chrome">
+              <div class="traffic-lights" aria-hidden="true">
+                <i></i><i></i><i></i>
+              </div>
+              <div class="mock-tab">
+                <img
+                  src="/site/assets/mark.png"
+                  alt=""
+                  width="13"
+                  height="13"
+                /><span id="mock-tab-name">A little space</span
+                ><span aria-hidden="true">×</span>
+              </div>
+              <button
+                class="chrome-plus"
+                id="reset-preview"
+                aria-label="Reset browser preview"
+              >
+                +</button
+              ><span class="chrome-right" aria-hidden="true">◫</span>
+            </div>
+            <div class="browser-body">
+              <aside class="browser-sidebar">
+                <div class="workspace-label">
+                  <span class="workspace-icon">S</span> My space <span>⌄</span>
+                </div>
+                <p class="sidebar-label">YOUR EVERYDAY</p>
+                <button
+                  class="sidebar-link active"
+                  data-view="home"
+                  aria-pressed="true"
+                >
+                  <span>⌂</span> A little space</button
+                ><button
+                  class="sidebar-link"
+                  data-view="inspiration"
+                  aria-pressed="false"
+                >
+                  <span>▧</span> Inspiration</button
+                ><button
+                  class="sidebar-link"
+                  data-view="studio"
+                  aria-pressed="false"
+                >
+                  <span>⌘</span> Sreon Studio <i></i>
+                </button>
+                <div class="sidebar-divider"></div>
+                <p class="sidebar-label">MAKE IT YOURS</p>
+                <button class="sidebar-link" id="customize-preview">
+                  <span>◈</span> Change the scenery
+                </button>
+                <div class="sidebar-bottom">
+                  <span class="tiny-shield">◇</span> A private little
+                  corner<span class="status-dot"></span>
+                </div>
+              </aside>
+              <div class="browser-main">
+                <div class="address-bar">
+                  <span aria-hidden="true">← &nbsp; →</span>
+                  <div>
+                    <span aria-hidden="true">⌕</span
+                    ><span id="preview-address">sreon://new-tab</span
+                    ><span class="address-lock" aria-hidden="true">⌑</span>
+                  </div>
+                  <button
+                    id="focus-preview"
+                    aria-label="Toggle focus mode"
+                    aria-pressed="false"
+                    title="Toggle focus mode"
+                  >
+                    ◧
+                  </button>
+                </div>
+                <div class="new-tab" id="preview-home">
+                  <img
+                    class="wallpaper"
+                    src="/site/assets/night-mountains.webp"
+                    alt="Moonlit alpine peaks beneath a quiet, star-filled sky"
+                    width="1536"
+                    height="1024"
+                    fetchpriority="high"
+                  />
+                  <div class="wallpaper-shade"></div>
+                  <div class="new-tab-content">
+                    <p class="new-tab-eyebrow">LESS NOISE. MORE YOU.</p>
+                    <p class="new-tab-heading">Room to wander.</p>
+                    <p class="new-tab-subtitle">
+                      A fresh perspective starts here.
+                    </p>
+                    <a class="mock-search" href="#studio"
+                      ><span aria-hidden="true">⌕</span> A browser that follows
+                      your lead.<span>⌘ K</span></a
+                    >
+                    <div class="quick-links">
+                      <a
+                        href="https://github.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ><span>⌘</span>GitHub</a
+                      ><a
+                        href="https://www.wikipedia.org"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ><span class="serif">W</span>Wikipedia</a
+                      ><a
+                        href="https://www.are.na"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        ><span>✳</span>Are.na</a
+                      ><a href="#studio"><span>+</span>Your space</a>
+                    </div>
+                  </div>
+                  <div class="wallpaper-footer">
+                    <span>Somewhere between here and possibility.</span
+                    ><button id="next-wallpaper" aria-label="Change wallpaper">
+                      ◈ &nbsp; Make it yours
+                    </button>
+                  </div>
+                </div>
+                <div id="preview-inspiration" class="inspiration-view" hidden>
+                  <p class="sidebar-label">YOUR COLLECTION / 01</p>
+                  <h3>Follow the small detours.</h3>
+                  <p>A place for whatever catches your eye.</p>
+                  <div class="inspiration-images">
+                    <figure>
+                      <img
+                        src="/site/assets/coast.webp"
+                        alt="A winding path above a turquoise coastline"
+                        width="1440"
+                        height="960"
+                        loading="lazy"
+                      />
+                      <figcaption>Take the scenic route. ↗</figcaption>
+                    </figure>
+                    <figure>
+                      <img
+                        src="/site/assets/studio.webp"
+                        alt="A sunlit reading room with warm plaster walls"
+                        width="1440"
+                        height="960"
+                        loading="lazy"
+                      />
+                      <figcaption>A different perspective. ↗</figcaption>
+                    </figure>
+                  </div>
+                </div>
+                <div id="preview-studio" class="mini-studio" hidden>
+                  <p class="sidebar-label">STUDIO / YOUR BROWSER, REIMAGINED</p>
+                  <h3>Not just settings.<br />Possibilities.</h3>
+                  <pre><span class="code-comment">// Small changes. Your kind of space.</span>
+<span class="code-keyword">browser</span>.greeting = <span class="code-string">"Hello, possibility."</span>
+<span class="code-keyword">browser</span>.theme = <span class="code-string">"dusk"</span>
+<span class="code-keyword">browser</span>.sidebar = <span class="code-string">"compact"</span></pre>
+                  <a class="button primary small" href="#studio"
+                    >Try the Studio playground <span>↗</span></a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="preview-caption">
+            <span
+              ><span class="status-dot"></span> A little look inside Sreon</span
+            ><span
+              >Interactive concept · Go ahead, explore the sidebar
+              <span aria-hidden="true">↗</span></span
+            >
+          </div>
+        </div>
+        <div class="feature-rail">
+          <span
+            ><svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m13 2-8 12h6l-1 8 9-13h-7z" />
+            </svg>
+            Fast by nature</span
+          ><span
+            ><svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M7 4v16M4 17h16M17 4v16" />
+            </svg>
+            Minimal by choice</span
+          ><span
+            ><svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-14-2 18" />
+            </svg>
+            Yours to program</span
+          ><span
+            ><svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m12 3 8 3v5c0 5-8 10-8 10S4 16 4 11V6z" />
+            </svg>
+            Privacy, always</span
+          >
+        </div>
+      </section>
+      <section class="philosophy section-wrap section-space" id="philosophy">
+        <div class="section-heading reveal">
+          <p class="eyebrow">01 / A LITTLE LESS. A LOT MORE.</p>
+          <div class="heading-row">
+            <h2>Out of your way.<br /><span>Into your flow.</span></h2>
+            <p>
+              The best browser is the one you stop noticing.<br />Sreon strips
+              away the noise, so there’s more room<br class="desktop-break" />
+              for what you came here to do.
+            </p>
+          </div>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card speed-card reveal">
+            <div class="card-topline">
+              <span class="card-icon">↗</span><span>BUILT TO KEEP UP</span>
+            </div>
+            <h3>Less waiting.<br />More doing.</h3>
+            <p>
+              Light on its feet. Quick to get going.<br />A focused browser,
+              without the baggage.
+            </p>
+            <div class="speed-art" aria-hidden="true">
+              <div class="speed-lines"></div>
+              <img
+                src="/site/assets/mark.png"
+                alt=""
+                width="90"
+                height="90"
+              /><span class="speed-orbit"></span>
+            </div>
+            <div class="card-bottom">
+              <span>Small by design. Fast by nature.</span><span>↗</span>
+            </div>
+          </article>
+          <article class="feature-card space-card reveal">
+            <img
+              src="/site/assets/coast.webp"
+              alt="Quiet turquoise water along a rugged coastline"
+              loading="lazy"
+              width="1440"
+              height="960"
+            />
+            <div class="space-card-shade"></div>
+            <div class="space-card-content">
+              <div class="card-topline">
+                <span class="card-icon">◫</span><span>ONLY WHAT MATTERS</span>
+              </div>
+              <h3>A breath of fresh air.<br />For your everyday.</h3>
+              <p>
+                Considered details. Calm spaces.<br />A little less interface. A
+                little more internet.
+              </p>
+              <span class="photo-caption"
+                >ROOM FOR A DIFFERENT POINT OF VIEW</span
+              >
+            </div>
+          </article>
+        </div>
+      </section>
+      <section
+        class="language-section section-wrap section-space"
+        id="language"
+      >
+        <div class="language-copy reveal">
+          <p class="eyebrow">02 / NOT ANOTHER WRAPPER</p>
+          <h2>A different browser.<br /><span>A language of its own.</span></h2>
+          <p>
+            Meet <strong>SPRFST</strong>. Our own programming language.<br />Not
+            an add-on. The foundation.
+          </p>
+          <p>
+            Sreon is built entirely on SPRFST, from the interface you see to the
+            interactions you feel. A browser and a language, designed together.
+            So you can go beyond using it — and start shaping it.
+          </p>
+          <a class="inline-link" href="#studio"
+            >Meet the built-in Studio <span>↗</span></a
+          >
+        </div>
+        <div class="language-art reveal">
+          <div class="orbital-ring ring-one"></div>
+          <div class="orbital-ring ring-two"></div>
+          <div class="orbital-ring ring-three"></div>
+          <span class="orbit-label orbit-top">THE INTERFACE</span
+          ><span class="orbit-label orbit-bottom">THE EXPERIENCE</span>
+          <div class="language-core">
+            <img
+              src="/site/assets/mark.png"
+              alt=""
+              width="52"
+              height="52"
+            /><span>SPRFST</span><small>THE FOUNDATION</small>
+          </div>
+          <span class="orbit-spark"></span>
+          <div class="language-caption">
+            <span class="status-dot"></span> One language. Endless
+            possibilities.
+          </div>
+        </div>
+      </section>
+      <section class="studio-section section-wrap section-space" id="studio">
+        <div class="section-heading reveal">
+          <p class="eyebrow">03 / THE BROWSER IS YOUR CANVAS</p>
+          <div class="heading-row">
+            <h2>Don’t just customize it.<br /><span>Make it yours.</span></h2>
+            <p>
+              A real IDE. Right inside your browser.<br />Meet Sreon Studio —
+              where every detail<br class="desktop-break" />
+              is an invitation to build.
+            </p>
+          </div>
+        </div>
+        <div class="studio-window reveal">
+          <div class="studio-topbar">
+            <span
+              ><span class="studio-glyph">⌘</span> Sreon Studio
+              <span class="subtle">/ playground</span></span
+            ><span class="studio-badge"
+              ><span class="status-dot"></span> LIVE PREVIEW</span
+            >
+          </div>
+          <div class="studio-columns">
+            <div class="editor-panel">
+              <div
+                class="editor-tabs"
+                role="tablist"
+                aria-label="Studio examples"
+              >
+                <button
+                  role="tab"
+                  aria-selected="true"
+                  data-example="appearance"
+                  id="studio-tab-appearance"
+                  aria-controls="studio-editor"
+                >
+                  appearance.spr</button
+                ><button
+                  role="tab"
+                  aria-selected="false"
+                  tabindex="-1"
+                  data-example="focus"
+                  id="studio-tab-focus"
+                  aria-controls="studio-editor"
+                >
+                  focus.spr</button
+                ><button
+                  role="tab"
+                  aria-selected="false"
+                  tabindex="-1"
+                  data-example="welcome"
+                  id="studio-tab-welcome"
+                  aria-controls="studio-editor"
+                >
+                  welcome.spr
+                </button>
+              </div>
+              <div
+                class="editor-body"
+                id="studio-editor"
+                role="tabpanel"
+                aria-labelledby="studio-tab-appearance"
+              >
+                <div class="line-numbers" aria-hidden="true">
+                  1<br />2<br />3<br />4<br />5<br />6<br />7<br />8
+                </div>
+                <label for="studio-code" class="sr-only"
+                  >Edit the illustrative browser settings</label
+                ><textarea
+                  id="studio-code"
+                  spellcheck="false"
+                  autocomplete="off"
+                  aria-describedby="studio-disclaimer"
+                >
+// Your browser. Your rules.
+// Try changing the greeting below.
 
-<link rel="stylesheet" href="/site/assets/whiteboard.css">
-</head>
-<body>
-<a class="skip" href="#main">Skip to content</a>
-<header class="header wrap">
-<a class="brand" href="#top" aria-label="Sreon home"><img src="/site/assets/mark.png" alt="" width="34" height="34">Sreon<span class="brand-period">.</span></a>
-<nav aria-label="Main navigation"><a href="#discover">Explore</a><a href="#privacy">Privacy</a><a href="#try">Try it</a></nav>
-<button class="theme" id="theme" type="button" aria-label="Switch to dark mode">◐</button>
-</header>
-<main id="main">
-<section class="hero wrap" id="top">
-<div class="hero-copy"><p class="eyebrow"><span class="small-dot"></span> LESS NOISE. MORE POSSIBILITY.</p><h1>A little more<br>room to <em>explore.</em></h1><p class="lede">The internet is a big place.<br>Your browser doesn’t have to get in the way.</p><a class="button" href="#try">Take a look around <span aria-hidden="true">↗</span></a><p class="hero-foot">Small by design. Open by nature.</p></div>
-<figure class="hero-photo"><img src="/site/assets/landscape.webp" alt="An illustrative landscape of pale dunes and purple mountains beneath a quiet evening sky" fetchpriority="high" width="1536" height="1024"><figcaption><span>A different point of view.</span><span>01 / EXPLORE</span></figcaption></figure>
-</section>
-<section class="intro wrap" id="about"><p class="eyebrow">A BROWSER, NOT A DISTRACTION</p><div><h2>Keep the useful.<br>Leave the rest.</h2><p>Sreon brings search and browsing into one small desktop app. A familiar address bar, real website results, and a clear path back to where you started.</p></div><div class="principles"><article><span>01</span><h3>Find your own way.</h3><p>Search the web, explore images, or go straight to a website.</p></article><article><span>02</span><h3>A quieter space.</h3><p>Local interface assets. Light and dark themes. No account needed to search.</p></article><article><span>03</span><h3>Nothing mysterious.</h3><p>A Rust core and your system’s webview. Not a new browser engine pretending to be one.</p></article></div></section>
-<section class="discover wrap" id="discover"><div class="section-top"><div><p class="eyebrow">FOLLOW THE SMALL DETOURS</p><h2>A good place<br>to <em>get curious.</em></h2></div><p>Sometimes you know what you’re looking for.<br>Sometimes a little inspiration is enough.</p></div><div class="discovery-grid"><button class="discovery-card" type="button" data-query="quiet coastal walking trails"><div class="discovery-image"><img src="/site/assets/coast.webp" alt="Illustrative turquoise coast and a winding limestone path" width="1440" height="960" loading="lazy"><span>01 / OUTSIDE</span></div><div><h3>Take the scenic route.</h3><span aria-hidden="true">↗</span></div><p>Coastal walks. New places. A change of pace.</p></button><button class="discovery-card" type="button" data-query="minimalist reading room design"><div class="discovery-image"><img src="/site/assets/studio.webp" alt="Illustrative sunlit reading corner with warm plaster and a wooden chair" width="1440" height="960" loading="lazy"><span>02 / MAKE SPACE</span></div><div><h3>Find a fresh perspective.</h3><span aria-hidden="true">↗</span></div><p>Thoughtful spaces and ideas worth keeping.</p></button><button class="discovery-card" type="button" data-query="desert landscapes photography guide"><div class="discovery-image"><img src="/site/assets/landscape.webp" alt="Illustrative pale desert dunes and distant purple mountains" width="1440" height="960" loading="lazy"><span>03 / LOOK CLOSER</span></div><div><h3>Notice something new.</h3><span aria-hidden="true">↗</span></div><p>A landscape. A story. The next rabbit hole.</p></button></div></section>
-<section class="try-section" id="try"><div class="wrap try-layout"><div><p class="eyebrow">A SMALL WINDOW INTO SREON</p><h2>Follow your<br><em>curiosity.</em></h2><p>Type a search or a web address.<br>No installation. No sign-up.</p><p class="fine">Tabs, back and forward, and Shields work right here. Some websites block embedded viewing; use “Open original” if one doesn’t load.</p></div><div class="search-window browser" id="browser"><div class="tabstrip"><div id="tabs" class="tabs" role="tablist" aria-label="Open tabs"></div><button id="new-tab" class="tab-add" type="button" aria-label="New tab">+</button><button id="wb-open" class="tab-add wb-open" type="button" aria-label="Open whiteboard" title="Whiteboard"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11a2.1 2.1 0 00-3-3L5 16l-1 4z"/></svg></button></div><div class="toolbar"><button id="nav-back" class="tool" type="button" aria-label="Back" disabled>←</button><button id="nav-forward" class="tool" type="button" aria-label="Forward" disabled>→</button><button id="nav-reload" class="tool" type="button" aria-label="Reload">↻</button><form id="search-form" class="omnibox" role="search"><label class="sr-only" for="query">Search or enter a web address</label><input id="query" name="q" type="search" maxlength="500" placeholder="Search or enter website name" required autocomplete="off"><button type="submit" id="search-submit" aria-label="Go">↗</button></form><button id="shields" class="tool shields" type="button" aria-label="Shields" aria-expanded="false" aria-controls="shield-panel"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3z"/></svg></button></div><div id="shield-panel" class="shield-panel" hidden><h3>Shields</h3><label><input type="checkbox" id="sh-https" checked> Upgrade http:// links to https://</label><label><input type="checkbox" id="sh-scripts"> Block scripts on websites</label><p>Always on: no referrer is sent, and pages load in a sandboxed frame without pop-ups.</p></div><div class="viewport"><div id="newtab" class="newtab"><img src="/site/assets/mark.png" width="46" height="46" alt=""><h3>Where to?</h3><div class="suggestions" aria-label="Try a search"><button type="button" data-query="quiet places to visit">Quiet places ↗</button><button type="button" data-query="YouTube">YouTube ↗</button><button type="button" data-query="design inspiration">A little inspiration ↗</button><button type="button" data-query="wikipedia.org">wikipedia.org ↗</button></div></div><p id="search-status" class="search-status" role="status" aria-live="polite">Connecting to the Rust search engine…</p><div id="results" aria-label="Search results"></div><button id="more" class="text-button" type="button" hidden>More results ↓</button><section id="site-preview" class="site-preview" aria-label="Website preview" hidden><div class="preview-toolbar"><button id="preview-back" class="preview-back" type="button">← Back</button><span id="preview-address" class="preview-address" aria-live="polite"></span><a id="preview-open" class="preview-open" target="_blank" rel="noopener noreferrer">Open original ↗</a></div><iframe id="preview-frame" name="sreon-site-preview" title="Website preview" sandbox="allow-scripts allow-forms allow-same-origin allow-downloads" referrerpolicy="no-referrer"></iframe></section></div></div></div></section>
-<section class="engine wrap"><div><p class="eyebrow">THE SAME ENGINE. A SMALLER WINDOW.</p><h2>Real search.<br>Not a pretend demo.</h2><p>The website uses the same Rust search core as the desktop app, through a small API adapter. No hard-coded results, no made-up answers, and no hidden switch to an unrelated demo.</p></div><ol class="engine-steps"><li><span>01</span><div><h3>Your question.</h3><p>A few words, a whole question, or something you’ve been meaning to look up.</p></div></li><li><span>02</span><div><h3>The Sreon engine.</h3><p>It asks existing web-search sources and returns links, titles, and short excerpts. Recent results may come from a brief in-memory cache.</p></div></li><li><span>03</span><div><h3>Back to the original.</h3><p>Every result links to its website. You choose what to read, watch, or explore next.</p></div></li></ol></section>
-<section class="privacy wrap" id="privacy"><div><p class="eyebrow privacy-address">sreon<a href="/site/notes/" class="quiet-colon" aria-label="Open notes">:</a>//privacy</p><h2>How privacy<br>actually works here<span class="brand-period">.</span></h2><p>Plain language. Not a promise<br>that the internet can’t keep.</p></div><div class="privacy-list"><article><span>01</span><div><h3>Your searches go somewhere.</h3><p>This demo sends your query to the Sreon API. The engine asks external search providers for results. The website host and those providers may process connection details.</p></div></article><article><span>02</span><div><h3>Your preferences stay here.</h3><p>This page stores your theme in this browser. It has no analytics script or advertising tracker. The hosting service may keep its own request logs.</p></div></article><article><span>03</span><div><h3>A website is still a website.</h3><p>Following a result takes you to that site, with its own cookies and privacy practices. Sreon is not a VPN or an anonymity service.</p></div></article></div></section>
-<section class="questions wrap"><div><p class="eyebrow">A FEW THINGS WORTH KNOWING</p><h2>Just the<br>straight answers.</h2></div><div><details><summary>Is this a whole browser inside a website?</summary><p>No. This is a small window into Sreon’s search engine. Result links load in an embedded preview when the destination allows it; otherwise, use “Open original.” The desktop app handles browsing using your system’s webview.</p></details><details><summary>Do I need an account to search?</summary><p>No Sreon account is required. The public search service has request limits to keep it available, and external search sources may sometimes be unavailable.</p></details><details><summary>Does Sreon have its own search index?</summary><p>Not currently. The Rust engine retrieves results from existing online sources. Sreon is open about that distinction instead of claiming to crawl the whole web.</p></details><details><summary>What stays on this device?</summary><p>This page remembers your light or dark theme locally. It doesn’t save a search-history list in your browser. Queries still go to the search service and its providers; hosting services may keep connection logs.</p></details></div></section>
-<section class="closing wrap"><p class="eyebrow">TAKE YOUR TIME.</p><h2>There’s a whole web<br>out there.</h2><a class="text-button" href="#try">Start with something you’re curious about ↗</a></section>
-</main><footer class="wrap footer"><a class="brand" href="#top"><img src="/site/assets/mark.png" alt="" width="25" height="25">Sreon.</a><span>A quieter way to explore.</span><a href="#privacy">Privacy, in plain language ↗</a></footer>
+browser.greeting = "Hello, possibility."
+browser.theme = "dusk"
+browser.sidebar = "expanded"
 
-<div id="wb" class="wb" hidden role="dialog" aria-label="Whiteboard">
-  <div class="wb-top">
-    <span class="wb-title">Whiteboard<i>.</i></span>
-    <button class="wb-x" id="wb-close" aria-label="Close whiteboard"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  </div>
-  <div class="wb-stage" id="wb-stage"><canvas id="wb-canvas"></canvas>
-    <div id="wb-tw" class="wb-tw" hidden><textarea id="wb-ti" rows="1" placeholder="Type…"></textarea></div>
-  </div>
-  <figure class="wb-cam" id="wb-cam" hidden>
-    <div class="wb-cam-view"><video id="wb-video" autoplay playsinline muted></video><canvas id="wb-cc"></canvas></div>
-    <figcaption id="wb-mode">Show your hand</figcaption>
-  </figure>
-  <div class="wb-dock" role="toolbar" aria-label="Whiteboard tools">
-    <div class="wb-g"><button class="wb-t on" data-tool="pen" title="Pen (P)" aria-label="Pen (P)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11a2.1 2.1 0 00-3-3L5 16l-1 4z"/></svg></button><button class="wb-t" data-tool="highlighter" title="Highlighter (H)" aria-label="Highlighter (H)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l6-6 3 3-6 6H9v-3z"/><path d="M5 20h6"/></svg></button><button class="wb-t" data-tool="eraser" title="Eraser (E)" aria-label="Eraser (E)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20h11"/><path d="M5 15l9-9a2 2 0 013 0l2 2a2 2 0 010 3l-8 8H8l-3-3a1 1 0 010-1z"/></svg></button><button class="wb-t" data-tool="line" title="Line (L)" aria-label="Line (L)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L19 5"/></svg></button><button class="wb-t" data-tool="rect" title="Rectangle (R)" aria-label="Rectangle (R)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg></button><button class="wb-t" data-tool="circle" title="Ellipse (C)" aria-label="Ellipse (C)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/></svg></button><button class="wb-t" data-tool="arrow" title="Arrow (A)" aria-label="Arrow (A)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L19 5M10 5h9v9"/></svg></button><button class="wb-t" data-tool="text" title="Text (T)" aria-label="Text (T)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7V5h12v2M12 5v14M9 19h6"/></svg></button><button class="wb-t" data-tool="sticky" title="Sticky note (N)" aria-label="Sticky note (N)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h14v9l-5 5H5z"/><path d="M14 19v-5h5"/></svg></button></div><span class="wb-sep"></span>
-    <div class="wb-g"><button class="wb-sw on" data-c="#282335" aria-label="Color #282335"></button><button class="wb-sw" data-c="#68508e" aria-label="Color #68508e"></button><button class="wb-sw" data-c="#d64545" aria-label="Color #d64545"></button><button class="wb-sw" data-c="#e8912d" aria-label="Color #e8912d"></button><button class="wb-sw" data-c="#2f9e6e" aria-label="Color #2f9e6e"></button><button class="wb-sw" data-c="#2f6fdb" aria-label="Color #2f6fdb"></button><label class="wb-sw wb-custom" title="Custom color"><input type="color" id="wb-color" value="#282335"></label></div>
-    <input type="range" id="wb-size" min="1" max="36" value="4" aria-label="Brush size" title="Size">
-    <span class="wb-sep"></span>
-    <div class="wb-g">
-      <button class="wb-t" id="wb-undo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg></button>
-      <button class="wb-t" id="wb-redo" title="Redo (Ctrl+Y)" aria-label="Redo"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 000 12h3"/></svg></button>
-      <button class="wb-t" id="wb-grid" title="Toggle grid" aria-label="Grid"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4zM4 12h16M12 4v16"/></svg></button>
-      <button class="wb-t" id="wb-save" title="Save as PNG" aria-label="Save PNG"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></button>
-      <button class="wb-t" id="wb-clear" title="Clear board" aria-label="Clear"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg></button>
-    </div>
-    <span class="wb-sep"></span>
-    <button class="wb-hand" id="wb-hand" title="Draw with your hand: 2 fingers draw, 1 finger erases"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V5.5a1.5 1.5 0 013 0V11M11 10V4.5a1.5 1.5 0 013 0V11M14 10V6a1.5 1.5 0 013 0v7c0 4-2.5 7-6 7-2.5 0-4-1.2-5.2-3.2L4 13.5a1.4 1.4 0 012.3-1.5L8 14"/></svg><span>Hand</span></button>
-  </div>
-</div>
-
-<script src="/site/assets/whiteboard.js" defer></script>
-</body>
+// Make a little space for yourself.</textarea>
+              </div>
+              <div class="editor-footer">
+                <span id="editor-status" role="status"
+                  >A small change. A whole new feeling.</span
+                ><button class="button primary small" id="run-code">
+                  Apply changes <span>↗</span>
+                </button>
+              </div>
+            </div>
+            <div class="studio-preview" id="studio-result" data-theme="dusk">
+              <div class="result-chrome">
+                <span class="result-dots">● ● ●</span
+                ><span>sreon://your-space</span><span>↗</span>
+              </div>
+              <div class="result-content">
+                <div class="result-sidebar" aria-hidden="true">
+                  <img
+                    src="/site/assets/mark.png"
+                    alt=""
+                    width="20"
+                    height="20"
+                  /><span>⌂</span><span>▧</span><span>⌘</span>
+                </div>
+                <div class="result-main">
+                  <span class="result-kicker">YOUR SPACE. YOUR PACE.</span
+                  ><img
+                    src="/site/assets/mark.png"
+                    alt=""
+                    width="42"
+                    height="42"
+                  />
+                  <h3 id="result-greeting">Hello, possibility.</h3>
+                  <p>It feels a little more like you.</p>
+                  <div class="result-search">
+                    <span>⌕</span> Where will you go next? <span>↵</span>
+                  </div>
+                </div>
+              </div>
+              <div class="result-footer">
+                <span class="status-dot"></span> Crafted by you. Powered by
+                SPRFST.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="studio-caption">
+          <span id="studio-disclaimer"
+            >Interactive UI concept. Illustrative syntax, not a SPRFST
+            compiler.</span
+          ><span>No setup. No limits to your imagination.</span>
+        </div>
+        <div class="studio-benefits">
+          <article>
+            <span>01</span>
+            <h3>Edit the everyday.</h3>
+            <p>
+              Colors, layouts, shortcuts. The little things that make a browser
+              feel like home.
+            </p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Build beyond the defaults.</h3>
+            <p>
+              Turn your own ideas into tools. Your workflow doesn’t have to fit
+              someone else’s.
+            </p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Nothing is off-canvas.</h3>
+            <p>
+              An editable, programmable experience. Not just a new coat of
+              paint.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section class="privacy-section section-wrap section-space" id="privacy">
+        <div class="privacy-visual reveal" aria-hidden="true">
+          <div class="shield-orbit"></div>
+          <svg class="privacy-shield" viewBox="0 0 120 140">
+            <defs>
+              <linearGradient id="shield-gradient" x1="0" y1="0" x2="1" y2="1">
+                <stop stop-color="#d8caff" />
+                <stop offset="1" stop-color="#7561ae" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M60 9 107 27v39c0 29-47 65-47 65S13 95 13 66V27Z"
+              fill="#141020"
+              stroke="url(#shield-gradient)"
+              stroke-width="1"
+            />
+            <path
+              d="m43 66 12 12 24-27"
+              fill="none"
+              stroke="#c7b5ff"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            /></svg
+          ><span class="privacy-orbit-label">PERSONAL. BY DESIGN.</span>
+        </div>
+        <div class="privacy-copy reveal">
+          <p class="eyebrow">04 / SOME THINGS SHOULD STAY YOURS</p>
+          <h2>
+            Privacy<a
+              class="quiet-colon"
+              href="/site/notes/"
+              aria-label="Open the hidden game section"
+              >:</a
+            ><br /><span>not an afterthought.</span>
+          </h2>
+          <p>
+            Your curiosity isn’t a commodity. Sreon is built around a simple
+            belief: your browser should work for you. Not for the attention
+            economy.
+          </p>
+          <div class="privacy-points">
+            <div>
+              <span>↗</span>
+              <p>
+                <strong>Your space, not an ad space.</strong><br />A quieter
+                experience with privacy at its heart.
+              </p>
+            </div>
+            <div>
+              <span>↗</span>
+              <p>
+                <strong>No analytics on this landing page.</strong><br />No
+                advertising trackers. No account to explore.
+              </p>
+            </div>
+            <div>
+              <span>↗</span>
+              <p>
+                <strong>Clear boundaries. No magic promises.</strong
+                ><br />Websites you visit have their own privacy practices.
+              </p>
+            </div>
+          </div>
+          <details class="privacy-details">
+            <summary>The small print, in plain language <span>+</span></summary>
+            <p>
+              This landing page uses locally hosted assets and has no analytics
+              scripts. Your Studio edits stay in this page. The host may keep
+              request logs, and external links take you to sites with their own
+              policies. Sreon is not a VPN. The hidden arcade has its own
+              features and disclosures.
+            </p>
+          </details>
+        </div>
+      </section>
+      <section
+        class="download-section section-wrap section-space"
+        id="download"
+      >
+        <div class="download-halo" aria-hidden="true"></div>
+        <div class="download-heading reveal">
+          <img src="/site/assets/mark.png" alt="" width="56" height="56" />
+          <p class="eyebrow">A SMALLER BROWSER. A BIGGER WORLD.</p>
+          <h2>Your next chapter.<br /><span>Starts with Sreon.</span></h2>
+          <p>A little less noise. A little more you.</p>
+        </div>
+        <div class="download-grid">
+          <article class="download-card featured-download reveal">
+            <div class="download-card-top">
+              <svg viewBox="0 0 24 24" class="os-icon" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  stroke="none"
+                  d="M16.8 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.6.9-.7 0-1.8-.9-3-.9-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.2.8 1.1 1.7 2.3 2.9 2.2 1.2 0 1.6-.7 3.1-.7 1.4 0 1.8.7 3 .7 1.3 0 2.1-1.1 2.8-2.2.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.4-.9-2.4-3.5ZM14.4 5.8c.6-.8 1.1-1.9 1-3-.9 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.5 2.8-1.4Z"
+                /></svg
+              ><span class="platform-tag">THE ORIGINAL</span>
+            </div>
+            <h3>Sreon for Mac</h3>
+            <p>Made to feel right at home.</p>
+            <button class="button primary download-action" data-platform="mac">
+              Get for macOS <span>↓</span></button
+            ><span class="release-status" data-status="mac"
+              >Coming soon · Download not yet available</span
+            >
+          </article>
+          <article class="download-card reveal">
+            <div class="download-card-top">
+              <svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="m3 5 8-1v7H3zm10-1 8-1v8h-8zM3 13h8v7l-8-1zm10 0h8v8l-8-1z"
+                  fill="currentColor"
+                  stroke="none"
+                /></svg
+              ><span class="platform-tag muted-tag">ON THE HORIZON</span>
+            </div>
+            <h3>Sreon for Windows</h3>
+            <p>A fresh perspective on your PC.</p>
+            <button
+              class="button secondary download-action"
+              data-platform="windows"
+            >
+              Get for Windows <span>↓</span></button
+            ><span class="release-status" data-status="windows"
+              >Coming soon · Download not yet available</span
+            >
+          </article>
+          <article class="download-card reveal">
+            <div class="download-card-top">
+              <svg
+                class="os-icon linux-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M8 11V7c0-6 8-6 8 0v4l3 6-3 3-4-1-4 1-3-3z" />
+                <path d="m9 9 3 2 3-2m-6 6-2 5m8-5 2 5" />
+                <path d="M10 7h.01M14 7h.01" stroke-width="3" /></svg
+              ><span class="platform-tag muted-tag">ON THE HORIZON</span>
+            </div>
+            <h3>Sreon for Linux</h3>
+            <p>For those who make it their own.</p>
+            <button
+              class="button secondary download-action"
+              data-platform="linux"
+            >
+              Get for Linux <span>↓</span></button
+            ><span class="release-status" data-status="linux"
+              >Coming soon · Download not yet available</span
+            >
+          </article>
+        </div>
+        <p class="download-footnote">
+          Built independently. Thoughtfully, from the ground up.
+        </p>
+      </section>
+      <section class="faq-section section-wrap section-space">
+        <div>
+          <p class="eyebrow">A FEW GOOD QUESTIONS</p>
+          <h2>Curious?<br /><span>Good.</span></h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>What makes Sreon different?<span>+</span></summary>
+            <p>
+              Sreon pairs a minimal browsing experience with a programmable
+              foundation. It’s built entirely on SPRFST, a self-made language,
+              and includes Studio so the browser can become your own creative
+              workspace.
+            </p>
+          </details>
+          <details>
+            <summary>Do I need to code to use Sreon?<span>+</span></summary>
+            <p>
+              No. The idea is a calm, focused browser from the start. Studio is
+              there when you want to go further — not something you need to use
+              to browse.
+            </p>
+          </details>
+          <details>
+            <summary>What is SPRFST?<span>+</span></summary>
+            <p>
+              SPRFST is the custom language behind Sreon. It’s the foundation of
+              the browser, rather than an extension language added on top. The
+              playground above is an illustrative preview of the customization
+              experience, not a live compiler.
+            </p>
+          </details>
+          <details>
+            <summary>When can I download it?<span>+</span></summary>
+            <p id="release-answer">
+              Downloads are not published yet. Sreon is designed for Mac, with
+              Windows and Linux sections ready for future releases. When builds
+              are available, you’ll find the official links right here.
+            </p>
+          </details>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer section-wrap">
+      <div class="footer-top">
+        <a class="logo" href="#"
+          ><img
+            src="/site/assets/mark.png"
+            alt=""
+            width="30"
+            height="30"
+          /><span>sreon</span></a
+        >
+        <p>Small by design. Infinite by possibility.</p>
+        <a
+          href="https://github.com/FellowPythonCoder/Sreon-Browser"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Find us on GitHub <span>↗</span></a
+        >
+      </div>
+      <div class="footer-bottom">
+        <span
+          >© <span id="year">2026</span> Sreon. An independent point of
+          view.</span
+        >
+        <div>
+          <a href="#privacy">Privacy</a><a href="#download">Downloads</a
+          ><a href="#">Back to top ↑</a>
+        </div>
+        <span class="made-with"
+          ><span class="status-dot"></span> Built different. On purpose.</span
+        >
+      </div>
+    </footer>
+    <dialog id="download-dialog" aria-labelledby="download-dialog-title">
+      <button class="dialog-close" aria-label="Close download information">
+        ×</button
+      ><img src="/site/assets/mark.png" alt="" width="44" height="44" />
+      <p class="eyebrow">GOOD THINGS TAKE A LITTLE TIME</p>
+      <h2 id="download-dialog-title">Sreon for Mac is on its way.</h2>
+      <p id="download-dialog-description">
+        We’re still making room for possibility. The official download will
+        appear here when it’s ready.
+      </p>
+      <a
+        class="button primary"
+        href="https://github.com/FellowPythonCoder/Sreon-Browser"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Follow the project <span>↗</span></a
+      ><button class="dialog-dismiss">Keep exploring</button>
+    </dialog>
+  </body>
 </html>
