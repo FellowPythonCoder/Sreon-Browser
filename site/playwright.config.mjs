@@ -1,4 +1,4 @@
-import { defineConfig } from '../Extra/Source/node_modules/@playwright/test/index.mjs';
+import { defineConfig } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 export default defineConfig({
   testDir:'./tests', testMatch:'**/*.spec.mjs', fullyParallel:true, workers:2,

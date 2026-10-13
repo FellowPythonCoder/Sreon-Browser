@@ -4,9 +4,15 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
-    "start": "node site/start.mjs"
+    "start": "node site/start.mjs",
+    "test:landing": "playwright test --config site/playwright.config.mjs landing.spec.mjs",
+    "test:browser": "playwright test --config site/playwright.config.mjs",
+    "test:server": "node --test site/tests/server.test.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0"
   }
 }
