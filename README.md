@@ -1,83 +1,194 @@
-# Sreon — opensreon.com
+<p align="center">
+  <img src="site/assets/mark.png" alt="Sreon Orbit logo" width="110">
+</p>
 
-A lightweight, deep-space landing page for Sreon, with locally hosted fonts and dark-graded imagery, a lavender accent, responsive layouts, and no analytics scripts.
+<h1 align="center">Sreon 1.1</h1>
 
-## What’s new on the Sreon 1.1 website
+<p align="center">
+  <strong>Less browser. More possibility.</strong>
+</p>
 
-- Animated solar-system hero with eight planets, an asteroid belt, and a ringed Saturn.
-- Dedicated speed section with an animated asteroid and practical workflow highlights, without invented benchmarks.
-- Downloads show current version **1.1**, a six-part release summary, and per-platform build metadata.
-- All four local photographs have a baked-in dark, cool color grade, including wallpapers and the preserved demo’s photos.
-- The Privacy colon is plain, non-focusable text on both landing and demo pages; the hidden Gaming Area entry point is disabled. Existing games are preserved at their direct URLs.
-- One pause/resume control stops the decorative animations; OS reduced-motion preferences are respected, including live preference changes.
+<p align="center">
+  A browser rebuilt from scratch with a homemade programming language.<br>
+  A quieter place to explore, create, and make your own.
+</p>
 
-## Run locally
+<p align="center">
+  <a href="https://opensreon.com/#download"><strong>Download Sreon</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://opensreon.com">Explore Sreon</a>
+</p>
 
-Use Node.js 20+ (Node.js 22 is used in the Docker image).
+---
 
-```sh
-npm install
-npm start
-```
+## A different browser starts with a different language.
 
-The server listens on `0.0.0.0:3000`. Set `PORT` to change it. The landing page also works as static files on GitHub Pages; `CNAME` retains `opensreon.com`.
+Meet **SPRFST** — a homemade programming language created specifically for building Sreon.
 
-## Publish downloads
+With version **1.1**, Sreon has been completely remade using this language. Its settings, new tab, sidebar, and buttons are written in SPRFST, rather than JavaScript or an off-the-shelf interface toolkit.
 
-Edit **`site/assets/downloads.js`**. `SREON_RELEASE.version` sets the current version displayed in Downloads and the release-notes heading. Set each platform’s `url` to an official HTTPS release asset URL or a same-origin path, its `version` to the build version, and `detail` to architecture or installer information. Update the release summary and announcement in `index.html` when publishing a new release.
+**SPRFST isn’t an extra feature attached to the browser. It’s the foundation of its interface.**
 
-The current Mac download points to the DMG included in this repository:
+And that foundation is yours to explore. Read the code, change how things work, and use the same language to create your own programs and apps.
 
-```js
-mac: {
-  url: "/site/assets/SREONBROWSER.dmg",
-  version: "1.1",
-  detail: "macOS · DMG installer"
-}
-```
+**Don’t just use your browser. Make it yours.**
 
-The existing DMG is retained unchanged; this website update does not build or replace the browser installer. Windows and Linux remain unset until their builds are available. Each unset platform opens a platform-specific “Coming soon” dialog, rather than a broken download. Configured platforms automatically become real links, update their availability badge, and update the download FAQ.
+---
 
-## What is interactive?
+## Your own little universe.
 
-- Browser sidebar: home, inspiration collection, and Studio preview.
-- Change the scenery: cycles through three locally hosted wallpapers.
-- Focus mode: collapses the browser preview's sidebar; the `+` button resets the preview.
-- Studio: three keyboard-accessible examples, an editable settings panel, live results, validation, and Ctrl/Cmd+Enter to apply.
-- Privacy: the colon in the **Privacy:** heading is now ordinary punctuation, not a hidden arcade link.
-- Solar system and asteroid: a shared pause/resume button and reduced-motion support.
-- Download dialogs: native keyboard-accessible dialogs with Escape-to-close and focus restoration.
-- Mac installation help: a native dropdown under the Mac download with DMG installation steps, conditional Privacy & Security → Open Anyway guidance for unverified apps, and a warning not to bypass malware detections. Works without JavaScript.
-- Mobile navigation, FAQ disclosures, and reduced-motion-aware section reveals.
+![Moonlit mountain artwork reflecting Sreon’s celestial aesthetic](site/assets/night-mountains.webp)
 
-**The browser and Studio are clearly labeled UI concepts.** Studio uses a strict, safe settings parser, not `eval`, and is not a SPRFST compiler. Its syntax is illustrative. Product copy follows the supplied Sreon brief; there are no invented speed benchmarks or OS compatibility requirements.
+*Deep-space colors. Quiet landscapes. Room to think.*
 
-## Structure
+Sreon’s **Celestial theme** brings a calmer feel to your everyday browsing: dark surfaces, delicate borders, and an interface that gives your content room.
 
-- `index.html` — new landing page
-- `site/assets/landing.css` / `landing.js` — styles and interactions
-- `site/assets/downloads.js` — release links
-- `site/assets/night-mountains.webp` — optimized generated alpine wallpaper
-- `site/assets/mark.png`, fonts, and other landscapes — existing repository assets
-- `site/notes/` — preserved arcade and companion features
-- `site/explore/index.html` — preserved previous live-search/demo page
-- `site/server.mjs` — existing server and API, with a route added for the preserved demo
+Your new tab becomes a small desktop, complete with:
 
-The landing page makes no third-party requests. Following an external link or using existing arcade companion features may involve third parties; relevant disclosures remain on those pages. The web host may keep request logs. Studio edits are held in page memory only.
+- A clock, status strip, and search box.
+- A dock for saved apps and built-in tools.
+- Activity dots showing which apps are open.
+- Quick access to **Studio, Guidebook, Shield, and Settings**.
+- A sidebar you can show or hide from the toolbar.
 
-## Tests
+Less visual noise. More space for what matters to you.
 
-```sh
-npx playwright install chromium
-npm run test:landing  # 15 landing-page interaction/responsive tests
-npm run test:browser  # all 27 browser tests, including preserved demos and games
-npm run test:server   # existing backend unit tests
-```
+---
 
-A custom Chromium can be supplied with `PLAYWRIGHT_EXECUTABLE_PATH`. Browser tests cover widths of 360, 390, 768, and 1440 pixels, versioned downloads and release notes, safe Studio input, disabled arcade entry points, motion controls, reduced motion, and the preserved search demo and direct game routes.
+## A new beginning, every time you launch.
 
-Known pre-existing backend test mismatches: `server.test.mjs` expects the old `rust` health identifier instead of the current `duckduckgo-html`, and expects `BACKEND_NOT_READY` on a generic search failure instead of the current error response. Those two assertions fail; the other seven server tests pass. This landing-page change does not modify API behavior. Other legacy Rust/package tests reference source files no longer present in this checkout.
+Sreon 1.1 welcomes you with an animated celestial splash screen.
 
-## Deployment
+Stars fill the background. A ring draws into view. A moon follows its orbit, and the Sreon wordmark appears in stages.
 
-Pushes to a feature branch do not by themselves change the production domain. Review/merge the branch into the repository's configured deployment branch to publish through the existing hosting setup. Static hosting supports the landing page and local arcade; the preserved search API needs the Node server.
+Live boot updates show what’s happening while the browser prepares. When it’s ready, the splash closes and your browser window gently fades in.
+
+A launch watchdog helps keep the splash from getting stuck.
+
+**A small moment of space before you explore the web.**
+
+---
+
+## From browsing to building.
+
+### Meet Sreon Studio.
+
+An idea shouldn’t have to stay an idea.
+
+With **Studio**, you can write SPRFST programs and build your own interactive apps inside Sreon.
+
+Version 1.1 introduces **live, clickable app previews**. Instead of only seeing text output, you can interact with what you’ve made. Each click replays your program so you can see how it responds.
+
+- Start with the new **app** starter button.
+- Write your program in SPRFST.
+- Supply input through Studio’s **Input** box.
+- Click through your app preview.
+- Experiment, adjust, and make something personal.
+
+**The language that builds Sreon can help you build something of your own.**
+
+### A guide beside you.
+
+The built-in **Guidebook** now spans **32 chapters**, including two new chapters dedicated to:
+
+- **Asking questions** — getting input into your programs.
+- **Making an app** — turning your code into an interactive experience.
+
+Start small. Learn as you go.
+
+---
+
+## A smoother path from thought to action.
+
+Sreon is designed to keep your tools close and your interface focused.
+
+Your dock brings apps and built-in tools together. The sidebar moves out of the way when you need more space. Studio lets you test interactions without leaving your creative workspace.
+
+**Less switching around. More getting on with it.**
+
+Actual performance varies by device, network, and workload.
+
+---
+
+## What’s new in Sreon 1.1?
+
+### A new foundation
+The browser interface has been rebuilt in **SPRFST**, Sreon’s custom-made programming language.
+
+### A celestial welcome
+An animated splash screen, live boot stages, a launch watchdog, and a smooth window fade-in.
+
+### A desktop-style new tab
+A clock, search, status strip, and app dock with open-app indicators.
+
+### Apps you can interact with
+Clickable Studio previews, a new app starter, and desktop-app project scaffolding through the SPRFST CLI.
+
+### Better ways to ask and listen
+New functions for numbers, integers, yes/no answers, and reading all input:
+
+- `io.ask_num`
+- `io.ask_int`
+- `io.ask_yes`
+- `io.read_all`
+
+Long input lines are preserved, and Studio’s Input box feeds your program directly.
+
+### More to discover
+A **32-chapter Guidebook**, expanded app documentation, and updated tests.
+
+### A new identity
+The **Orbit mark** — a glowing planet, tilted ring, and moon — alongside refreshed app icons.
+
+---
+
+## Get Sreon 1.1
+
+**Your next chapter starts here.**
+
+| Platform | Availability |
+| :--- | :--- |
+| **macOS** | [Download Sreon](https://opensreon.com/#download) |
+| **Windows** | Coming soon |
+| **Linux** | Coming soon |
+
+### Install on Mac
+
+1. Download **SREONBROWSER.dmg** from the official Sreon website.
+2. Open the downloaded disk image.
+3. Drag **Sreon** into your **Applications** folder.
+4. Eject the disk image, then open Sreon from Applications.
+
+<details>
+<summary><strong>Need help with a macOS verification warning?</strong></summary>
+
+If macOS says **“Apple cannot check it for malicious software”** or **“developer cannot be verified,”** it means Apple hasn’t verified the app. This is not by itself proof of malware, but it is not a guarantee of safety.
+
+**Only continue if you downloaded Sreon from the official website and trust the app:**
+
+1. Try opening Sreon.
+2. Go to **System Settings → Privacy & Security**.
+3. Scroll down to the **Security** section.
+4. Find the message about Sreon being blocked.
+5. Click **Open Anyway**, authenticate if asked, and confirm **Open**.
+
+If Open Anyway isn’t shown, try opening Sreon again and check the settings. On a managed Mac, contact your administrator.
+
+**Do not bypass an actual malware warning.** If macOS says the app **“will damage your computer”** or **“contains malware,”** stop and don’t open it. Don’t disable macOS security protections.
+
+</details>
+
+---
+
+<p align="center">
+  <img src="site/assets/landscape.webp" alt="Dark landscape artwork reflecting Sreon’s quiet visual style" width="800">
+</p>
+
+<p align="center">
+  <strong>A browser of your own. A language of its own.</strong><br>
+  Explore the web. Learn something new. Build what comes next.
+</p>
+
+<p align="center">
+  <a href="https://opensreon.com/#download"><strong>Make space for Sreon →</strong></a>
+</p>
