@@ -15,16 +15,18 @@ The server listens on `0.0.0.0:3000`. Set `PORT` to change it. The landing page 
 
 ## Publish downloads
 
-Edit **`site/assets/downloads.js`**. Set a platform's `url` to an official HTTPS release asset URL, and optionally add version/architecture information in `detail`.
+Edit **`site/assets/downloads.js`**. Set a platform's `url` to an official HTTPS release asset URL or a same-origin path, and optionally add version/architecture information in `detail`.
+
+The current Mac download points to the DMG included in this repository:
 
 ```js
 mac: {
-  url: "https://github.com/FellowPythonCoder/Sreon-Browser/releases/download/v1.0.0/Sreon.dmg",
-  detail: "v1.0.0 · Apple silicon"
+  url: "/site/assets/SREONBROWSER.dmg",
+  detail: "macOS · DMG installer"
 }
 ```
 
-The URL above is an example, not an existing release. Keep `url: null` until an actual build exists. Each unset platform opens a platform-specific “Coming soon” dialog, rather than a broken download. Configured platforms automatically become real links, update their availability badge, and update the download FAQ.
+Windows and Linux remain unset until their builds are available. Each unset platform opens a platform-specific “Coming soon” dialog, rather than a broken download. Configured platforms automatically become real links, update their availability badge, and update the download FAQ.
 
 ## What is interactive?
 

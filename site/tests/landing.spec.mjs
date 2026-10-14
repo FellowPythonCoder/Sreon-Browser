@@ -98,17 +98,37 @@ test("Studio safely applies editable settings, reports errors and supports keybo
   await expect(page.locator("#result-greeting b")).toHaveCount(0);
 });
 
-test("downloads honestly show each platform status, trap focus and close with Escape", async ({
+test("only Mac offers the DMG while Windows and Linux remain coming soon", async ({
   page,
 }) => {
   await page.goto("/#download");
+  const mac = page.locator('a.download-action[data-platform="mac"]');
+  await expect(mac).toHaveAttribute(
+    "href",
+    /\/site\/assets\/SREONBROWSER\.dmg$/,
+  );
+  await expect(page.locator('[data-status="mac"]')).toHaveText(
+    "macOS · DMG installer",
+  );
+  await expect(page.locator(".download-card").first().locator(".platform-tag"))
+    .toHaveText("AVAILABLE NOW");
+  await expect(page.locator("a.download-action")).toHaveCount(1);
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    mac.click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("SREONBROWSER.dmg");
+
   for (const [platform, name] of [
-    ["mac", "Mac"],
     ["windows", "Windows"],
     ["linux", "Linux"],
   ]) {
     const button = page.locator(
-      `.download-action[data-platform="${platform}"]`,
+      `button.download-action[data-platform="${platform}"]`,
+    );
+    await expect(button).toBeVisible();
+    await expect(page.locator(`[data-status="${platform}"]`)).toHaveText(
+      "Coming soon · Download not yet available",
     );
     await button.click();
     await expect(page.getByRole("dialog")).toBeVisible();
