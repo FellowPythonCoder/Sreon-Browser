@@ -1,12 +1,28 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../Extra/Source/node_modules/@playwright/test/index.mjs';
 
+test('minimal homepage has a single colon entrance and no download links', async ({page}) => {
+  const errors=[]; page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('/');
+  await expect(page.getByRole('heading',{name:'A little more room to explore.'})).toBeVisible();
+  await expect(page.locator('a[href="/site/notes/"]')).toHaveCount(1);
+  await expect(page.locator('.quiet-colon')).toHaveText(':');
+  await expect(page.getByRole('link',{name:/download/i})).toHaveCount(0);
+  await expect(page.locator('.hero-photo img')).toBeVisible();
+  await page.getByRole('button',{name:'Switch to dark mode'}).click();
+  await page.reload(); await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+  await page.locator('.quiet-colon').click();
+  await expect(page.getByRole('heading',{name:'Off the clock.'})).toBeVisible();
+  await expect(page.locator('.game-card')).toHaveCount(27);
+  await expect(page.getByRole('button',{name:/Space Waves/})).toBeVisible();
+  expect(errors).toEqual([]);
+});
 test('try area uses API data, safely renders results, and paginates', async ({page}) => {
   const requests=[];
   await page.route('**/api/search',route=>{
     requests.push(route.request().postDataJSON());
     return route.fulfill({json:{results:[{title:'<b>YouTube</b>',url:'https://www.youtube.com/',content:'Watch and discover.'},{title:'Unsafe',url:'javascript:alert(1)'}],nextCursor:requests.length===1?'next':null}});
   });
-  await page.goto('/site/explore/#try'); await page.locator('#query').fill('YouTube'); await page.locator('#search-submit').click();
+  await page.goto('/#try'); await page.locator('#query').fill('YouTube'); await page.locator('#search-submit').click();
   await expect(page.locator('.result')).toHaveCount(1);
   await expect(page.locator('.result a')).toHaveText('<b>YouTube</b>');
   await expect(page.locator('.result b')).toHaveCount(0);
@@ -17,7 +33,7 @@ test('result links open inside the small preview instead of a new tab', async ({
   const popups=[]; page.on('popup',popup=>popups.push(popup));
   await page.route('**/api/search',route=>route.fulfill({json:{results:[{title:'Example site',url:'https://example.org/'}]}}));
   await page.route('https://example.org/**',route=>route.fulfill({contentType:'text/html',body:'<title>Example</title><h1>Preview loaded</h1>'}));
-  await page.goto('/site/explore/#try'); await page.locator('#query').fill('example'); await page.locator('#search-submit').click();
+  await page.goto('/#try'); await page.locator('#query').fill('example'); await page.locator('#search-submit').click();
   await page.locator('.result a').click();
   await expect(page.locator('#site-preview')).toBeVisible();
   await expect(page.frameLocator('#preview-frame').locator('h1')).toHaveText('Preview loaded');
@@ -28,7 +44,7 @@ test('result links open inside the small preview instead of a new tab', async ({
 test('search errors do not create fake results and retry works', async ({page}) => {
   let fail=true;
   await page.route('**/api/search',route=>route.fulfill(fail?{status:503,json:{code:'BACKEND_NOT_READY',error:'Unavailable'}}:{json:{results:[{title:'Example',url:'https://example.org/'}]}}));
-  await page.goto('/site/explore/#try'); await page.locator('#query').fill('example'); await page.locator('#search-submit').click();
+  await page.goto('/#try'); await page.locator('#query').fill('example'); await page.locator('#search-submit').click();
   await expect(page.locator('#search-status')).toContainText('not connected'); await expect(page.locator('.result')).toHaveCount(0);
   fail=false; await page.locator('#search-submit').click(); await expect(page.locator('.result')).toHaveCount(1);
 });
@@ -116,7 +132,7 @@ test('endless mode starts from an accessible button and retains all three forms'
 test('all three photographs load and the discovery cards submit a real API request', async ({page}) => {
   let query;
   await page.route('**/api/search',route=>{query=route.request().postDataJSON().q;return route.fulfill({json:{results:[]}});});
-  await page.goto('/site/explore/');
+  await page.goto('/');
   await page.locator('.discovery-grid').scrollIntoViewIfNeeded();
   for(const image of await page.locator('.discovery-image img').all()) await expect.poll(()=>image.evaluate(img=>img.complete && img.naturalWidth>0)).toBe(true);
   await page.getByRole('button',{name:/Take the scenic route/}).click();
@@ -127,7 +143,7 @@ test('all three photographs load and the discovery cards submit a real API reque
 test('the try panel confirms engine readiness and distinguishes provider outages',async({page})=>{
   await page.route('**/api/health',route=>route.fulfill({json:{ready:true,engine:'rust'}}));
   await page.route('**/api/search',route=>route.fulfill({status:502,json:{code:'SOURCE_UNAVAILABLE'}}));
-  await page.goto('/site/explore/#try');
+  await page.goto('/#try');
   await expect(page.locator('#search-status')).toContainText('Connected to the Rust');
   await page.locator('#query').fill('YouTube'); await page.locator('#search-submit').click();
   await expect(page.locator('#search-status')).toContainText('engine is running');
