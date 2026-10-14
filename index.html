@@ -51,7 +51,7 @@
         <nav class="desktop-nav" aria-label="Main navigation">
           <a href="#browser">The browser</a><a href="#language">SPRFST</a
           ><a href="#studio">Studio <span class="nav-dot"></span></a
-          ><a href="#privacy">Privacy</a>
+          ><a href="#speed">Speed</a><a href="#privacy">Privacy</a>
         </nav>
         <a class="nav-download" href="#download"
           >Get Sreon <span aria-hidden="true">↗</span></a
@@ -66,16 +66,17 @@
       </div>
       <nav id="mobile-nav" aria-label="Mobile navigation" hidden>
         <a href="#browser">The browser</a><a href="#language">SPRFST</a
-        ><a href="#studio">Studio</a><a href="#privacy">Privacy</a>
+        ><a href="#studio">Studio</a><a href="#speed">Speed</a
+        ><a href="#privacy">Privacy</a>
       </nav>
     </header>
     <main id="main">
       <section class="hero section-wrap">
         <div class="hero-halo" aria-hidden="true"></div>
         <div class="star-field" aria-hidden="true"></div>
-        <a class="announcement" href="#language"
-          ><span class="status-dot"></span> Independent by design. Built on
-          SPRFST. <span aria-hidden="true">↗</span></a
+        <a class="announcement" href="#release-notes"
+          ><span class="status-dot"></span> Sreon 1.1 is here. Built on SPRFST.
+          <span aria-hidden="true">↗</span></a
         >
         <h1>Less browser.<br /><span>More possibility.</span></h1>
         <p class="hero-description">
@@ -93,6 +94,32 @@
           >
         </div>
         <p class="hero-note">Designed for Mac. Made for the way you think.</p>
+        <figure class="solar-scene" aria-labelledby="solar-caption">
+          <div class="solar-system" aria-hidden="true">
+            <div class="solar-sun"></div>
+            <div class="planet-orbit mercury"><span class="planet"></span></div>
+            <div class="planet-orbit venus"><span class="planet"></span></div>
+            <div class="planet-orbit earth"><span class="planet"></span></div>
+            <div class="planet-orbit mars"><span class="planet"></span></div>
+            <div class="asteroid-belt"></div>
+            <div class="planet-orbit jupiter"><span class="planet"></span></div>
+            <div class="planet-orbit saturn"><span class="planet"></span></div>
+            <div class="planet-orbit uranus"><span class="planet"></span></div>
+            <div class="planet-orbit neptune"><span class="planet"></span></div>
+          </div>
+          <figcaption id="solar-caption">
+            <span class="status-dot"></span> A little browser. An entire
+            universe.
+          </figcaption>
+          <button
+            class="motion-toggle"
+            id="motion-toggle"
+            aria-pressed="false"
+            hidden
+          >
+            Pause animations
+          </button>
+        </figure>
         <div class="browser-stage" id="browser">
           <div class="browser-window" id="browser-preview">
             <div class="browser-chrome">
@@ -349,6 +376,109 @@
         </div>
       </section>
       <section
+        class="speed-section section-wrap section-space"
+        id="speed"
+        aria-labelledby="speed-title"
+      >
+        <div class="speed-copy reveal">
+          <p class="eyebrow">BUILT FOR MOMENTUM</p>
+          <h2 id="speed-title">
+            Keep your orbit.<br /><span>Lose the waiting.</span>
+          </h2>
+          <p>
+            From launch to your next idea, Sreon is designed to stay out of your
+            way. A focused interface, less visual clutter, and your everyday
+            tools within reach.
+          </p>
+          <ul class="speed-details">
+            <li>
+              <span>01</span>
+              <div>
+                <h3>A smoother liftoff.</h3>
+                <p>
+                  A live boot sequence, a launch watchdog, and a gentle fade-in
+                  when your window is ready.
+                </p>
+              </div>
+            </li>
+            <li>
+              <span>02</span>
+              <div>
+                <h3>A shorter path to your tools.</h3>
+                <p>
+                  Open apps, Studio, Shield, and Settings share one dock. Hide
+                  the sidebar when it’s time to focus.
+                </p>
+              </div>
+            </li>
+            <li>
+              <span>03</span>
+              <div>
+                <h3>Stay in the creative flow.</h3>
+                <p>
+                  Clickable app previews in Studio replay your program with each
+                  interaction.
+                </p>
+              </div>
+            </li>
+          </ul>
+          <p class="speed-footnote">
+            Actual performance varies by device, network, and workload.
+          </p>
+        </div>
+        <div
+          class="asteroid-scene reveal"
+          role="img"
+          aria-label="An asteroid streaking across a dark star field"
+        >
+          <div class="flight-grid" aria-hidden="true"></div>
+          <div class="asteroid-flight" aria-hidden="true">
+            <div class="asteroid-trail"></div>
+            <svg class="asteroid-rock" viewBox="0 0 140 140">
+              <defs>
+                <radialGradient id="rock-light" cx=".75" cy=".25" r=".8">
+                  <stop stop-color="#c6b3e0" />
+                  <stop offset=".45" stop-color="#5f506e" />
+                  <stop offset="1" stop-color="#1c1926" />
+                </radialGradient>
+              </defs>
+              <path
+                d="M35 14 76 6 113 29 131 65 119 105 82 130 37 119 9 88 14 45Z"
+                fill="url(#rock-light)"
+                stroke="#a892c6"
+                stroke-width="1"
+              />
+              <path
+                d="m35 14 13 36-34-5m34 5 37-18 28-3M48 50 37 88l45 16 37 1M37 88l-28 0m73 16v26m3-98 15 39 31-6"
+                stroke="#d4c2eb"
+                opacity=".16"
+              />
+              <ellipse
+                cx="77"
+                cy="60"
+                rx="17"
+                ry="13"
+                fill="#292333"
+                stroke="#8b759e"
+                opacity=".65"
+              />
+              <ellipse
+                cx="48"
+                cy="96"
+                rx="10"
+                ry="7"
+                fill="#201b2c"
+                stroke="#78618c"
+                opacity=".7"
+              />
+              <circle cx="103" cy="83" r="6" fill="#332a42" stroke="#816a95" />
+            </svg>
+          </div>
+          <span class="flight-label">SREON / IN MOTION</span>
+          <span class="flight-caption">Less friction. More exploration. ↗</span>
+        </div>
+      </section>
+      <section
         class="language-section section-wrap section-space"
         id="language"
       >
@@ -577,12 +707,9 @@ browser.sidebar = "expanded"
         <div class="privacy-copy reveal">
           <p class="eyebrow">04 / SOME THINGS SHOULD STAY YOURS</p>
           <h2>
-            Privacy<a
-              class="quiet-colon"
-              href="/site/notes/"
-              aria-label="Open the hidden game section"
-              >:</a
-            ><br /><span>not an afterthought.</span>
+            Privacy<span class="quiet-colon">:</span><br /><span
+              >not an afterthought.</span
+            >
           </h2>
           <p>
             Your curiosity isn’t a commodity. Sreon is built around a simple
@@ -618,8 +745,7 @@ browser.sidebar = "expanded"
               This landing page uses locally hosted assets and has no analytics
               scripts. Your Studio edits stay in this page. The host may keep
               request logs, and external links take you to sites with their own
-              policies. Sreon is not a VPN. The hidden arcade has its own
-              features and disclosures.
+              policies. Sreon is not a VPN.
             </p>
           </details>
         </div>
@@ -634,7 +760,79 @@ browser.sidebar = "expanded"
           <p class="eyebrow">A SMALLER BROWSER. A BIGGER WORLD.</p>
           <h2>Your next chapter.<br /><span>Starts with Sreon.</span></h2>
           <p>A little less noise. A little more you.</p>
+          <a class="release-badge" href="#release-notes"
+            ><span class="status-dot"></span> Current version ·
+            <span data-release-version>1.1</span
+            ><span aria-hidden="true">↓</span></a
+          >
         </div>
+        <article
+          class="release-notes reveal"
+          id="release-notes"
+          aria-labelledby="release-title"
+        >
+          <div class="release-intro">
+            <p class="eyebrow">A NEW FOUNDATION</p>
+            <h3 id="release-title">
+              What’s new in Sreon <span data-release-version>1.1</span>
+            </h3>
+            <p>
+              Rebuilt from scratch in SPRFST, our homemade language. Read the
+              code, make it yours, and build your own apps.
+            </p>
+          </div>
+          <div class="release-highlights">
+            <div>
+              <span>01 / BUILT BY HAND</span>
+              <h4>A language of its own.</h4>
+              <p>
+                Settings, tabs, sidebar, and buttons are written in SPRFST — not
+                JavaScript or an off-the-shelf UI toolkit.
+              </p>
+            </div>
+            <div>
+              <span>02 / READY FOR LIFTOFF</span>
+              <h4>A celestial welcome.</h4>
+              <p>
+                An animated star-field splash with live boot stages, a launch
+                watchdog, and a smooth window fade-in.
+              </p>
+            </div>
+            <div>
+              <span>03 / YOUR NEW DESKTOP</span>
+              <h4>Space to make it yours.</h4>
+              <p>
+                A deep-space theme, clock, search, an app dock with activity
+                dots, a toggleable sidebar, and new Orbit icons.
+              </p>
+            </div>
+            <div>
+              <span>04 / BETTER INPUT</span>
+              <h4>Ask. Read. Create.</h4>
+              <p>
+                New number, integer, yes/no, and read-all inputs. Long lines
+                stay intact, and Studio’s Input box feeds your program directly.
+              </p>
+            </div>
+            <div>
+              <span>05 / REAL APP PREVIEWS</span>
+              <h4>From code to clickable.</h4>
+              <p>
+                Live app previews replay on every click. Start with Studio’s app
+                button or scaffold a project with
+                <code>sprfst new app &lt;name&gt;</code>.
+              </p>
+            </div>
+            <div>
+              <span>06 / KEEP EXPLORING</span>
+              <h4>32 chapters. More possibility.</h4>
+              <p>
+                The expanded guidebook now covers asking questions and making
+                apps, alongside updated documentation and app tests.
+              </p>
+            </div>
+          </div>
+        </article>
         <div class="download-grid">
           <article class="download-card featured-download reveal">
             <div class="download-card-top">
@@ -653,6 +851,62 @@ browser.sidebar = "expanded"
             ><span class="release-status" data-status="mac"
               >Coming soon · Download not yet available</span
             >
+            <details class="mac-install-help">
+              <summary>
+                How to install on Mac <span aria-hidden="true">+</span>
+              </summary>
+              <div class="mac-install-content">
+                <ol>
+                  <li>
+                    Download the Mac installer above, then open
+                    <strong>SREONBROWSER.dmg</strong> from your Downloads
+                    folder.
+                  </li>
+                  <li>
+                    Drag <strong>Sreon</strong> into your
+                    <strong>Applications</strong> folder, then eject the disk
+                    image.
+                  </li>
+                  <li>Open <strong>Sreon</strong> from Applications.</li>
+                </ol>
+                <h4>If macOS can’t verify the app</h4>
+                <p>
+                  A message such as “Apple cannot check it for malicious
+                  software” or “developer cannot be verified” can appear for
+                  apps that Apple hasn’t verified. It isn’t proof of malware,
+                  but it isn’t a guarantee of safety either.
+                </p>
+                <p>
+                  Only continue if you downloaded Sreon from this official site
+                  and trust the app:
+                </p>
+                <ol>
+                  <li>
+                    After trying to open Sreon, go to
+                    <strong>System Settings → Privacy &amp; Security</strong>.
+                  </li>
+                  <li>
+                    Scroll down to the <strong>Security</strong> section and
+                    find the message about Sreon being blocked.
+                  </li>
+                  <li>
+                    Click <strong>Open Anyway</strong>, authenticate if asked,
+                    and confirm <strong>Open</strong>.
+                  </li>
+                </ol>
+                <p>
+                  If Open Anyway isn’t shown, try opening Sreon once more and
+                  check the settings again. On a managed Mac, contact your
+                  administrator.
+                </p>
+                <p class="install-safety-note">
+                  <strong>Don’t bypass a malware warning.</strong> If macOS says
+                  the app “will damage your computer” or “contains malware,”
+                  stop and don’t open it. Don’t disable macOS security
+                  protections.
+                </p>
+              </div>
+            </details>
           </article>
           <article class="download-card reveal">
             <div class="download-card-top">
@@ -770,8 +1024,8 @@ browser.sidebar = "expanded"
           view.</span
         >
         <div>
-          <a href="#privacy">Privacy</a><a href="#download">Downloads</a
-          ><a href="#">Back to top ↑</a>
+          <a href="#speed">Speed</a><a href="#privacy">Privacy</a
+          ><a href="#download">Downloads</a><a href="#">Back to top ↑</a>
         </div>
         <span class="made-with"
           ><span class="status-dot"></span> Built different. On purpose.</span

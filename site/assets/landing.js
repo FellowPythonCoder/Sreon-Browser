@@ -4,6 +4,33 @@
   const $$ = (selector) => [...document.querySelectorAll(selector)];
   $("#year").textContent = new Date().getFullYear();
 
+  // Release metadata is shared by the download header and release notes.
+  if (window.SREON_RELEASE?.version) {
+    $$("[data-release-version]").forEach((label) => {
+      label.textContent = window.SREON_RELEASE.version;
+    });
+  }
+
+  // Respect OS motion preferences, including changes while this page is open.
+  const motionPreference = matchMedia("(prefers-reduced-motion: reduce)");
+  const motionToggle = $("#motion-toggle");
+  let manuallyPaused = false;
+  function updateMotion() {
+    const paused = manuallyPaused || motionPreference.matches;
+    document.documentElement.classList.toggle("animations-paused", paused);
+    motionToggle.hidden = motionPreference.matches;
+    motionToggle.setAttribute("aria-pressed", String(paused));
+    motionToggle.textContent = paused
+      ? "Resume animations"
+      : "Pause animations";
+  }
+  motionToggle.addEventListener("click", () => {
+    manuallyPaused = !manuallyPaused;
+    updateMotion();
+  });
+  motionPreference.addEventListener("change", updateMotion);
+  updateMotion();
+
   // Keep navigation usable with a keyboard and close it after choosing a section.
   const menu = $(".menu-toggle");
   const mobileNav = $("#mobile-nav");
@@ -203,8 +230,12 @@
         .querySelector(".platform-tag").textContent = "AVAILABLE NOW";
       $("#release-answer").textContent =
         "Published builds are linked in the download section above. Platforms marked Coming soon do not have a public download yet. Choose your platform to see its current availability.";
-      $(`[data-status="${platform}"]`).textContent =
-        config.detail || "Official release";
+      $(`[data-status="${platform}"]`).textContent = [
+        config.version ? `Version ${config.version}` : "",
+        config.detail || "Official release",
+      ]
+        .filter(Boolean)
+        .join(" · ");
     } else {
       button.addEventListener("click", () => {
         $("#download-dialog-title").textContent =

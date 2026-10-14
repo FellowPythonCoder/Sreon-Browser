@@ -108,10 +108,11 @@ test("only Mac offers the DMG while Windows and Linux remain coming soon", async
     /\/site\/assets\/SREONBROWSER\.dmg$/,
   );
   await expect(page.locator('[data-status="mac"]')).toHaveText(
-    "macOS · DMG installer",
+    "Version 1.1 · macOS · DMG installer",
   );
-  await expect(page.locator(".download-card").first().locator(".platform-tag"))
-    .toHaveText("AVAILABLE NOW");
+  await expect(
+    page.locator(".download-card").first().locator(".platform-tag"),
+  ).toHaveText("AVAILABLE NOW");
   await expect(page.locator("a.download-action")).toHaveCount(1);
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -141,6 +142,31 @@ test("only Mac offers the DMG while Windows and Linux remain coming soon", async
   }
 });
 
+test("Mac installation help is keyboard accessible and works without JavaScript", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/#download");
+  const details = page.locator(".mac-install-help");
+  const summary = details.locator("summary");
+  await expect(details).not.toHaveAttribute("open");
+  await expect(details.locator(".mac-install-content")).toBeHidden();
+  await summary.focus();
+  await page.keyboard.press("Enter");
+  await expect(details).toHaveAttribute("open", "");
+  await expect(details.locator("ol")).toHaveCount(2);
+  await expect(details).toContainText("SREONBROWSER.dmg");
+  await expect(details).toContainText("System Settings → Privacy & Security");
+  await expect(details).toContainText("Open Anyway");
+  await expect(details.locator(".install-safety-note")).toContainText(
+    "Don’t bypass a malware warning.",
+  );
+  await page.keyboard.press("Space");
+  await expect(details).not.toHaveAttribute("open");
+  await context.close();
+});
+
 test("configured release URLs become real links and unsafe URLs are ignored", async ({
   page,
 }) => {
@@ -162,22 +188,104 @@ test("configured release URLs become real links and unsafe URLs are ignored", as
   ).toBeVisible();
 });
 
-test("Privacy colon opens the hidden game library and local game", async ({
+test("Privacy colons are plain text and cannot open the gaming area", async ({
   page,
 }) => {
-  const errors = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/#privacy");
-  await page.locator(".quiet-colon").click();
-  await expect(
-    page.getByRole("heading", { name: "Off the clock." }),
-  ).toBeVisible();
-  await expect(page.locator(".game-card")).not.toHaveCount(0);
-  await page.getByRole("button", { name: /Geometry Rush/ }).click();
-  await expect(page.locator("#game-canvas")).toBeVisible();
-  await page.locator("#exit-game").click();
-  await expect(page.locator("#library")).toBeVisible();
-  expect(errors).toEqual([]);
+  for (const path of ["/#privacy", "/site/explore/#privacy"]) {
+    await page.goto(path);
+    const colon = page.locator(".quiet-colon");
+    await expect(colon).toHaveText(":");
+    expect(await colon.evaluate((el) => el.tagName)).toBe("SPAN");
+    await expect(colon).not.toHaveAttribute("tabindex");
+    await expect(page.locator('a[href*="/site/notes"]')).toHaveCount(0);
+    await colon.click();
+    await expect(page).toHaveURL(new RegExp(path.replaceAll("/", "\\/") + "$"));
+  }
+});
+
+test("downloads show the current version and summarized release notes", async ({
+  page,
+}) => {
+  await page.goto("/#download");
+  await expect(page.locator(".release-badge")).toContainText(
+    "Current version · 1.1",
+  );
+  await page.locator(".release-badge").click();
+  await expect(page).toHaveURL(/#release-notes$/);
+  await expect(page.locator("#release-title")).toHaveText(
+    "What’s new in Sreon 1.1",
+  );
+  await expect(page.locator(".release-highlights > div")).toHaveCount(6);
+  await expect(page.locator(".release-notes")).toContainText("SPRFST");
+  await expect(page.locator(".release-notes")).toContainText("32 chapters");
+  await expect(page.locator(".release-notes code")).toHaveText(
+    "sprfst new app <name>",
+  );
+});
+
+test("release metadata updates both version labels and platform-specific build status", async ({
+  page,
+}) => {
+  await page.route("**/downloads.js", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: 'window.SREON_RELEASE = {version:"1.2"}; window.SREON_DOWNLOADS = {mac:{url:"/site/assets/SREONBROWSER.dmg",version:"1.2",detail:"macOS"}};',
+    }),
+  );
+  await page.goto("/#download");
+  await expect(page.locator("[data-release-version]")).toHaveText([
+    "1.2",
+    "1.2",
+  ]);
+  await expect(page.locator('[data-status="mac"]')).toHaveText(
+    "Version 1.2 · macOS",
+  );
+});
+
+test("solar system and speed asteroid animate and can be paused together", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".planet-orbit")).toHaveCount(8);
+  await expect(page.locator(".earth")).toHaveCSS(
+    "animation-name",
+    "planet-revolve",
+  );
+  await expect(page.locator(".asteroid-flight")).toHaveCSS(
+    "animation-name",
+    "asteroid-fly",
+  );
+  await page.getByRole("button", { name: "Pause animations" }).click();
+  for (const selector of [
+    ".earth",
+    ".earth .planet",
+    ".asteroid-flight",
+    ".flight-grid",
+  ]) {
+    await expect(page.locator(selector)).toHaveCSS(
+      "animation-play-state",
+      "paused",
+    );
+  }
+  await expect(page.locator("#motion-toggle")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.getByRole("button", { name: "Resume animations" }).click();
+  await expect(page.locator(".earth")).toHaveCSS(
+    "animation-play-state",
+    "running",
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator(".earth")).toHaveCSS("animation-name", "none");
+  await expect(page.locator(".asteroid-flight")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await expect(page.locator("#motion-toggle")).toBeHidden();
+  await expect(page.locator("#speed-title")).toHaveText(
+    "Keep your orbit.Lose the waiting.",
+  );
 });
 
 for (const width of [360, 390, 768, 1440]) {
@@ -191,6 +299,14 @@ for (const width of [360, 390, 768, 1440]) {
     ).toBe(true);
     await page.locator("#download").scrollIntoViewIfNeeded();
     await expect(page.locator(".download-card").first()).toBeVisible();
+    await page.locator(".mac-install-help summary").click();
+    await expect(page.locator(".mac-install-content")).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+
     if (width < 760) {
       await page.goto("/");
       await page.getByRole("button", { name: "Open navigation" }).click();
@@ -214,7 +330,7 @@ test("FAQ and privacy disclosure open; reduced motion still reveals all content"
     .filter({ hasText: "When can I download it?" })
     .click();
   await expect(page.locator(".faq-list details[open] p")).toContainText(
-    "Downloads are not published yet",
+    "Published builds are linked in the download section above",
   );
   await page
     .getByText("The small print, in plain language", { exact: false })
