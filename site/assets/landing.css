@@ -925,7 +925,7 @@ h2 > span {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: brightness(0.42) saturate(0.45) hue-rotate(15deg);
+  filter: brightness(0.85);
   transition: transform 0.8s;
 }
 .space-card:hover > img {
@@ -1390,10 +1390,6 @@ h2 > span {
   transition:
     color 0.3s,
     text-shadow 0.3s;
-}
-.quiet-colon:hover {
-  color: #d0b6f9;
-  text-shadow: 0 0 20px #b991ec;
 }
 .privacy-copy > p:not(.eyebrow) {
   font-size: 12px;
@@ -2640,6 +2636,430 @@ dialog > p:not(.eyebrow) {
     padding: 38px 24px;
   }
 }
+/* Sreon 1.1 — a small, CSS-only solar system (illustrative, not to scale). */
+.solar-scene {
+  position: relative;
+  margin: 42px auto 0;
+  padding-bottom: 50px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 44%, #38245025, transparent 65%);
+}
+.solar-system {
+  position: relative;
+  width: min(850px, 100%);
+  aspect-ratio: 1.95;
+  margin: auto;
+  isolation: isolate;
+}
+.solar-sun {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 36% 30%,
+    #fff1d9,
+    #e6b674 35%,
+    #b46642 70%,
+    #643949
+  );
+  box-shadow:
+    0 0 28px #e9b57255,
+    0 0 85px #dc8f3930,
+    0 0 150px #bb76eb18;
+  z-index: 2;
+}
+.planet-orbit,
+.asteroid-belt {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--diameter);
+  aspect-ratio: 1;
+  border: 1px solid #b8abd321;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scaleY(0.48) rotate(var(--angle));
+  animation: planet-revolve var(--period) linear infinite;
+}
+.planet {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: var(--size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 75% 25%, var(--color), #101019 85%);
+  box-shadow: 0 0 14px #b4a0db18;
+  /* Undo the orbit's rotation and flattening so planets remain spherical. */
+  transform: translate(-50%, -50%) rotate(calc(-1 * var(--angle)))
+    scaleY(2.0833);
+  animation: planet-upright var(--period) linear infinite;
+}
+.mercury {
+  --diameter: 16%;
+  --size: 8px;
+  --color: #b7a79e;
+  --period: 20s;
+  --angle: 35deg;
+}
+.venus {
+  --diameter: 25%;
+  --size: 13px;
+  --color: #ddba8c;
+  --period: 30s;
+  --angle: 145deg;
+}
+.earth {
+  --diameter: 35%;
+  --size: 17px;
+  --color: #80b9d2;
+  --period: 44s;
+  --angle: 240deg;
+}
+.earth .planet:after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #a4a0b4;
+  border-radius: 50%;
+  top: -7px;
+  right: -4px;
+}
+.mars {
+  --diameter: 44%;
+  --size: 11px;
+  --color: #c78368;
+  --period: 56s;
+  --angle: 330deg;
+}
+.asteroid-belt {
+  --diameter: 52%;
+  --angle: 0deg;
+  border: 5px dotted #b29ac01c;
+  animation: none;
+}
+.jupiter {
+  --diameter: 62%;
+  --size: 34px;
+  --color: #d4b090;
+  --period: 78s;
+  --angle: 165deg;
+}
+.saturn {
+  --diameter: 74%;
+  --size: 26px;
+  --color: #c8b398;
+  --period: 100s;
+  --angle: 25deg;
+}
+.saturn .planet:after {
+  content: "";
+  position: absolute;
+  inset: 28% -45%;
+  border: 4px solid #a4958177;
+  border-radius: 50%;
+  transform: rotate(-30deg);
+}
+.uranus {
+  --diameter: 86%;
+  --size: 19px;
+  --color: #92bfc3;
+  --period: 124s;
+  --angle: 270deg;
+}
+.neptune {
+  --diameter: 98%;
+  --size: 18px;
+  --color: #7c92d5;
+  --period: 150s;
+  --angle: 65deg;
+}
+@keyframes planet-revolve {
+  to {
+    transform: translate(-50%, -50%) scaleY(0.48)
+      rotate(calc(var(--angle) + 360deg));
+  }
+}
+@keyframes planet-upright {
+  to {
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--angle) - 360deg))
+      scaleY(2.0833);
+  }
+}
+.solar-scene figcaption {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  color: #aaa0b8;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 10px;
+}
+.motion-toggle {
+  margin-top: 18px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #111018;
+  color: #b2a8c2;
+  font-size: 10px;
+}
+.animations-paused .planet-orbit,
+.animations-paused .planet,
+.animations-paused .asteroid-flight,
+.animations-paused .flight-grid {
+  animation-play-state: paused;
+}
+.quiet-colon {
+  cursor: text;
+}
+.speed-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 70px;
+  align-items: center;
+}
+.speed-copy h2 {
+  margin-top: 22px;
+}
+.speed-copy > p:not(.eyebrow) {
+  margin-top: 22px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.9;
+}
+.speed-details {
+  list-style: none;
+  padding: 0;
+  margin: 28px 0 0;
+}
+.speed-details li {
+  display: flex;
+  gap: 18px;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+.speed-details li > span {
+  color: var(--accent);
+  font-size: 10px;
+  padding-top: 4px;
+}
+.speed-details h3 {
+  font-size: 14px;
+}
+.speed-details p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.speed-copy > .speed-footnote {
+  font-size: 10px !important;
+  color: #a39aaf !important;
+}
+.asteroid-scene {
+  position: relative;
+  min-height: 440px;
+  overflow: hidden;
+  border: 1px solid #b9a5db20;
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at 75% 40%, #33234450, transparent 65%), #0c0b12;
+}
+.flight-grid {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(circle, #c9b2eb 1px, transparent 1px),
+    radial-gradient(circle, #6c617a 1px, transparent 1px);
+  background-size:
+    91px 73px,
+    57px 113px;
+  background-position:
+    0 0,
+    21px 43px;
+  animation: star-drift 8s linear infinite;
+}
+@keyframes star-drift {
+  to {
+    transform: translate(-91px, 73px);
+  }
+}
+.asteroid-flight {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 110px;
+  height: 110px;
+  transform: translate(-50%, -50%) rotate(-28deg);
+  animation: asteroid-fly 7s ease-in-out infinite;
+}
+.asteroid-rock {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(8px 0 18px #b393e74d);
+}
+.asteroid-trail {
+  position: absolute;
+  right: 40%;
+  top: 18%;
+  width: 310px;
+  height: 70%;
+  border-radius: 100% 10% 10% 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #9774c112 35%,
+    #ac8be056 85%,
+    #dfbeff80
+  );
+  filter: blur(9px);
+}
+.asteroid-trail:after {
+  content: "";
+  position: absolute;
+  inset: 48% 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #eadcff);
+}
+@keyframes asteroid-fly {
+  0%,
+  100% {
+    transform: translate(-75%, -20%) rotate(-28deg);
+  }
+  50% {
+    transform: translate(-15%, -75%) rotate(-22deg);
+  }
+}
+.flight-label,
+.flight-caption {
+  position: absolute;
+  left: 26px;
+  font-size: 9px;
+  letter-spacing: 1.6px;
+  color: #b3a2c9;
+}
+.flight-label {
+  top: 26px;
+}
+.flight-caption {
+  bottom: 26px;
+  letter-spacing: 0.5px;
+}
+.release-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 10px 18px;
+  border: 1px solid #bda1ea40;
+  background: #a985e00b;
+  border-radius: 30px;
+  font-size: 12px;
+  color: var(--accent-light);
+}
+.release-notes {
+  text-align: left;
+  position: relative;
+  background: linear-gradient(130deg, #16121f, #0e0e16 60%);
+  border: 1px solid #c3a7ef26;
+  border-radius: 14px;
+  padding: 36px;
+  margin: 36px 0 28px;
+  scroll-margin-top: 100px;
+}
+.release-intro h3 {
+  margin-top: 14px;
+  font-size: 28px;
+  letter-spacing: -1px;
+}
+.release-intro > p:last-child {
+  max-width: 600px;
+  color: #aaa0b8;
+  font-size: 13px;
+  line-height: 1.9;
+  margin-top: 12px;
+}
+.release-highlights {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin-top: 32px;
+}
+.release-highlights > div {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.release-highlights span {
+  color: #b3a0c9;
+  font-size: 8px;
+  letter-spacing: 1.1px;
+}
+.release-highlights h4 {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 13px 0 9px;
+}
+.release-highlights p {
+  color: #a39baa;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.release-highlights code {
+  color: #cdb4ef;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .solar-scene {
+    margin-top: 30px;
+    padding-bottom: 15px;
+  }
+  .solar-scene figcaption {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+  .planet {
+    width: calc(var(--size) * 0.65);
+  }
+  .speed-section {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .asteroid-scene {
+    min-height: 330px;
+  }
+  .release-notes {
+    padding: 26px;
+  }
+  .release-highlights {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+@media (max-width: 480px) {
+  .release-highlights {
+    grid-template-columns: 1fr;
+  }
+  .release-intro h3 {
+    font-size: 24px;
+  }
+  .solar-system {
+    margin-block: 18px;
+  }
+  .planet {
+    width: calc(var(--size) * 0.45);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

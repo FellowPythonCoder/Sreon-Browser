@@ -1,6 +1,15 @@
 # Sreon — opensreon.com
 
-A lightweight, deep-space landing page for Sreon, with locally hosted fonts and imagery, a lavender accent, responsive layouts, and no analytics scripts.
+A lightweight, deep-space landing page for Sreon, with locally hosted fonts and dark-graded imagery, a lavender accent, responsive layouts, and no analytics scripts.
+
+## What’s new on the Sreon 1.1 website
+
+- Animated solar-system hero with eight planets, an asteroid belt, and a ringed Saturn.
+- Dedicated speed section with an animated asteroid and practical workflow highlights, without invented benchmarks.
+- Downloads show current version **1.1**, a six-part release summary, and per-platform build metadata.
+- All four local photographs have a baked-in dark, cool color grade, including wallpapers and the preserved demo’s photos.
+- The Privacy colon is plain, non-focusable text on both landing and demo pages; the hidden Gaming Area entry point is disabled. Existing games are preserved at their direct URLs.
+- One pause/resume control stops the decorative animations; OS reduced-motion preferences are respected, including live preference changes.
 
 ## Run locally
 
@@ -15,18 +24,19 @@ The server listens on `0.0.0.0:3000`. Set `PORT` to change it. The landing page 
 
 ## Publish downloads
 
-Edit **`site/assets/downloads.js`**. Set a platform's `url` to an official HTTPS release asset URL or a same-origin path, and optionally add version/architecture information in `detail`.
+Edit **`site/assets/downloads.js`**. `SREON_RELEASE.version` sets the current version displayed in Downloads and the release-notes heading. Set each platform’s `url` to an official HTTPS release asset URL or a same-origin path, its `version` to the build version, and `detail` to architecture or installer information. Update the release summary and announcement in `index.html` when publishing a new release.
 
 The current Mac download points to the DMG included in this repository:
 
 ```js
 mac: {
   url: "/site/assets/SREONBROWSER.dmg",
+  version: "1.1",
   detail: "macOS · DMG installer"
 }
 ```
 
-Windows and Linux remain unset until their builds are available. Each unset platform opens a platform-specific “Coming soon” dialog, rather than a broken download. Configured platforms automatically become real links, update their availability badge, and update the download FAQ.
+The existing DMG is retained unchanged; this website update does not build or replace the browser installer. Windows and Linux remain unset until their builds are available. Each unset platform opens a platform-specific “Coming soon” dialog, rather than a broken download. Configured platforms automatically become real links, update their availability badge, and update the download FAQ.
 
 ## What is interactive?
 
@@ -34,7 +44,8 @@ Windows and Linux remain unset until their builds are available. Each unset plat
 - Change the scenery: cycles through three locally hosted wallpapers.
 - Focus mode: collapses the browser preview's sidebar; the `+` button resets the preview.
 - Studio: three keyboard-accessible examples, an editable settings panel, live results, validation, and Ctrl/Cmd+Enter to apply.
-- Privacy: the colon in the **Privacy:** heading opens the existing hidden arcade at `/site/notes/`.
+- Privacy: the colon in the **Privacy:** heading is now ordinary punctuation, not a hidden arcade link.
+- Solar system and asteroid: a shared pause/resume button and reduced-motion support.
 - Download dialogs: native keyboard-accessible dialogs with Escape-to-close and focus restoration.
 - Mobile navigation, FAQ disclosures, and reduced-motion-aware section reveals.
 
@@ -57,12 +68,12 @@ The landing page makes no third-party requests. Following an external link or us
 
 ```sh
 npx playwright install chromium
-npm run test:landing  # 11 new interaction/responsive tests
-npm run test:browser  # all 23 browser tests, including preserved demos and games
+npm run test:landing  # 14 landing-page interaction/responsive tests
+npm run test:browser  # all 26 browser tests, including preserved demos and games
 npm run test:server   # existing backend unit tests
 ```
 
-A custom Chromium can be supplied with `PLAYWRIGHT_EXECUTABLE_PATH`. Browser tests cover widths of 360, 390, 768, and 1440 pixels, downloads, safe Studio input, hidden games, reduced motion, and the preserved search demo.
+A custom Chromium can be supplied with `PLAYWRIGHT_EXECUTABLE_PATH`. Browser tests cover widths of 360, 390, 768, and 1440 pixels, versioned downloads and release notes, safe Studio input, disabled arcade entry points, motion controls, reduced motion, and the preserved search demo and direct game routes.
 
 Known pre-existing backend test mismatches: `server.test.mjs` expects the old `rust` health identifier instead of the current `duckduckgo-html`, and expects `BACKEND_NOT_READY` on a generic search failure instead of the current error response. Those two assertions fail; the other seven server tests pass. This landing-page change does not modify API behavior. Other legacy Rust/package tests reference source files no longer present in this checkout.
 
