@@ -110,6 +110,44 @@ Actual performance varies by device, network, and workload.
 
 ---
 
+## Found something broken?
+
+Sreon has a **public bug chat** at [opensreon.com/report](https://opensreon.com/report/).
+
+It is one open thread that everybody reads and writes. No account, no form to fight with.
+
+- Say what went wrong in one line, then add the steps and what you expected.
+- Pick how serious it is: **Crash**, **Broken**, **Minor**, or **Idea**.
+- Attach up to **three screenshots**. They are resized in your own browser before they are sent.
+- Reply to somebody else’s report — “same here on Windows” is useful.
+- Filter by severity, search the thread, or export it as Markdown.
+
+Reach it from the front page navigation, the footer, the search demo, and the hidden corner at `/site/notes/`.
+
+**Everything posted there is public.** The page says so above the composer, and the contact field is optional.
+
+You can delete your own posts. When you post, the server hands your browser a token that is stored locally and never published; that token is the only way to withdraw a post, and withdrawing a report takes its replies and screenshots with it.
+
+### Running the inbox
+
+The thread is stored by the website server, one JSON line per post, beside the images:
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `SREON_BUG_DIR` | a temporary directory | Where the thread and its screenshots live. Point this at a mounted volume to keep reports across restarts. |
+| `SREON_BUG_LIMIT` | `6` | Posts accepted per address per hour. |
+
+The API is small and deliberately boring:
+
+- `GET /api/bugs` — the shared thread. Says plainly when a host cannot keep one.
+- `POST /api/bugs` — a report, or a reply with `kind: "reply"` and a `parent`.
+- `POST /api/bugs/remove` — withdraw a post with its token.
+- `GET /api/bugs/files/<name>` — a stored screenshot, served as data and nothing else.
+
+Uploads are checked twice: a size and field-length limit, and the image bytes themselves decide the stored format, so a renamed script is refused. If the website is hosted somewhere without this server, the page does not pretend otherwise — it tells you the thread cannot be shared and offers Copy and a prefilled GitHub issue instead.
+
+---
+
 ## What’s new in Sreon 1.1?
 
 ### A new foundation

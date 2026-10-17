@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
-import { readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
 import { createWebsite } from '../server.mjs';
 
@@ -68,7 +70,7 @@ test('health endpoint verifies the engine and does not assert provider reachabil
   const base=await setup(t,{clientFactory:()=>({close(){},search:async q=>{calls++;assert.equal(q,'');throw Object.assign(new Error('Invalid query'),{status:400,code:'INVALID_QUERY'});}})});
   const response=await fetch(base+'/api/health');
   assert.equal(response.status,200);
-  assert.deepEqual(await response.json(),{ready:true,engine:'rust',sources:'checked when searching'});
+  assert.deepEqual(await response.json(),{ready:true,engine:'duckduckgo-html',sources:'checked when searching'});
   await fetch(base+'/api/health'); assert.equal(calls,1);
 });
 test('health distinguishes unavailable transport from an operational backend', async t => {
@@ -92,7 +94,7 @@ test('only the Mac download is configured; Windows and Linux stay unavailable', 
   const context = { window:{} };
   runInNewContext(await response.text(), context);
   assert.deepEqual(JSON.parse(JSON.stringify(context.window.SREON_DOWNLOADS)), {
-    mac:{ url:'/site/assets/SREONBROWSER.dmg', detail:'macOS · DMG installer' },
+    mac:{ url:'/site/assets/SREONBROWSER.dmg', version:'1.1', detail:'macOS · DMG installer' },
     windows:{ url:null, detail:'' },
     linux:{ url:null, detail:'' },
   });
@@ -113,4 +115,106 @@ test('the Mac DMG is served from its exact case-sensitive path', async t => {
   assert.equal(head.headers.get('content-type'), 'application/x-apple-diskimage');
   assert.equal(head.headers.get('content-length'), String(expected.length));
   assert.equal((await head.arrayBuffer()).byteLength, 0);
+});
+
+/* ------------------------------------------------- the public bug chat --- */
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8AAAwAB/AF+p7RLAAAAAElFTkSuQmCC', 'base64');
+const REPORT = { name:'Ada', title:'Sidebar snaps shut on its own', severity:'broken', area:'Sidebar', steps:'1. Open\n2. Wait', version:'1.1', platform:'macOS' };
+async function inbox(t, options = {}) {
+  const holder = await mkdtemp(join(tmpdir(), 'sreon-bug-inbox-'));
+  t.after(() => rm(holder, { recursive:true, force:true }));
+  const base = await setup(t, { bugDir: join(holder, 'inbox'), ...options });
+  const send = (data, path = '/api/bugs') => fetch(base+path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+  const thread = async () => (await fetch(base+'/api/bugs')).json();
+  return { base, holder, send, thread, withdraw: (id, token) => send({ id, token }, '/api/bugs/remove') };
+}
+test('the bug chat keeps a report and shows it to everybody without its token', async t => {
+  const { send, thread } = await inbox(t);
+  const created = await send(REPORT);
+  assert.equal(created.status, 201);
+  const { id, token, images } = await created.json();
+  assert.match(id, /^bug-[a-z0-9-]+$/);
+  assert.equal(token.length, 24);
+  assert.deepEqual(images, []);
+  const listed = await thread();
+  assert.equal(listed.ready, true);
+  assert.equal(listed.intake, 'open');
+  assert.equal(listed.count, 1);
+  assert.deepEqual(listed.entries[0], { kind:'report', id, at:listed.entries[0].at, name:'Ada', title:REPORT.title, severity:'broken', area:'Sidebar', steps:'1. Open\n2. Wait', version:'1.1', platform:'macOS' });
+  assert.ok(!JSON.stringify(listed).includes(token), 'the removal token must never be published');
+});
+test('replies join a report and leave again with it', async t => {
+  const { send, thread, withdraw } = await inbox(t);
+  const parent = await (await send(REPORT)).json();
+  assert.equal((await send({ kind:'reply', parent:parent.id, name:'Grace', text:'Same on Windows.' })).status, 201);
+  assert.equal((await thread()).count, 2);
+  assert.equal((await send({ kind:'reply', parent:'bug-gone-already', text:'orphan' })).status, 400);
+  const removed = await withdraw(parent.id, parent.token);
+  assert.equal(removed.status, 200);
+  assert.equal((await removed.json()).replies, 1);
+  assert.equal((await thread()).count, 0);
+});
+test('screenshots are stored under the format their own bytes declare', async t => {
+  const { base, send } = await inbox(t);
+  const { id, images } = await (await send({ ...REPORT, title:'A picture of the broken tab', images:[`data:image/png;base64,${PNG.toString('base64')}`] })).json();
+  assert.deepEqual(images, [`${id}-0.png`]);
+  const shot = await fetch(`${base}/api/bugs/files/${images[0]}`);
+  assert.equal(shot.status, 200);
+  assert.equal(shot.headers.get('content-type'), 'image/png');
+  assert.match(shot.headers.get('content-security-policy'), /default-src 'none'/);
+  assert.deepEqual(Buffer.from(await shot.arrayBuffer()), PNG);
+  const disguised = await send({ ...REPORT, title:'Not a picture', images:['data:image/png;base64,'+Buffer.from('<svg onload="alert(1)"></svg>').toString('base64')] });
+  assert.equal(disguised.status, 400);
+  assert.equal((await fetch(`${base}/api/bugs/files/..%2F..%2Fserver.mjs`)).status, 404);
+  assert.equal((await fetch(`${base}/api/bugs/files/${images[0]}.html`)).status, 404);
+  assert.equal((await fetch(`${base}/api/bugs/files/`, { method:'POST' })).status, 405);
+});
+test('the bug inbox refuses junk, wrong methods, foreign origins, and floods', async t => {
+  const { base, send } = await inbox(t, { bugLimit: 2 });
+  for (const value of [null, [], {}, { title:'' }, { title:'x'.repeat(121), severity:'crash', area:'Other' }, { title:'ok', severity:'meh', area:'Other' }, { title:'ok', severity:'crash', area:'Nowhere' }, { title:'ok', severity:'crash', area:'Other', steps:7 }, { kind:'reply', text:'no parent' }])
+    assert.equal((await send(value)).status, 400, JSON.stringify(value));
+  assert.equal((await fetch(`${base}/api/bugs`, { method:'PUT' })).status, 405);
+  assert.equal((await fetch(`${base}/api/bugs`, { method:'POST', body:'title=x' })).status, 415);
+  assert.equal((await fetch(`${base}/api/bugs`, { headers:{ Origin:'https://untrusted.test' } })).status, 403);
+  assert.equal((await fetch(`${base}/api/bugs/remove`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:'../etc/passwd', token:'x'.repeat(24) }) })).status, 400);
+  assert.equal((await send(REPORT)).status, 201);
+  assert.equal((await send(REPORT)).status, 201);
+  const flooded = await send(REPORT);
+  assert.equal(flooded.status, 429);
+  assert.equal(flooded.headers.get('retry-after'), '3600');
+});
+test('only the browser that posted can withdraw a post', async t => {
+  const { send, thread, withdraw } = await inbox(t);
+  const { id, token } = await (await send(REPORT)).json();
+  assert.equal((await withdraw(id, 'not-the-token-at-all')).status, 403);
+  assert.equal((await withdraw(id, token.slice(0, -1))).status, 403);
+  assert.equal((await withdraw('bug-somewhere-else', token)).status, 403);
+  assert.equal((await thread()).count, 1);
+  assert.equal((await withdraw(id, token)).status, 200);
+  assert.equal((await thread()).count, 0);
+});
+test('a host that cannot keep reports says so instead of accepting them', async t => {
+  const holder = await mkdtemp(join(tmpdir(), 'sreon-blocked-'));
+  t.after(() => rm(holder, { recursive:true, force:true }));
+  const inTheWay = join(holder, 'not-a-folder');
+  await writeFile(inTheWay, 'in the way');
+  const base = await setup(t, { bugDir: join(inTheWay, 'inbox') });
+  const probe = await fetch(`${base}/api/bugs`);
+  assert.equal(probe.status, 503);
+  assert.equal((await probe.json()).code, 'INTAKE_CLOSED');
+  const posted = await fetch(`${base}/api/bugs`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(REPORT) });
+  assert.equal(posted.status, 503);
+});
+test('the report page is public while the stored thread is not a web page', async t => {
+  const { base, send } = await inbox(t);
+  await send(REPORT);
+  const short = await fetch(`${base}/report`);
+  assert.equal(short.status, 200);
+  assert.equal(new URL(short.url).pathname, '/report/');
+  const page = await fetch(`${base}/report/`);
+  assert.equal(page.status, 200);
+  assert.match(page.headers.get('content-type'), /text\/html/);
+  assert.equal(page.headers.get('x-robots-tag'), null);
+  assert.match(await page.text(), /report\.js/);
+  for (const path of ['/reports.jsonl', '/site/report/reports.jsonl', '/site/report/', '/site/server.mjs']) assert.equal((await fetch(base+path)).status, 404, path);
 });

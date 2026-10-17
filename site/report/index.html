@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Sreon’s public bug chat. Say what broke, add a screenshot, and see what everybody else has found.">
+<meta name="theme-color" content="#19171e">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="canonical" href="https://opensreon.com/report/">
+<title>Bug chat · Sreon</title>
+<link rel="icon" href="/site/assets/mark.png">
+<link rel="stylesheet" href="/site/assets/site.css">
+<link rel="stylesheet" href="/site/assets/report.css">
+<script src="/site/assets/theme.js"></script>
+<script src="/site/assets/report.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+<a class="brand" href="/" aria-label="Sreon home"><img src="/site/assets/mark.png" alt="" width="34" height="34">Sreon<span class="brand-period">.</span></a>
+<nav aria-label="Main navigation"><a href="/#browser">The browser</a><a href="/#studio">Studio</a><a href="/site/explore/#try">Try it</a><a href="/report/" aria-current="page">Bug chat</a></nav>
+<button class="theme" id="theme" type="button" aria-label="Switch to dark mode">◐</button>
+</header>
+<main id="main">
+
+<section class="wrap report-intro">
+<div class="report-intro-copy">
+<p class="eyebrow"><span class="small-dot"></span> ONE PUBLIC THREAD FOR EVERYTHING BROKEN</p>
+<h1>Something went<br>wrong? <em>Say so.</em></h1>
+<p class="lede">This is Sreon’s bug chat. Post what broke, drop in a screenshot, and read what other people have already found — all in one open thread.</p>
+<p class="public-note"><span aria-hidden="true">◉</span> Everything posted here is public and visible to everyone. Never paste a password, an API key, or anything private.</p>
+</div>
+<div class="intake-card" id="intake-card" data-state="checking">
+<p class="intake-head"><i class="intake-dot" aria-hidden="true"></i><span id="intake-label">Connecting to the bug inbox…</span></p>
+<p class="intake-note" id="intake-note">Checking whether this host keeps the shared thread.</p>
+<dl class="intake-stats">
+<div><dt>Reports</dt><dd id="stat-reports">·</dd></div>
+<div><dt>Replies</dt><dd id="stat-replies">·</dd></div>
+<div><dt>Crashes</dt><dd id="stat-crashes">·</dd></div>
+</dl>
+<p class="intake-refresh"><span id="last-sync">Not synced yet</span><button class="text-button" id="sync-now" type="button">Refresh now</button></p>
+</div>
+</section>
+
+<section class="wrap report-layout" id="thread-top">
+<aside class="report-side">
+<div class="side-card">
+<p class="eyebrow">POSTING AS</p>
+<label class="sr-only" for="reader-name">Name shown next to your posts</label>
+<input id="reader-name" maxlength="40" autocomplete="nickname" spellcheck="false" placeholder="Anonymous">
+<p class="side-note">Kept in this browser. Leave it empty to post as Anonymous.</p>
+</div>
+<div class="side-card">
+<p class="eyebrow">A USEFUL REPORT</p>
+<ol class="side-steps">
+<li><span>01</span><p><strong>What you did.</strong> The steps in order, from a fresh start of Sreon.</p></li>
+<li><span>02</span><p><strong>What happened.</strong> The wrong thing, and what you expected instead.</p></li>
+<li><span>03</span><p><strong>Where you are.</strong> Sreon version, system, and which part of the app.</p></li>
+</ol>
+</div>
+<div class="side-card">
+<p class="eyebrow">NARROW IT DOWN</p>
+<div class="chip-row" role="group" aria-label="Filter the thread by severity">
+<button type="button" class="chip" data-filter="all" aria-pressed="true">All</button>
+<button type="button" class="chip" data-filter="crash" aria-pressed="false">Crash</button>
+<button type="button" class="chip" data-filter="broken" aria-pressed="false">Broken</button>
+<button type="button" class="chip" data-filter="minor" aria-pressed="false">Minor</button>
+<button type="button" class="chip" data-filter="idea" aria-pressed="false">Idea</button>
+<button type="button" class="chip" data-filter="mine" aria-pressed="false">Mine</button>
+</div>
+<label class="sr-only" for="thread-search">Search the thread</label>
+<input id="thread-search" class="side-search" type="search" placeholder="Search titles and text…">
+<p class="side-note" id="filter-note">Showing the whole thread.</p>
+</div>
+<div class="side-card quiet">
+<p class="eyebrow">IF THIS HOST HAS NO INBOX</p>
+<p class="side-note">You can still write a report here, then copy it or open it as an issue on GitHub so it reaches the project.</p>
+<a class="text-button" href="https://github.com/FellowPythonCoder/Sreon-Browser/issues" target="_blank" rel="noopener noreferrer">Sreon on GitHub ↗</a>
+</div>
+</aside>
+
+<div class="conversation">
+<div class="chat-toolbar">
+<span class="chat-person"><span class="assistant-mark bug-mark" aria-hidden="true">!</span><span>Bug thread<small><i id="thread-dot"></i><span id="thread-summary">Waiting for the inbox…</span></small></span></span>
+<span class="toolbar-tools">
+<button id="copy-thread" class="text-button" type="button" disabled>Copy all</button>
+<button id="download-thread" class="text-button" type="button" disabled>Export</button>
+</span>
+</div>
+<div class="thread-wrap">
+<div id="thread" role="log" aria-label="Public bug reports" aria-live="polite">
+<div id="thread-empty">
+<div class="empty-mark" aria-hidden="true">✳</div>
+<h3>No bugs yet. Suspicious.</h3>
+<p>Either Sreon is behaving, or nobody has said anything.<br>If something is wrong, you can be the first to mention it.</p>
+</div>
+</div>
+<button id="thread-cue" class="scroll-cue" type="button" hidden>↓ New posts</button>
+</div>
+
+<form id="composer" class="composer">
+<p class="reply-banner" id="reply-banner" hidden><span>Replying to <b id="reply-title"></b></span><button id="reply-cancel" type="button" aria-label="Cancel this reply">×</button></p>
+<div class="composer-fields" id="report-fields">
+<div class="composer-head">
+<label class="sr-only" for="bug-title">What went wrong?</label>
+<input id="bug-title" name="title" type="text" maxlength="120" autocomplete="off" placeholder="What went wrong? One line is enough to start." required>
+<span class="title-count" id="bug-title-count" aria-hidden="true">0/120</span>
+</div>
+<div class="composer-choices">
+<fieldset class="severity-set">
+<legend class="sr-only">How serious is it?</legend>
+<label class="pill crash"><input type="radio" name="severity" value="crash"><span>Crash</span></label>
+<label class="pill broken"><input type="radio" name="severity" value="broken" checked><span>Broken</span></label>
+<label class="pill minor"><input type="radio" name="severity" value="minor"><span>Minor</span></label>
+<label class="pill idea"><input type="radio" name="severity" value="idea"><span>Idea</span></label>
+</fieldset>
+<label class="select-field"><span class="sr-only">Where does it happen?</span><select id="bug-area" name="area"><option>Browser window</option><option>New tab</option><option>Tabs</option><option>Sidebar</option><option>Search</option><option>Studio</option><option>Guidebook</option><option>Shield</option><option>Settings</option><option>Splash</option><option>This website</option><option>Other</option></select></label>
+</div>
+<details class="composer-details" id="bug-details">
+<summary>Add the details<span class="summary-mark" aria-hidden="true">+</span></summary>
+<div class="detail-grid">
+<label for="bug-steps">What did you do?</label>
+<textarea id="bug-steps" name="steps" rows="3" maxlength="2000" placeholder="1. Opened Sreon&#10;2. Clicked the sidebar&#10;3. Nothing moved"></textarea>
+<label for="bug-expected">What did you expect?</label>
+<textarea id="bug-expected" name="expected" rows="2" maxlength="1000" placeholder="The sidebar should have closed."></textarea>
+</div>
+</details>
+<div class="composer-meta">
+<label class="meta-field"><span>Sreon</span><input id="bug-version" name="version" maxlength="40" value="1.1" placeholder="1.1"></label>
+<label class="meta-field"><span>System</span><input id="bug-platform" name="platform" maxlength="40" placeholder="macOS"></label>
+<label class="meta-field grow"><span>Contact</span><input id="bug-contact" name="contact" maxlength="120" autocomplete="off" spellcheck="false" placeholder="optional · public"></label>
+</div>
+</div>
+<div class="composer-reply" id="reply-fields" hidden>
+<label class="sr-only" for="reply-text">Your reply</label>
+<textarea id="reply-text" rows="2" maxlength="2000" placeholder="Same thing happens to me, or: here is what I found…"></textarea>
+</div>
+<div class="attachments" id="attachments"></div>
+<div class="composer-actions">
+<label class="attach-button" tabindex="0" for="attach-images">+ Screenshots</label>
+<input id="attach-images" class="sr-only" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
+<span class="composer-note" id="composer-note">Public · 3 images max · paste or drop a screenshot</span>
+<button id="composer-reset" class="text-button" type="button">Clear</button>
+<button id="composer-send" type="submit">Post bug ↗</button>
+</div>
+</form>
+<p id="composer-status" role="status"></p>
+</div>
+</section>
+
+<section class="wrap report-closing">
+<p class="eyebrow">WHAT HAPPENS NEXT</p>
+<h2>Every report<br>gets <em>read.</em></h2>
+<p>Fixes land in the release notes on the front page. If a report needs more detail, somebody will ask for it right here in the thread.</p>
+<a class="button" href="/#download">Back to Sreon <span aria-hidden="true">↗</span></a>
+</section>
+
+</main>
+<footer class="wrap footer"><a class="brand" href="/"><img src="/site/assets/mark.png" alt="" width="25" height="25">Sreon.</a><span>Public bug chat. Be kind, be specific.</span><a href="/#privacy">Privacy, in plain language ↗</a></footer>
+<dialog id="shot-viewer" aria-label="Screenshot"><img id="shot-image" alt=""><figcaption id="shot-caption"></figcaption><button class="dialog-close" id="shot-close" type="button" aria-label="Close screenshot">×</button></dialog>
+</body>
+</html>

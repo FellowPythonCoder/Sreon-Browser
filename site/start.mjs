@@ -1,4 +1,5 @@
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { once } from 'node:events';
 import { createWebsite } from './server.mjs';
@@ -26,6 +27,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   try {
     const server = await startWebsite();
     console.log(`Sreon website and search backend ready on port ${server.address().port}`);
+    console.log(`Public bug chat inbox: ${process.env.SREON_BUG_DIR || join(tmpdir(), 'sreon-bug-inbox')} (set SREON_BUG_DIR to keep it on a mounted volume)`);
     for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => { server.close(); server.closeAllConnections(); });
   } catch (error) {
     console.error(error.message);
