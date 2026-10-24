@@ -1559,13 +1559,15 @@ h2 > span {
   color: #6d6377;
   margin-top: 12px;
 }
-.mac-install-help {
+.mac-install-help,
+.linux-install-help {
   margin-top: 20px;
   border-top: 1px solid #c3a7ef26;
   padding-top: 14px;
   overflow-wrap: anywhere;
 }
-.mac-install-help summary {
+.mac-install-help summary,
+.linux-install-help summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1576,52 +1578,72 @@ h2 > span {
   cursor: pointer;
   list-style: none;
 }
-.mac-install-help summary::-webkit-details-marker {
+.mac-install-help summary::-webkit-details-marker,
+.linux-install-help summary::-webkit-details-marker {
   display: none;
 }
-.mac-install-help summary > span {
+.mac-install-help summary > span,
+.linux-install-help summary > span {
   font-size: 18px;
   transition: transform 0.2s;
 }
-.mac-install-help[open] summary > span {
+.mac-install-help[open] summary > span,
+.linux-install-help[open] summary > span {
   transform: rotate(45deg);
 }
-.mac-install-content {
+.mac-install-content,
+.linux-install-content {
   padding-top: 10px;
   color: #b9afc5;
   font-size: 12px;
   line-height: 1.8;
 }
-.mac-install-content ol {
+.mac-install-content ol,
+.linux-install-content ol {
   margin: 0;
   padding-left: 20px;
 }
-.mac-install-content li + li {
+.mac-install-content li + li,
+.linux-install-content li + li {
   margin-top: 10px;
 }
-.mac-install-content h4 {
+.mac-install-content h4,
+.linux-install-content h4 {
   margin: 22px 0 0;
   color: var(--text);
   font-size: 13px;
   font-weight: 500;
 }
-.download-card .mac-install-content p {
+.download-card .mac-install-content p,
+.download-card .linux-install-content p {
   margin: 12px 0;
   min-height: 0;
   color: #b9afc5;
   font-size: 12px;
   line-height: 1.8;
 }
-.mac-install-content strong {
+.mac-install-content strong,
+.linux-install-content strong {
   color: #e1d5ef;
   font-weight: 500;
 }
-.download-card .mac-install-content .install-safety-note {
+.download-card .mac-install-content .install-safety-note,
+.download-card .linux-install-content .install-safety-note {
   margin-bottom: 0;
   padding: 12px;
   background: #c3a7ef09;
   border-left: 2px solid #b599dd;
   border-radius: 0 6px 6px 0;
+}
+.mac-install-content code,
+.linux-install-content code {
+  padding: 2px 6px;
+  background: #c3a7ef14;
+  border: 1px solid #c3a7ef26;
+  border-radius: 6px;
+  color: #e1d5ef;
+  font-size: 11px;
+  overflow-wrap: anywhere;
 }
 .download-footnote {
   margin-top: 25px;

@@ -10,5 +10,9 @@ window.SREON_DOWNLOADS = Object.freeze({
     detail: "macOS · DMG installer",
   },
   windows: { url: null, detail: "" },
-  linux: { url: null, detail: "" },
+  linux: {
+    url: "/site/assets/SREONBROWSER-linux-arm64.deb",
+    version: "1.1",
+    detail: "Linux ARM64 · .deb package",
+  },
 });

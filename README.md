@@ -150,7 +150,7 @@ The **Orbit mark** — a glowing planet, tilted ring, and moon — alongside ref
 | :--- | :--- |
 | **macOS** | [Download Sreon](https://opensreon.com/#download) |
 | **Windows** | Coming soon |
-| **Linux** | Coming soon |
+| **Linux (ARM64)** | [Download Sreon](https://opensreon.com/#download) |
 
 ### Install on Mac
 
@@ -177,6 +177,15 @@ If Open Anyway isn’t shown, try opening Sreon again and check the settings. On
 **Do not bypass an actual malware warning.** If macOS says the app **“will damage your computer”** or **“contains malware,”** stop and don’t open it. Don’t disable macOS security protections.
 
 </details>
+
+### Install on Linux (ARM64)
+
+1. Download **SREONBROWSER-linux-arm64.deb** from the official Sreon website.
+2. Check your architecture: `dpkg --print-architecture` should print `arm64`.
+3. Install with `sudo apt install ./SREONBROWSER-linux-arm64.deb`.
+4. Run `sreon` in a terminal. The payload lives in `/opt/sreon`.
+
+> **A note about the Linux engine.** The native binaries in the macOS build — the WebKit window host and the `sprfst` interpreter — are Mach-O executables and cannot run on Linux. The ARM64 `.deb` therefore ships everything portable from the app bundle: the SPRFST engine sources that build Sreon’s interface, the standard library, the 21 Studio examples, the 32-chapter Guidebook, Shield rules, the splash screen, and the Orbit icons, plus a `sreon` launcher and desktop entry. When a linux-arm64 engine build is published, drop it into `/opt/sreon/bin` and the launcher will start it.
 
 ---
 

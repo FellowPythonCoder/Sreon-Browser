@@ -947,6 +947,41 @@ browser.sidebar = "expanded"
             ><span class="release-status" data-status="linux"
               >Coming soon · Download not yet available</span
             >
+            <details class="linux-install-help">
+              <summary>
+                How to install on Linux <span aria-hidden="true">+</span>
+              </summary>
+              <div class="linux-install-content">
+                <ol>
+                  <li>
+                    Download the Linux installer above, then check that your
+                    system is ARM64: <code>dpkg --print-architecture</code>
+                    should print <strong>arm64</strong>.
+                  </li>
+                  <li>
+                    Install it with
+                    <code>sudo apt install ./SREONBROWSER-linux-arm64.deb</code>
+                    (or <code>sudo dpkg -i</code> the same file).
+                  </li>
+                  <li>
+                    Sreon’s SPRFST payload lands in <strong>/opt/sreon</strong>
+                    — engine sources, standard library, examples, and the
+                    Guidebook. Run <code>sreon</code> in a terminal to see what
+                    is ready.
+                  </li>
+                </ol>
+                <h4>About the Linux engine</h4>
+                <p>
+                  The native engine binaries from the macOS build are Mach-O
+                  executables and cannot run on Linux, so this package ships
+                  Sreon’s full portable payload with a launcher instead. When a
+                  linux-arm64 engine build is published, place it in
+                  <strong>/opt/sreon/bin</strong> and <code>sreon</code> will
+                  start it. Until then, the payload is yours to read and make
+                  your own.
+                </p>
+              </div>
+            </details>
           </article>
         </div>
         <p class="download-footnote">
@@ -988,9 +1023,9 @@ browser.sidebar = "expanded"
           <details>
             <summary>When can I download it?<span>+</span></summary>
             <p id="release-answer">
-              Downloads are not published yet. Sreon is designed for Mac, with
-              Windows and Linux sections ready for future releases. When builds
-              are available, you’ll find the official links right here.
+              Sreon is available for Mac and Linux (ARM64), with Windows ready
+              for a future release. You’ll find the official links in the
+              download section right here.
             </p>
           </details>
         </div>

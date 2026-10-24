@@ -98,7 +98,7 @@ test("Studio safely applies editable settings, reports errors and supports keybo
   await expect(page.locator("#result-greeting b")).toHaveCount(0);
 });
 
-test("only Mac offers the DMG while Windows and Linux remain coming soon", async ({
+test("Mac and Linux offer downloads while Windows remains coming soon", async ({
   page,
 }) => {
   await page.goto("/#download");
@@ -113,33 +113,48 @@ test("only Mac offers the DMG while Windows and Linux remain coming soon", async
   await expect(
     page.locator(".download-card").first().locator(".platform-tag"),
   ).toHaveText("AVAILABLE NOW");
-  await expect(page.locator("a.download-action")).toHaveCount(1);
+
+  const linux = page.locator('a.download-action[data-platform="linux"]');
+  await expect(linux).toHaveAttribute(
+    "href",
+    /\/site\/assets\/SREONBROWSER-linux-arm64\.deb$/,
+  );
+  await expect(page.locator('[data-status="linux"]')).toHaveText(
+    "Version 1.1 · Linux ARM64 · .deb package",
+  );
+  await expect(
+    linux.locator("xpath=ancestor::article[1]").locator(".platform-tag"),
+  ).toHaveText("AVAILABLE NOW");
+  await expect(page.locator("a.download-action")).toHaveCount(2);
+
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     mac.click(),
   ]);
   expect(download.suggestedFilename()).toBe("SREONBROWSER.dmg");
+  const [linuxDownload] = await Promise.all([
+    page.waitForEvent("download"),
+    linux.click(),
+  ]);
+  expect(linuxDownload.suggestedFilename()).toBe(
+    "SREONBROWSER-linux-arm64.deb",
+  );
 
-  for (const [platform, name] of [
-    ["windows", "Windows"],
-    ["linux", "Linux"],
-  ]) {
-    const button = page.locator(
-      `button.download-action[data-platform="${platform}"]`,
-    );
-    await expect(button).toBeVisible();
-    await expect(page.locator(`[data-status="${platform}"]`)).toHaveText(
-      "Coming soon · Download not yet available",
-    );
-    await button.click();
-    await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.locator("#download-dialog-title")).toHaveText(
-      `Sreon for ${name} is on its way.`,
-    );
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog")).toBeHidden();
-    await expect(button).toBeFocused();
-  }
+  const button = page.locator(
+    'button.download-action[data-platform="windows"]',
+  );
+  await expect(button).toBeVisible();
+  await expect(page.locator('[data-status="windows"]')).toHaveText(
+    "Coming soon · Download not yet available",
+  );
+  await button.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.locator("#download-dialog-title")).toHaveText(
+    "Sreon for Windows is on its way.",
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(button).toBeFocused();
 });
 
 test("Mac installation help is keyboard accessible and works without JavaScript", async ({
@@ -162,6 +177,29 @@ test("Mac installation help is keyboard accessible and works without JavaScript"
   await expect(details.locator(".install-safety-note")).toContainText(
     "Don’t bypass a malware warning.",
   );
+  await page.keyboard.press("Space");
+  await expect(details).not.toHaveAttribute("open");
+  await context.close();
+});
+
+test("Linux installation help is keyboard accessible and honest about the engine", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto("/#download");
+  const details = page.locator(".linux-install-help");
+  const summary = details.locator("summary");
+  await expect(details).not.toHaveAttribute("open");
+  await expect(details.locator(".linux-install-content")).toBeHidden();
+  await summary.focus();
+  await page.keyboard.press("Enter");
+  await expect(details).toHaveAttribute("open", "");
+  await expect(details.locator("ol")).toHaveCount(1);
+  await expect(details).toContainText("SREONBROWSER-linux-arm64.deb");
+  await expect(details).toContainText("dpkg --print-architecture");
+  await expect(details).toContainText("/opt/sreon");
+  await expect(details).toContainText("cannot run on Linux");
   await page.keyboard.press("Space");
   await expect(details).not.toHaveAttribute("open");
   await context.close();

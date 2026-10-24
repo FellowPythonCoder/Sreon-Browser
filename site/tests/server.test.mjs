@@ -85,16 +85,16 @@ test('an upstream failure is not mislabeled as an uninstalled backend', async t 
   assert.equal((await response.json()).code,'SOURCE_UNAVAILABLE');
 });
 
-test('only the Mac download is configured; Windows and Linux stay unavailable', async t => {
+test('Mac and Linux ARM64 downloads are configured; Windows stays unavailable', async t => {
   const base = await setup(t);
   const response = await fetch(base + '/site/assets/downloads.js');
   assert.equal(response.status, 200);
   const context = { window:{} };
   runInNewContext(await response.text(), context);
   assert.deepEqual(JSON.parse(JSON.stringify(context.window.SREON_DOWNLOADS)), {
-    mac:{ url:'/site/assets/SREONBROWSER.dmg', detail:'macOS · DMG installer' },
+    mac:{ url:'/site/assets/SREONBROWSER.dmg', version:'1.1', detail:'macOS · DMG installer' },
     windows:{ url:null, detail:'' },
-    linux:{ url:null, detail:'' },
+    linux:{ url:'/site/assets/SREONBROWSER-linux-arm64.deb', version:'1.1', detail:'Linux ARM64 · .deb package' },
   });
 });
 
@@ -111,6 +111,23 @@ test('the Mac DMG is served from its exact case-sensitive path', async t => {
   const head = await fetch(url, { method:'HEAD' });
   assert.equal(head.status, 200);
   assert.equal(head.headers.get('content-type'), 'application/x-apple-diskimage');
+  assert.equal(head.headers.get('content-length'), String(expected.length));
+  assert.equal((await head.arrayBuffer()).byteLength, 0);
+});
+
+test('the Linux ARM64 .deb is served from its exact case-sensitive path', async t => {
+  const base = await setup(t);
+  const expected = await readFile(new URL('../assets/SREONBROWSER-linux-arm64.deb', import.meta.url));
+  const url = base + '/site/assets/SREONBROWSER-linux-arm64.deb';
+  const response = await fetch(url);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-type'), 'application/vnd.debian.binary-package');
+  assert.equal(response.headers.get('content-length'), String(expected.length));
+  assert.deepEqual(Buffer.from(await response.arrayBuffer()), expected);
+
+  const head = await fetch(url, { method:'HEAD' });
+  assert.equal(head.status, 200);
+  assert.equal(head.headers.get('content-type'), 'application/vnd.debian.binary-package');
   assert.equal(head.headers.get('content-length'), String(expected.length));
   assert.equal((await head.arrayBuffer()).byteLength, 0);
 });
